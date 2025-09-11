@@ -2,10 +2,13 @@
 
 namespace App\Filament\Resources\Users\Tables;
 
+use App\Utils\Helper;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\App;
@@ -16,55 +19,47 @@ class UsersTable
     {
         return $table
             ->columns([
+                ImageColumn::make('avatar_path')
+                ->label('Ảnh đại diện')
+                ->circular()
+                ->disk('public')
+                ->state(function ($record) {
+                    if (! empty($record->avatar_path)) {
+                        return Helper::generateURLImagePath($record->avatar_path);
+                    }
+                    return Helper::generateUiAvatarUrl($record->name, $record->email);
+                }),
                 TextColumn::make('name')
+                    ->label('Tên người dùng')
                     ->searchable(),
                 TextColumn::make('email')
-                    ->label('Email address')
+                    ->label('Email')
                     ->searchable(),
                 TextColumn::make('phone')
+                    ->label('Số điện thoại')
                     ->searchable(),
                 TextColumn::make('address')
+                    ->label('Địa chỉ')
                     ->searchable(),
-                TextColumn::make('role')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('avatar_path')
-                    ->searchable(),
-                TextColumn::make('email_verified_at')
-                    ->dateTime()
-                    ->sortable(),
-                TextColumn::make('phone_verified_at')
-                    ->dateTime()
-                    ->sortable(),
-                TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //
             ])
             ->recordActions([
-                EditAction::make(),
-                Action::make('language')
-                    ->icon('heroicon-o-cog-6-tooth')
-                    ->label('Language')
-                    ->action(function () {
-                        // Logic to change the language
-                        // This could be a redirect to a language selection page or an AJAX call
-                        dump(App::getLocale());
-                        if (App::getLocale())
-                            App::setLocale('vi');
-                    }),
+                EditAction::make()
+                ->label('Sửa'),
+                DeleteAction::make()
+                ->label('Xóa'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                    ->label('Xóa'),
                 ]),
             ]);
     }
 }
+
+
+
+
