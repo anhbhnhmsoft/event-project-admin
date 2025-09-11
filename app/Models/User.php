@@ -58,7 +58,7 @@ namespace App\Models;
 
     public function canAccessPanel(Panel $panel): bool
     {
-       return in_array($this->role, [RoleUser::ADMIN->value, RoleUser::SPEAKER->value]);
+       return RoleUser::checkCanAccessAdminPanel($this->role);
     }
 
      protected static function booted()

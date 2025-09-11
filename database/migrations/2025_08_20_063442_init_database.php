@@ -11,6 +11,46 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::create('sessions', function (Blueprint $table) {
+            $table->string('id')->primary();
+            $table->foreignId('user_id')->nullable()->index();
+            $table->string('ip_address', 45)->nullable();
+            $table->text('user_agent')->nullable();
+            $table->longText('payload');
+            $table->integer('last_activity')->index();
+        });
+
+        // Tạo bảng organizers để lưu trữ thông tin về các nhà tổ chức sự kiện
+        Schema::create('organizers', function (Blueprint $table) {
+            $table->id();
+            $table->comment('Bảng organizers lưu trữ các nhà tổ chức sự kiện');
+            $table->string('name')->comment('Tên nhà tổ chức');
+            $table->string('image')->nullable()->comment('URL hình ảnh đại diện');
+            $table->text('description')->nullable()->comment('Mô tả về nhà tổ chức');
+            $table->softDeletes();
+            $table->timestamps();
+        });
+
+        Schema::create('users', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('email')->unique();
+            $table->string('phone')->nullable()->unique();
+            $table->string('address')->nullable();
+            $table->text('introduce')->nullable();
+            $table->tinyInteger('role');
+            $table->string('avatar_path')->nullable();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->timestamp('phone_verified_at')->nullable();
+            $table->bigInteger('organizer_id');
+            $table->foreign('organizer_id')->references('id')->on('organizers')->cascadeOnDelete();
+            $table->string('password');
+            $table->rememberToken();
+            $table->softDeletes();
+            $table->timestamps();
+        });
+
+
         // Tạo bảng membership để lưu trữ các gói membership
         Schema::create('membership', function (Blueprint $table) {
             $table->id();
@@ -33,7 +73,6 @@ return new class extends Migration
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
             $table->comment('Bảng transactions lưu trữ các giao dịch của người dùng');
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             // Khóa ngoại liên kết với các bảng, dựa theo type sẽ xác định bảng nào được liên kết
             $table->bigInteger('foreign_id')->comment('ID của đối tượng liên kết, có thể là ID của gói membership hoặc ID của sự kiện');
             $table->tinyInteger('type')->comment('Loại giao dịch, trong enum TransactionType');
@@ -46,7 +85,7 @@ return new class extends Migration
             $table->string('transaction_id')->nullable()->comment('ID giao dịch từ hệ thống thanh toán bên ngoài');
             $table->string('description')->nullable()->comment('Mô tả giao dịch');
             $table->tinyInteger('status')->comment('Trạng thái giao dịch trong enum TransactionStatus');
-            $table->json('metadata')->nullable()->comment('Dữ liệu bổ sung liên quan đến giao dịch, có thể là thông tin bổ sung từ hệ thống thanh toán');
+            $table->text('metadata')->nullable()->comment('Dữ liệu bổ sung liên quan đến giao dịch, có thể là thông tin bổ sung từ hệ thống thanh toán');
 
             $table->softDeletes();
             $table->timestamps();
@@ -56,38 +95,38 @@ return new class extends Migration
         Schema::create('provinces', function (Blueprint $table) {;
             $table->id();
             $table->comment('Bảng provinces lưu trữ các tỉnh thành');
-            $table->string('name')->comment('Tên tỉnh thành');
-            $table->string('code')->unique()->comment('Mã tỉnh thành');
-            $table->string('english_name')->nullable()->comment('Tên tiếng Anh của tỉnh thành');
-            $table->string('administrative_level')->nullable()->comment('Cấp hành chính của tỉnh thành');
-            $table->string('decree')->nullable()->comment('Số quyết định thành lập tỉnh thành');
+            $table->string('name')->comment('Tên');
+            $table->string('code')->unique()->comment('Mã');
+            $table->string('division_type')->nullable()->comment('Cấp hành chính');
+            $table->timestamps();
         });
 
         // Tạo bảng districts để lưu trữ thông tin về các quận huyện
-        Schema::create('ward', function (Blueprint $table) {;
+        Schema::create('districts', function (Blueprint $table) {;
             $table->id();
-            $table->comment('Bảng ward lưu trữ các phường xã');
-            $table->string('name')->comment('Tên phường xã');
-            $table->string('code')->unique()->comment('Mã phường xã');
-            $table->string('english_name')->nullable()->comment('Tên tiếng Anh của phường xã');
-            $table->string('administrative_level')->nullable()->comment('Cấp hành chính của phường xã');
-            $table->string('decree')->nullable()->comment('Số quyết định thành lập phường xã');
-
-            // Khóa ngoại nối bằng code
+            $table->comment('Bảng districts lưu trữ các quận huyện');
+            $table->string('name')->comment('Tên');
+            $table->string('code')->unique()->comment('Mã');
+            $table->string('division_type')->nullable()->comment('Cấp hành chính');
             $table->string('province_code');
             $table->foreign('province_code')->references('code')->on('provinces')->cascadeOnDelete();
-        });
-
-        // Tạo bảng organizers để lưu trữ thông tin về các nhà tổ chức sự kiện
-        Schema::create('organizers', function (Blueprint $table) {
-            $table->id();
-            $table->comment('Bảng organizers lưu trữ các nhà tổ chức sự kiện');
-            $table->string('name')->comment('Tên nhà tổ chức');
-            $table->string('image')->nullable()->comment('URL hình ảnh đại diện');
-            $table->text('description')->nullable()->comment('Mô tả về nhà tổ chức');
-            $table->softDeletes();
             $table->timestamps();
         });
+
+        // Tạo bảng districts để lưu trữ thông tin về các phường xã
+        Schema::create('wards', function (Blueprint $table) {;
+            $table->id();
+            $table->comment('Bảng ward lưu trữ các phường xã');
+            $table->string('name')->comment('Tên');
+            $table->string('code')->unique()->comment('Mã');
+            $table->string('division_type')->nullable()->comment('Cấp hành chính');
+
+            // Khóa ngoại nối bằng code
+            $table->string('district_code');
+            $table->foreign('district_code')->references('code')->on('districts')->cascadeOnDelete();
+            $table->timestamps();
+        });
+
 
         // Tạo bảng events để lưu trữ các sự kiện
         Schema::create('events', function (Blueprint $table) {
@@ -109,17 +148,12 @@ return new class extends Migration
             $table->tinyInteger('status')
                 ->comment('Trạng thái của sự kiện, Lưu trong enum EventStatus');
 
-
-
             // Địa điểm sự kiện
-            $table->string('province_code')->comment('Mã tỉnh thành liên kết với sự kiện');
-            $table->string('district_code')->comment('Mã quận huyện liên kết với sự kiện');
             $table->foreign('province_code')->references('code')->on('provinces')->cascadeOnDelete();
-            $table->foreign('district_code')->references('code')->on('ward')->cascadeOnDelete();
-            $table->string('address')->comment('Địa chỉ cụ thể của sự kiện');
-            $table->string('latitude')->nullable()->comment('Vĩ độ của địa điểm sự kiện');
-            $table->string('longitude')->nullable()->comment('Kinh độ của địa điểm sự kiện');
-            $table->string('google_map_place_id')->nullable('ID của địa điểm trên Google Maps');
+            $table->foreign('district_code')->references('code')->on('districts')->cascadeOnDelete();
+            $table->foreign('ward_code')->references('code')->on('wards')->cascadeOnDelete();
+            $table->decimal('latitude', 10, 6)->comment('Vĩ độ');
+            $table->decimal('longitude', 10, 6)->comment('Kinh độ');
             $table->softDeletes();
             $table->timestamps();
         });
@@ -266,5 +300,7 @@ return new class extends Migration
         Schema::dropIfExists('provinces');
         Schema::dropIfExists('transactions');
         Schema::dropIfExists('membership');
+        Schema::dropIfExists('users');
+        Schema::dropIfExists('sessions');
     }
 };
