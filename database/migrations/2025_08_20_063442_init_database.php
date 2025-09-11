@@ -45,6 +45,7 @@ return new class extends Migration
             $table->bigInteger('organizer_id');
             $table->foreign('organizer_id')->references('id')->on('organizers')->cascadeOnDelete();
             $table->string('password');
+            $table->string('lang',10);
             $table->rememberToken();
             $table->softDeletes();
             $table->timestamps();
