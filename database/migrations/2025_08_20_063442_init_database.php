@@ -34,18 +34,19 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('email')->unique();
-            $table->string('phone')->nullable()->unique();
+            $table->string('email');
+            $table->string('phone')->nullable();
             $table->string('address')->nullable();
             $table->text('introduce')->nullable();
             $table->tinyInteger('role');
             $table->string('avatar_path')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->timestamp('phone_verified_at')->nullable();
-            $table->bigInteger('organizer_id');
-            $table->foreign('organizer_id')->references('id')->on('organizers')->cascadeOnDelete();
+            $table->foreignId('organizer_id')->references('id')->on('organizers')->cascadeOnDelete();
             $table->string('password');
             $table->string('lang',10);
+            $table->unique(['email', 'organizer_id']);
+            $table->unique(['phone', 'organizer_id']);
             $table->rememberToken();
             $table->softDeletes();
             $table->timestamps();
@@ -150,6 +151,9 @@ return new class extends Migration
                 ->comment('Trạng thái của sự kiện, Lưu trong enum EventStatus');
 
             // Địa điểm sự kiện
+            $table->string('province_code');
+            $table->string('district_code');
+            $table->string('ward_code');
             $table->foreign('province_code')->references('code')->on('provinces')->cascadeOnDelete();
             $table->foreign('district_code')->references('code')->on('districts')->cascadeOnDelete();
             $table->foreign('ward_code')->references('code')->on('wards')->cascadeOnDelete();

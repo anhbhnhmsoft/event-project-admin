@@ -2,18 +2,17 @@
 
 namespace App\Models;
 
- use App\Utils\Constants\RoleUser;
- use App\Utils\Helper;
- use Filament\Models\Contracts\FilamentUser;
- use Filament\Panel;
- use Illuminate\Contracts\Auth\MustVerifyEmail;
- use Illuminate\Database\Eloquent\Factories\HasFactory;
- use Illuminate\Foundation\Auth\User as Authenticatable;
- use Illuminate\Notifications\Notifiable;
+use App\Utils\Constants\RoleUser;
+use App\Utils\Helper;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
- class User extends Authenticatable implements MustVerifyEmail, FilamentUser
+class User extends Authenticatable implements MustVerifyEmail, FilamentUser
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
     /**
@@ -30,7 +29,10 @@ namespace App\Models;
         'introduce',
         'role',
         'avatar_path',
-        'email_verified_at'
+        'email_verified_at',
+        'phone_verified_at',
+        'organizer_id',
+        'lang',
     ];
 
     /**
@@ -58,15 +60,15 @@ namespace App\Models;
 
     public function canAccessPanel(Panel $panel): bool
     {
-       return RoleUser::checkCanAccessAdminPanel($this->role);
+        return RoleUser::checkCanAccessAdminPanel($this->role);
     }
 
-     protected static function booted()
-     {
-         static::creating(function ($model) {
-             if (empty($model->id)) {
-                 $model->id = Helper::getTimestampAsId();
-             }
-         });
-     }
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            if (empty($model->id)) {
+                $model->id = Helper::getTimestampAsId();
+            }
+        });
+    }
 }

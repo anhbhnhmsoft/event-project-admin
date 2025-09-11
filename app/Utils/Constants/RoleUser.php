@@ -31,6 +31,10 @@ enum RoleUser: int
 
     public static function checkCanAccessAdminPanel($role): bool
     {
-        return in_array($role, [self::SUPER_ADMIN, self::ADMIN, self::SPEAKER]);
+        return in_array($role, [
+            self::SUPER_ADMIN->value,
+            self::ADMIN->value,
+            self::SPEAKER->value
+        ]);
     }
 }
