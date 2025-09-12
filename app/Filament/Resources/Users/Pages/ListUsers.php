@@ -27,7 +27,6 @@ class ListUsers extends ListRecords
         
         return [];
     }
-
     public function getBreadcrumbs(): array
     {
         return [
