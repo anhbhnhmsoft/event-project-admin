@@ -2,12 +2,14 @@
 
 namespace App\Utils\Constants;
 
+use Illuminate\Support\Facades\Auth;
+
 enum RoleUser: int
 {
     case SUPER_ADMIN = 10;
     case ADMIN = 15;
-    case CUSTOMER = 25;
-    case SPEAKER = 35;
+    case SPEAKER = 25;
+    case CUSTOMER = 35;
 
     public static function getOptions(): array
     {
@@ -36,5 +38,14 @@ enum RoleUser: int
             self::ADMIN->value,
             self::SPEAKER->value
         ]);
+    }
+
+    public static function canAccess($role): bool
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return false;
+        }
+        return $user->role == $role->value;
     }
 }

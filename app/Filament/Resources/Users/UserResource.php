@@ -8,11 +8,14 @@ use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Filament\Resources\Users\Schemas\UserForm;
 use App\Filament\Resources\Users\Tables\UsersTable;
 use App\Models\User;
+use App\Utils\Constants\RoleUser;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class UserResource extends Resource
 {
@@ -52,5 +55,29 @@ class UserResource extends Resource
             'create' => CreateUser::route('/create'),
             'edit' => EditUser::route('/{record}/edit'),
         ];
+    }
+
+    public static function canCreate(): bool
+    {
+        $user = Auth::user();
+        return $user->role === RoleUser::SUPER_ADMIN->value || $user->role === RoleUser::ADMIN->value;
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery()->where('id', '!=', Auth::id());
+        $user = Auth::user();
+        if ($user->role === RoleUser::SUPER_ADMIN->value) {
+            return $query;
+        }
+        if ($user->role === RoleUser::ADMIN->value) {
+            return $query->where('organizer_id', $user->organizer_id)->where('role', '>', RoleUser::ADMIN->value);
+        }
+        
+        if($user->role === RoleUser::SPEAKER->value) {
+            return $query->where('role', '>', RoleUser::SPEAKER->value);
+        }
+
+        return $query->whereNull('id');
     }
 }
