@@ -16,4 +16,18 @@ final class Helper
         usleep(100);
         return (int)$formatted;
     }
+
+    public static function generateURLImagePath(?string $filePath): ?string
+    {
+        if (!empty($filePath)) {
+            return route('public_image', ['file_path' => $filePath]);
+        }
+        return null;
+    }
+
+    public static function generateUiAvatarUrl(?string $name, ?string $email): string
+    {
+        $text = $name ?: ($email ?: 'User');
+        return 'https://ui-avatars.com/api/?name=' . urlencode($text) . '&background=random&color=random';
+    }
 }
