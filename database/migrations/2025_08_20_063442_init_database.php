@@ -19,7 +19,6 @@ return new class extends Migration
             $table->longText('payload');
             $table->integer('last_activity')->index();
         });
-
         // Tạo bảng organizers để lưu trữ thông tin về các nhà tổ chức sự kiện
         Schema::create('organizers', function (Blueprint $table) {
             $table->id();
