@@ -276,6 +276,7 @@ return new class extends Migration
         Schema::create('configs', function (Blueprint $table) {
             $table->id();
             $table->string('config_key')->unique();
+            $table->smallInteger('config_type')->nullable()->comment('Loại cấu hình, Lưu trong enum ConfigType');
             $table->text('config_value');
             $table->text('description')->nullable();
             $table->timestamps();
