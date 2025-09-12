@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Users\Tables;
 
 use App\Utils\Helper;
+use App\Utils\Constants\RoleUser;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -12,6 +13,7 @@ use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Auth;
 
 class UsersTable
 {
@@ -47,14 +49,18 @@ class UsersTable
             ])
             ->recordActions([
                 EditAction::make()
-                ->label('Sửa'),
+                    ->label('Sửa')
+                    ->visible(fn() => Auth::user()->role === RoleUser::SUPER_ADMIN->value || 
+                                    Auth::user()->role === RoleUser::ADMIN->value),
                 DeleteAction::make()
-                ->label('Xóa'),
+                    ->label('Xóa')
+                    ->visible(fn() => Auth::user()->role === RoleUser::SUPER_ADMIN->value),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
-                    ->label('Xóa'),
+                        ->label('Xóa')
+                        ->visible(fn() => Auth::user()->role === RoleUser::SUPER_ADMIN->value),
                 ]),
             ]);
     }
