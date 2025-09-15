@@ -63,6 +63,11 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
         return RoleUser::checkCanAccessAdminPanel($this->role);
     }
 
+    public function organizer()
+    {
+        return $this->belongsTo(Organizer::class);
+    }
+
     protected static function booted()
     {
         static::creating(function ($model) {

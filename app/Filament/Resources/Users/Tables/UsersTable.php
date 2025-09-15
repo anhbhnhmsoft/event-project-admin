@@ -43,6 +43,9 @@ class UsersTable
                 TextColumn::make('address')
                     ->label('Địa chỉ')
                     ->searchable(),
+                TextColumn::make('organizer.name')
+                    ->label('Nhà tổ chức')
+                    ->searchable(),
             ])
             ->filters([
                 //
