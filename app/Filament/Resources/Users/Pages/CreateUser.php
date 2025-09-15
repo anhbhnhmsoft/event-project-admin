@@ -5,6 +5,8 @@ namespace App\Filament\Resources\Users\Pages;
 use App\Filament\Resources\Users\UserResource;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Actions\Action;
+use Illuminate\Database\Eloquent\Model;
+
 class CreateUser extends CreateRecord
 {
     protected static string $resource = UserResource::class;
@@ -35,5 +37,13 @@ class CreateUser extends CreateRecord
     {
         return parent::getCancelFormAction()
             ->label('Hủy');
+    }
+
+    protected function handleRecordCreation(array $data): Model
+    {
+        if(!empty($data['new_password'])) {
+            $data['password'] = $data['new_password'];
+        }
+        return static::getModel()::create($data);
     }
 }

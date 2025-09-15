@@ -7,15 +7,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Organizer extends Model
+class UserResetCode extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'id',
-        'name',
-        'image',
-        'description',
+        'user_id',
+        'email',
+        'code',
+        'expires_at',
     ];
 
     protected static function booted()
@@ -25,5 +25,9 @@ class Organizer extends Model
                 $model->id = Helper::getTimestampAsId();
             }
         });
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

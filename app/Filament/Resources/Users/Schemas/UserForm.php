@@ -13,6 +13,9 @@ use App\Utils\Constants\Language;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Schemas\Components\Fieldset;
+use App\Services\OrganizerService;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class UserForm
 {
@@ -26,31 +29,30 @@ class UserForm
                 TextInput::make('email')
                     ->label('Email')
                     ->email()
-                    ->required(),
+                    ->required()
+                    ->unique(
+                        table: User::class,
+                        column: 'email',
+                        ignoreRecord: true,
+                        modifyRuleUsing: function ($rule, $get) {
+                            return $rule->where('organizer_id', $get('organizer_id'));
+                        }
+                    ),
                 TextInput::make('phone')
                     ->label('Số điện thoại')
-                    ->tel(),
+                    ->tel()
+                    ->unique(
+                        table: User::class,
+                        column: 'phone',
+                        ignoreRecord: true,
+                        modifyRuleUsing: function ($rule, $get) {
+                            return $rule->where('organizer_id', $get('organizer_id'));
+                        }
+                    ),
                 TextInput::make('address')
                     ->label('Địa chỉ'),
                 Textarea::make('introduce')
                     ->label('Giới thiệu')
-                    ->columnSpanFull(),
-                Select::make('role')
-                    ->label('Vai trò')
-                    ->options(RoleUser::getOptions())
-                    ->required(),
-                Select::make('lang')
-                    ->label('Ngôn ngữ')
-                    ->options(Language::getOptions())
-                    ->default('vi'),
-                FileUpload::make('avatar_path')
-                    ->label('Ảnh đại diện')
-                    ->image()
-                    ->imageEditor()
-                    ->disk('public')
-                    ->directory('avatars')
-                    ->visibility('public')
-                    ->nullable()
                     ->columnSpanFull(),
                 Fieldset::make('Password')
                     ->label('Mật khẩu')
@@ -88,10 +90,43 @@ class UserForm
                         Hidden::make('showChangePassword')->default(false),
                     ])
                     ->columnSpanFull(),
+                Select::make('role')
+                    ->label('Vai trò')
+                    ->options(function () {
+                        $user = Auth::user();
+                        $options = RoleUser::getOptions();
+                        unset($options[$user->role]);
+                        if ($user->role !== RoleUser::SUPER_ADMIN->value) {
+                            unset($options[RoleUser::SUPER_ADMIN->value]);
+                            unset($options[RoleUser::SPEAKER->value]);
+                        }
+                        return $options;
+                    })
+                    ->required(),
+                Select::make('organizer_id')
+                    ->label('Nhà tổ chức')
+                    ->options(function () {
+                        return app(OrganizerService::class)->getActiveOptions();
+                    })
+                    ->required()
+                    ->searchable(),
+                FileUpload::make('avatar_path')
+                    ->label('Ảnh đại diện')
+                    ->image()
+                    ->imageEditor()
+                    ->disk('public')
+                    ->directory('avatars')
+                    ->visibility('public')
+                    ->nullable()
+                    ->columnSpanFull(),
                 DateTimePicker::make('email_verified_at')
                     ->label('Ngày xác thực email'),
                 DateTimePicker::make('phone_verified_at')
                     ->label('Ngày xác thực số điện thoại'),
+                Select::make('lang')
+                    ->label('Ngôn ngữ')
+                    ->options(Language::getOptions())
+                    ->default('vi'),
             ]);
     }
 }
