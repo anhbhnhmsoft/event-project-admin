@@ -26,6 +26,7 @@ return new class extends Migration
             $table->string('name')->comment('Tên nhà tổ chức');
             $table->string('image')->nullable()->comment('URL hình ảnh đại diện');
             $table->text('description')->nullable()->comment('Mô tả về nhà tổ chức');
+            $table->tinyInteger('status')->default(1)->comment('Trạng thái của nhà tổ chức, 1: hoạt động, 0: không hoạt động');
             $table->softDeletes();
             $table->timestamps();
         });
