@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Exceptions\ServiceException;
+use App\Utils\Constants\Language;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
 use App\Services\AuthService;
@@ -24,7 +25,7 @@ class AuthController extends Controller
             'locate' => ['nullable', 'in:vi,en'],
         ]);
 
-        App::setLocale($v['locate'] ?? 'vi');
+        App::setLocale($v['locate'] ?? Language::VI->value);
 
         try {
             $result = $service->login($v);
@@ -37,7 +38,7 @@ class AuthController extends Controller
             ], $e->getCode() ?: 422);
         }
 
-        App::setLocale($user->lang ?? config('app.locale'));
+        App::setLocale($user->lang ?? Language::VI->value);
 
         return response()->json([
             'message' => __('auth.success.login_success'),
@@ -100,7 +101,7 @@ class AuthController extends Controller
             'locate' => ['sometimes', 'string', 'in:vi,en'],
         ]);
 
-        $locale = $v['locate'] ?? 'vi';
+        $locale = $v['locate'] ?? Language::VI->value;
         App::setLocale($locale);
 
         $user = User::where('email', $v['email'])->first();
@@ -130,7 +131,7 @@ class AuthController extends Controller
             'locate' => ['sometimes', 'string', 'in:vi,en'],
         ]);
 
-        $locale = $v['locate'] ?? 'vi';
+        $locale = $v['locate'] ?? Language::VI->value;
         App::setLocale($locale);
 
         try {

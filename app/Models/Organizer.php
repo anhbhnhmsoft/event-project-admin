@@ -16,6 +16,7 @@ class Organizer extends Model
         'name',
         'image',
         'description',
+        'status'
     ];
 
     protected static function booted()
