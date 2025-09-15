@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\OrganizerController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -17,4 +18,7 @@ Route::post('/email/verification-notification', [AuthController::class, 'resendV
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'getUserInfo']);
+});
+Route::prefix('organizers')->middleware('set-locale')->group(function () {
+    Route::get('/', [OrganizerController::class, 'getOrganizers']);
 });

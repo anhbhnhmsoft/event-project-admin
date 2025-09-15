@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Organizers\Tables;
 
+use App\Utils\Constants\CommonStatus;
 use App\Utils\Helper;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\DeleteAction;
@@ -25,6 +26,13 @@ class OrganizerTable
                         : null;
                 }),
             TextColumn::make('name')->label('Tên')->searchable(),
+            TextColumn::make('status')
+                    ->label('Trạng thái')
+                    ->badge()
+                    ->color(fn($state) => match ($state) {
+                        CommonStatus::ACTIVE->value => 'success',
+                        CommonStatus::INACTIVE->value => 'warning'
+                    })->formatStateUsing(fn($state) => $state == CommonStatus::ACTIVE->value ? 'Hoạt động' : 'Không hoạt động'),
             TextColumn::make('created_at')->label('Tạo lúc')->dateTime('d/m/Y H:i'),
         ])
         ->filters([
