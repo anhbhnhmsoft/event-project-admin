@@ -37,6 +37,7 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->string('address')->nullable();
             $table->text('introduce')->nullable();
+            $table->tinyInteger('gender')->nullable();
             $table->tinyInteger('role');
             $table->string('avatar_path')->nullable();
             $table->timestamp('email_verified_at')->nullable();
@@ -282,6 +283,26 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        Schema::create('personal_access_tokens', function (Blueprint $table) {
+            $table->id();
+            $table->morphs('tokenable');
+            $table->text('name');
+            $table->string('token', 64)->unique();
+            $table->text('abilities')->nullable();
+            $table->timestamp('last_used_at')->nullable();
+            $table->timestamp('expires_at')->nullable()->index();
+            $table->timestamps();
+        });
+
+        Schema::create('user_reset_codes', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->string('email');
+            $table->string('code', 6);
+            $table->timestamp('expires_at')->nullable();
+            $table->softDeletes();
+            $table->timestamps();
+        });
     }
 
     /**
@@ -307,5 +328,6 @@ return new class extends Migration
         Schema::dropIfExists('membership');
         Schema::dropIfExists('users');
         Schema::dropIfExists('sessions');
+        Schema::dropIfExists('personal_access_tokens');
     }
 };
