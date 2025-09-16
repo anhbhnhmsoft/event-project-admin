@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Services\OrganizerService;
+use App\Utils\Constants\CommonStatus;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class OrganizerController extends Controller
@@ -15,19 +17,15 @@ class OrganizerController extends Controller
         $this->organizerService = $organizerService;
     }
 
-    public function getOrganizers(Request $request)
+    public function getOrganizers(Request $request): JsonResponse
     {
         $keyword = $request->query('key');
-        $limit = $request->query('limit', 10);
+        $limit = $request->integer('limit', 10);
 
-        $organizers = $this->organizerService->filterByName($keyword, $limit);
-
-        if($keyword) {
-            return response()->json([
-                'message' => __('organizer.success.filter_success'),
-                'data' => $organizers,
-            ], 200);
-        }
+        $organizers = $this->organizerService->getOptions([
+            'keyword' => $keyword,
+            'status' => CommonStatus::ACTIVE->value,
+        ], $limit);
 
         return response()->json([
             'message' => __('organizer.success.get_success'),
