@@ -4,16 +4,24 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Services\OrganizerService;
-use Illuminate\Support\Facades\App;
+use Illuminate\Http\Request;
 
 class OrganizerController extends Controller
 {
-    public function getOrganizers(OrganizerService $service)
+    protected OrganizerService $organizerService;
+
+    public function __construct(OrganizerService $organizerService)
     {
-        $keyword = request()->query('key');
+        $this->organizerService = $organizerService;
+    }
 
-        $organizers = $service->filterByName($keyword, 10);
+    public function getOrganizers(Request $request)
+    {
+        $keyword = $request->query('key');
+        $limit = $request->query('limit', 10);
 
+        $organizers = $this->organizerService->filterByName($keyword, $limit);
+        
         if($keyword) {
             return response()->json([
                 'message' => __('organizer.success.filter_success'),

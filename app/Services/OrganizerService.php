@@ -19,7 +19,7 @@ class OrganizerService
         return $this->getActive()->pluck('name', 'id')->toArray();
     }
 
-    public function filterByName(?string $keyword = null, int $limit = 10): Collection
+    public function filterByName(?string $keyword = null, int $limit = 10): array
     {
         try {
             $query = Organizer::query()
@@ -29,12 +29,19 @@ class OrganizerService
             if (!empty($keyword)) {
                 $query->where('name', 'like', '%'.trim($keyword).'%');
             }
-
-            return $query->select(['id', 'name'])
-                ->limit($limit)
-                ->get();
+            $result = $query->select(['id', 'name'])
+            ->limit($limit)
+            ->get();
+            return [
+                'status' => true,
+                'message' => __('organizer.success.filter_success'),
+                'data' => $result,
+            ];
         } catch (\Exception $e) {
-            return collect();
+            return [
+                'status' => false,
+                'message' => __('organizer.error.filter_failed'),
+            ];
         }
     }
 }
