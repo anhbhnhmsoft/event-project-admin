@@ -24,5 +24,6 @@ return [
         'password_not_match' => 'Password does not match',
         'organizer_not_found' => 'Organizer not found',
         'unauthorized' => 'Unauthorized',
+        
     ],
 ];

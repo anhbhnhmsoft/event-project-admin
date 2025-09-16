@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Exceptions\ServiceException;
-use App\Utils\Constants\Language;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
 use App\Services\AuthService;
@@ -17,7 +15,14 @@ use Illuminate\Support\Facades\URL;
 
 class AuthController extends Controller
 {
-    public function login(Request $request, AuthService $service)
+    protected AuthService $authService;
+
+    public function __construct(AuthService $authService)
+    {
+        $this->authService = $authService;
+    }
+
+    public function login(Request $request)
     {
         $v = $request->validate([
             'email' => 'required|email',
@@ -25,20 +30,9 @@ class AuthController extends Controller
             'locate' => ['nullable', 'in:vi,en'],
         ]);
 
-        App::setLocale($v['locate'] ?? Language::VI->value);
-
-        try {
-            $result = $service->login($v);
-            $user = $result['user'];
-            $token = $result['token'];
-        } catch (ServiceException $e) {
-            return response()->json([
-                'message' => __($e->getMessage()),
-                'data' => null,
-            ], $e->getCode() ?: 422);
-        }
-
-        App::setLocale($user->lang ?? Language::VI->value);
+        $result = $this->authService->login($v);
+        $user = $result['user'];
+        $token = $result['token'];
 
         return response()->json([
             'message' => __('auth.success.login_success'),
@@ -49,7 +43,7 @@ class AuthController extends Controller
         ], 200);
     }
 
-    public function register(Request $request, AuthService $service)
+    public function register(Request $request)
     {
         $v = $request->validate([
             'name' => ['required', 'string', 'min:4', 'max:255'],
@@ -59,14 +53,7 @@ class AuthController extends Controller
             'organizer_id' => ['required', 'integer'],
         ]);
 
-        try {
-            $service->register($v);
-        } catch (ServiceException $e) {
-            return response()->json([
-                'message' => __($e->getMessage()),
-                'data' => null,
-            ], $e->getCode() ?: 422);
-        }
+        $this->authService->register($v);
 
         return response()->json([
             'message' => __('auth.success.register_success'),
@@ -101,8 +88,7 @@ class AuthController extends Controller
             'locate' => ['sometimes', 'string', 'in:vi,en'],
         ]);
 
-        $locale = $v['locate'] ?? Language::VI->value;
-        App::setLocale($locale);
+        $locale = $v['locate'] ?? null;
 
         $user = User::where('email', $v['email'])->first();
 
@@ -124,24 +110,16 @@ class AuthController extends Controller
         return response()->json(['message' => __('auth.success.verify_sent'), 'data' => ['status' => true]], 200);
     }
 
-    public function forgotPassword(Request $request, AuthService $service)
+    public function forgotPassword(Request $request)
     {
         $v = $request->validate([
             'email' => ['required', 'email', 'exists:users,email'],
             'locate' => ['sometimes', 'string', 'in:vi,en'],
         ]);
 
-        $locale = $v['locate'] ?? Language::VI->value;
-        App::setLocale($locale);
+        $locale = $v['locate'] ?? null;
 
-        try {
-            $service->forgotPassword($v, $locale);
-        } catch (ServiceException $e) {
-            return response()->json([
-                'message' => __($e->getMessage()),
-                'data' => null,
-            ], $e->getCode() ?: 422);
-        }
+        $this->authService->forgotPassword($v, $locale);
 
         return response()->json([
             'message' => __('auth.success.reset_sent'),
@@ -149,7 +127,7 @@ class AuthController extends Controller
         ], 200);
     }
 
-    public function confirmPassword(Request $request, AuthService $service)
+    public function confirmPassword(Request $request)
     {
         $v = $request->validate([
             'email' => ['required', 'email'],
@@ -158,14 +136,7 @@ class AuthController extends Controller
             'confirm_password' => ['required', 'same:password'],
         ]);
 
-        try {
-            $service->confirmPassword($v);
-        } catch (ServiceException $e) {
-            return response()->json([
-                'message' => __($e->getMessage()),
-                'data' => null,
-            ], $e->getCode() ?: 422);
-        }
+        $this->authService->confirmPassword($v);
 
         return response()->json([
             'message' => __('auth.success.password_changed'),

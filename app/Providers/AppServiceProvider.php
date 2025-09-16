@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Services\AuthService;
+use App\Services\OrganizerService;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\ServiceProvider;
 
@@ -12,7 +14,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(AuthService::class);
+        $this->app->singleton(OrganizerService::class);
     }
 
     /**
