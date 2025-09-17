@@ -22,7 +22,8 @@ class MembershipsTable
                 TextColumn::make('badge')
                     ->label('Huy hiệu hiển thị'),
                 TextColumn::make('price')
-                    ->label('Giá'),
+                    ->label('Giá')
+                    ->numeric(0, ',', '.'),
                 IconColumn::make('status')
                     ->label("Trạng thái hoạt động")
                     ->boolean()
@@ -32,25 +33,6 @@ class MembershipsTable
                     ->falseColor('danger'),
                 TextColumn::make('duration')
                     ->label('Thời hạn gói'),
-                IconColumn::make('config.'.ConfigMembership::ALLOW_COMMENT->value)
-                    ->label(ConfigMembership::ALLOW_COMMENT->label())->boolean()
-                    ->trueIcon('heroicon-o-check')
-                    ->falseIcon('heroicon-o-x-mark')
-                    ->trueColor('success')
-                    ->falseColor('gray'),
-                IconColumn::make('config.'.ConfigMembership::ALLOW_CHOOSE_SEAT->value)
-                    ->label(ConfigMembership::ALLOW_CHOOSE_SEAT->label())->boolean()
-                    ->trueIcon('heroicon-o-check')
-                    ->falseIcon('heroicon-o-x-mark')
-                    ->trueColor('success')
-                    ->falseColor('gray'),
-                IconColumn::make('config.'.ConfigMembership::ALLOW_DOCUMENTARY->value)
-                    ->label(ConfigMembership::ALLOW_DOCUMENTARY->label())
-                    ->boolean()
-                    ->trueIcon('heroicon-o-check')
-                    ->falseIcon('heroicon-o-x-mark')
-                    ->trueColor('success')
-                    ->falseColor('gray')
             ])
             ->filters([])
             ->recordActions([
