@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Memberships\Schemas;
 
+use App\Utils\Constants\ConfigMembership;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\RichEditor;
@@ -57,12 +58,12 @@ class MembershipSchema
                         ]),
                     Section::make('Cấu hình quyền')
                         ->schema([
-                            Toggle::make('config.allow_comment')
-                                ->label("Cho phép bình luận"),
-                            Toggle::make('config.allow_choose_seat')
-                                ->label("Cho phép chọn chỗ ngồi"),
-                            Toggle::make('config.allow_documentary')
-                                ->label("Cho phép xem tải hay xem tài liệu trong sự kiện"),
+                            Toggle::make('config.'.ConfigMembership::ALLOW_COMMENT->value)
+                                ->label(ConfigMembership::ALLOW_COMMENT->label()),
+                            Toggle::make('config.'.ConfigMembership::ALLOW_CHOOSE_SEAT->value)
+                                ->label(ConfigMembership::ALLOW_CHOOSE_SEAT->label()),
+                            Toggle::make('config.'.ConfigMembership::ALLOW_DOCUMENTARY->value)
+                                ->label(ConfigMembership::ALLOW_DOCUMENTARY->label()),
                         ])
                 ])
             ]);

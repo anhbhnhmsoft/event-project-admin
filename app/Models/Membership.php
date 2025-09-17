@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Utils\Constants\ConfigMembership;
 use App\Utils\Helper;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -49,5 +50,30 @@ class Membership extends Model
                 $model->id = Helper::getTimestampAsId();
             }
         });
+    }
+
+    public function getConfig(ConfigMembership $key, $default = null)
+    {
+        return $this->config[$key->value] ?? $default;
+    }
+
+    public function hasFeature(ConfigMembership $key): bool
+    {
+        return (bool) $this->getConfig($key, false);
+    }
+
+    public function allowComment(): bool
+    {
+        return $this->hasFeature(ConfigMembership::ALLOW_COMMENT);
+    }
+
+    public function allowChooseSeat(): bool
+    {
+        return $this->hasFeature(ConfigMembership::ALLOW_CHOOSE_SEAT);
+    }
+
+    public function allowDocumentary(): bool
+    {
+        return $this->hasFeature(ConfigMembership::ALLOW_DOCUMENTARY);
     }
 }

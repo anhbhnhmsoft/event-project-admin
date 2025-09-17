@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Memberships\Tables;
 
+use App\Utils\Constants\ConfigMembership;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -31,20 +32,20 @@ class MembershipsTable
                     ->falseColor('danger'),
                 TextColumn::make('duration')
                     ->label('Thời hạn gói'),
-                IconColumn::make('config.allow_comment')
-                    ->label('Cho phép bình luận')->boolean()
+                IconColumn::make('config.'.ConfigMembership::ALLOW_COMMENT->value)
+                    ->label(ConfigMembership::ALLOW_COMMENT->label())->boolean()
                     ->trueIcon('heroicon-o-check')
                     ->falseIcon('heroicon-o-x-mark')
                     ->trueColor('success')
                     ->falseColor('gray'),
-                IconColumn::make('config.allow_choose_seat')
-                    ->label('Cho phép chọn chỗ ngồi')->boolean()
+                IconColumn::make('config.'.ConfigMembership::ALLOW_CHOOSE_SEAT->value)
+                    ->label(ConfigMembership::ALLOW_CHOOSE_SEAT->label())->boolean()
                     ->trueIcon('heroicon-o-check')
                     ->falseIcon('heroicon-o-x-mark')
                     ->trueColor('success')
                     ->falseColor('gray'),
-                IconColumn::make('config.allow_documentary')
-                    ->label('Cho phép xem hay tải xuống tài liệu')
+                IconColumn::make('config.'.ConfigMembership::ALLOW_DOCUMENTARY->value)
+                    ->label(ConfigMembership::ALLOW_DOCUMENTARY->label())
                     ->boolean()
                     ->trueIcon('heroicon-o-check')
                     ->falseIcon('heroicon-o-x-mark')
