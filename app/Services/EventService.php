@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\Event;
 use App\Utils\Helper;
-use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -14,19 +14,29 @@ class EventService
     {
         $query = Event::query();
 
-        if (!empty($filter['status'])) {
+        if (!empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
-        if (!empty($filter['province_code'])) {
+        if (!empty($filters['start_time'])) {
+            $start = \Carbon\Carbon::parse($filters['start_time'])->startOfDay();
+            $query->whereDate('start_time', '>=', $start);
+        }
+
+        if (!empty($filters['end_time'])) {
+            $end = \Carbon\Carbon::parse($filters['end_time'])->endOfDay();
+            $query->whereDate('end_time', '<=', $end);
+        }
+
+        if (!empty($filters['province_code'])) {
             $query->where('province_code', $filters['province_code']);
         }
 
-        if (!empty($filter['district_code'])) {
+        if (!empty($filters['district_code'])) {
             $query->where('district_code', $filters['district_code']);
         }
 
-        if (!empty($filter['ward_code'])) {
+        if (!empty($filters['ward_code'])) {
             $query->where('ward_code', $filters['ward_code']);
         }
 
@@ -36,64 +46,41 @@ class EventService
 
         if (!empty($filters['keyword'])) {
             $keyword = trim($filters['keyword']);
-            $query->where('name', 'like', '%' . $keyword . '%');
+            $query->where('name', 'like', '%' . $keyword . '%')->orWhere('address', 'like', '%' . $keyword . '%');;
         }
 
         return $query;
-    }
-
-    public function getEventById(int $id): ?Event
-    {
-        return Event::find($id);
     }
 
     public function getEvents(array $filters = [], int $page = 1, int $limit = 10): array
     {
         try {
             $query = $this->filter($filters);
-            $events = $query->get();
+            $sortBy = $filters['sortBy'] ?? 'created_at';
+            $lat = isset($filters['lat']) ? (float) $filters['lat'] : null;
+            $lng = isset($filters['lng']) ? (float) $filters['lng'] : null;
 
-            if (!empty($filters['user_lat']) && !empty($filters['user_lng'])) {
-                $userLat = (float) $filters['user_lat'];
-                $userLng = (float) $filters['user_lng'];
+            $hasDistance = $this->distanceSelect($query, $lat, $lng);
+            $query = $this->sortBy($query, $sortBy, 'desc', $hasDistance);
 
-                $events->transform(function ($event) use ($userLat, $userLng) {
-                    $event->distance = Helper::calculateDistance(
-                        $userLat,
-                        $userLng,
-                        (float) $event->latitude,
-                        (float) $event->longitude
-                    );
-                    return $event;
-                });
-
-                $events = $events->sortBy('distance')->values();
-            }
-
-            $total    = $events->count();
+            $total = $query->count();
             $lastPage = (int) ceil($total / $limit);
-            $paged = $events->forPage($page, $limit)->values();
+            $paged = $query->paginate($limit)->values();
             $collection = $paged->map(function ($event) {
-                return [
-                    'id' => $event->id,
-                    'name' => $event->name,
-                    'image_represent_path' => $event->image_represent_path,
-                    'address' => $event->address,
-                    'day_represent' => date('d/m/Y', strtotime($event->day_represent)),
-                    'distance' => $event->distance ?? null,
-                    'short_description' => $event->short_description,
-                    'start_time' => $event->start_time,
-                    'end_time' => $event->end_time
-                ];
+                $data = $event->toArray();
+                $data['start_time'] = date('Y-m-d H:i:s', strtotime($event->start_time));
+                $data['end_time']   = date('Y-m-d H:i:s', strtotime($event->end_time));
+                return $data;
             });
+            $meta = [
+                'current_page' => $page,
+                'last_page' => $lastPage,
+                'per_page' =>  $limit,
+                'total' => $total
+            ];
             return [
                 'data' => $collection,
-                'meta' => [
-                    'current_page' => $page,
-                    'last_page' => $lastPage,
-                    'per_page' =>  $limit,
-                    'total' => $total
-                ]
+                'meta' => $meta
             ];
         } catch (\Exception $e) {
             Log::error('Error getEvents: ' . $e->getMessage());
@@ -108,5 +95,36 @@ class EventService
                 ]
             ];
         }
+    }
+
+    public function sortBy(Builder $query, string $sortBy, string $direction = 'desc', bool $hasDistance = false)
+    {
+        switch ($sortBy) {
+            case 'name':
+                $query->orderBy('name', $direction);
+                break;
+            case 'distance':
+                if ($hasDistance) {
+                    $query->whereNotNull('latitude')->whereNotNull('longitude');
+                    $query->orderBy('distance_km', 'asc');
+                }
+                break;
+            default:
+                $query->orderBy('created_at', $direction);
+                break;
+        }
+        return $query;
+    }
+
+    private function distanceSelect($query, ?float $lat, ?float $lng): bool
+    {
+        if ($lat && $lng) {
+            $query->selectRaw(
+                '(6371 * acos( cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)) )) as distance_km',
+                [$lat, $lng, $lat]
+            );
+            return true;
+        }
+        return false;
     }
 }
