@@ -23,5 +23,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (request()->is('admin*')) {
+            App::setLocale('vi');
+        }
     }
 }
