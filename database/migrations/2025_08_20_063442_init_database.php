@@ -146,7 +146,7 @@ return new class extends Migration
             $table->string('name')->comment('Tên sự kiện');
             $table->text('short_description')->nullable()->comment('Mô tả ngắn gọn của sự kiện');
             $table->text('description')->comment('Mô tả sự kiện');
-            $table->dateTime('day_repersent')->comment('Ngày tổ chức sự kiện');
+            $table->dateTime('day_represent')->comment('Ngày tổ chức sự kiện');
             $table->dateTime('start_time')->comment('Thời gian bắt đầu sự kiện');
             $table->dateTime('end_time')->comment('Thời gian kết thúc sự kiện');
             $table->string('image_represent_path')->nullable()->comment('URL hình ảnh đại diện cho sự kiện');
