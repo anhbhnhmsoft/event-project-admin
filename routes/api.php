@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\OrganizerController;
+use App\Http\Controllers\Api\ProvinceController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -28,4 +29,7 @@ Route::middleware(['set-locale','auth:sanctum'])->group(function () {
 
 Route::prefix('common')->middleware('set-locale')->group(function () {
     Route::get('/organizers', [OrganizerController::class, 'getOrganizers']);
+    Route::get('/province', [ProvinceController::class, 'getProvinces']);
+    Route::get('/district/{code}', [ProvinceController::class, 'getDistricts']);
+    Route::get('/ward/{code}', [ProvinceController::class, 'getWards']);
 });
