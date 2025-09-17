@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\EventListResource;
 use App\Services\EventService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,18 +17,27 @@ class EventController extends Controller
         $this->eventService = $eventService;
     }
 
-    public function getEvents(): JsonResponse
+    public function list(Request $request): JsonResponse
     {
-        $filters = request()->get('filters', []);
-        $page  = (int) request()->integer('page', 1);
-        $limit = (int) request()->integer('limit', 10);
+        $filters = $request->array('filters', []);
+        $sortBy =  $request->string('sort_by', '')->toString();
+        $page  = $request->integer('page', 1);
+        $limit = $request->integer('limit', 10);
 
-        $events = $this->eventService->getEvents($filters, $page, $limit);
+        // điều kiện kiên quyết
+        $filters['organizer_id'] = $request->user()->organizer_id;
+
+        $events = $this->eventService->eventPaginator($filters,$sortBy, $page, $limit);
 
         return response()->json([
-            'data'    => $events['data'],
-            'meta'    => $events['meta'],
-            'message' => __('event.success.get_success'),
+            'message' => __('common.common_success.get_success'),
+            'data' => EventListResource::collection($events),
+            'pagination' => [
+                'total' => $events->total(),
+                'per_page' => $events->perPage(),
+                'current_page' => $events->currentPage(),
+                'last_page' => $events->lastPage()
+            ],
         ], 200);
     }
 }

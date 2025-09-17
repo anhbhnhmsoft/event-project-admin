@@ -3,6 +3,7 @@
 namespace App\Utils;
 
 use Carbon\Carbon;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\App;
 
 final class Helper
@@ -44,5 +45,14 @@ final class Helper
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
 
         return $earthRadius * $c;
+    }
+
+    public static function checkColumnSelected(Builder $query, string $name): bool
+    {
+        $cols = collect($query->getQuery()->columns);
+
+        return $cols->contains(function ($col) use ($name) {
+            return is_string($col) && stripos($col, $name) !== false;
+        });
     }
 }

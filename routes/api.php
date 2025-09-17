@@ -28,7 +28,7 @@ Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
     Route::get('/user', [AuthController::class, 'getUserInfo']);
 
     Route::prefix('/event')->group(function () {
-        Route::post('/', [EventController::class, 'getEvents']);
+        Route::get('/', [EventController::class, 'list']);
     });
 });
 
