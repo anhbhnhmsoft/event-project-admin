@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Utils\Helper;
 
 class Config extends Model
 {
@@ -12,4 +13,13 @@ class Config extends Model
         'config_value',
         'description',
     ];
+
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            if (empty($model->id)) {
+                $model->id = Helper::getTimestampAsId();
+            }
+        });
+    }
 }
