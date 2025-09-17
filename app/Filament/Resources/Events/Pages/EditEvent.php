@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Events\Pages;
 use App\Filament\Resources\Events\EventResource;
 use App\Models\Event;
 use App\Utils\Constants\StoragePath;
+use Carbon\Carbon;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
@@ -30,6 +31,10 @@ class EditEvent extends EditRecord
         if ($event->image_represent_path){
             $data['image_represent_path'] = $event->image_represent_path;
         }
+        
+        $data['start_time'] = $event->start_time ? $event->start_time->format('H:i') : '';
+        $data['end_time'] = $event->end_time ? $event->end_time->format('H:i') : '';
+        
         $location = [
             'lat' => $data['latitude'],
             'lng' => $data['longitude'],
@@ -60,6 +65,10 @@ class EditEvent extends EditRecord
             $longitude = $eventLocation['lng'] ?? null;
             $address = $eventLocation['address'] ?? null;
 
+            $date = Carbon::parse($data['day_repersent']);
+            $startDateTime = $date->copy()->setTimeFromTimeString($data['start_time'] . ':00');
+            $endDateTime = $date->copy()->setTimeFromTimeString($data['end_time'] . ':00');
+
             $update = [
                 'name' => $data['name'],
                 'organizer_id' => $data['organizer_id'],
@@ -68,9 +77,9 @@ class EditEvent extends EditRecord
                 'longitude' => $longitude,
                 'short_description' => $data['short_description'],
                 'description' => $data['description'],
-                'day_represent' => $data['day_represent'],
-                'start_time' => $data['start_time'],
-                'end_time' => $data['end_time'],
+                'day_repersent' => $data['day_repersent'],
+                'start_time' => $startDateTime,
+                'end_time' => $endDateTime,
                 'image_represent_path' => $data['image_represent_path'],
                 'province_code' => $data['province_code'],
                 'district_code' => $data['district_code'],
