@@ -21,7 +21,8 @@ class ProvinceController extends Controller
     {
         $provinces = $this->provinceService->getProvinces();
         return response()->json([
-            'provinces' => $provinces,
+            'message' => __('common.common_success.get_success'),
+            'data' => $provinces,
         ]);
     }
 
@@ -29,7 +30,8 @@ class ProvinceController extends Controller
     {
         $district = $this->provinceService->getDistrictsByCodeProvince($code);
         return response()->json([
-            'districts' => $district
+            'message' => __('common.common_success.get_success'),
+            'data' => $district
         ]);
     }
 
@@ -37,7 +39,8 @@ class ProvinceController extends Controller
     {
         $wards = $this->provinceService->getWardsByCodeDistrict($code);
         return response()->json([
-            'wards' => $wards,
+            'message' => __('common.common_success.get_success'),
+            'data' => $wards,
         ]);
     }
 }
