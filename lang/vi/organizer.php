@@ -8,5 +8,7 @@ return [
     'error' => [
         'get_failed' => 'Lấy dữ liệu thất bại: :error',
         'filter_failed' => 'Lọc thất bại',
+        'get_active_failed' => 'Lấy danh sách nhà tổ chức thất bại',
+        'get_options_failed' => 'Lấy tùy chọn nhà tổ chức thất bại',
     ],
 ];

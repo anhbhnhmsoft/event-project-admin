@@ -19,22 +19,26 @@ class OrganizerService
         return $this->getActive()->pluck('name', 'id')->toArray();
     }
 
-    public function filterByName(?string $keyword = null, int $limit = 10): Collection
+    public function filter(array $filters = [])
+    {
+        $query = Organizer::query();
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+        if (!empty($filters['keyword'])) {
+            $keyword = trim($filters['keyword']);
+            $query->where('name', 'like', '%'.$keyword.'%');
+        }
+        return $query;
+    }
+
+    public function getOptions(array $filters = [], int $limit = 10): array
     {
         try {
-            $query = Organizer::query()
-                ->whereNull('deleted_at')
-                ->where('status', CommonStatus::ACTIVE->value);
-
-            if (!empty($keyword)) {
-                $query->where('name', 'like', '%'.trim($keyword).'%');
-            }
-
-            return $query->select(['id', 'name'])
-                ->limit($limit)
-                ->get();
-        } catch (\Exception $e) {
-            return collect();
+            $query = $this->filter($filters);
+            return $query->limit($limit)->select(['id', 'name'])->get()->toArray();
+        }catch (\Exception $e){
+            return [];
         }
     }
 }
