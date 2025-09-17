@@ -4,7 +4,6 @@ namespace App\Filament\Resources\Events\Tables;
 
 use App\Models\Organizer;
 use App\Utils\Constants\EventStatus;
-use App\Utils\Helper;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
