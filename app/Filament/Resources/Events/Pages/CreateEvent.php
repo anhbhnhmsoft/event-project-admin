@@ -6,6 +6,7 @@ use App\Filament\Resources\Events\EventResource;
 use App\Models\Event;
 use App\Utils\Constants\StoragePath;
 use App\Utils\Helper;
+use Carbon\Carbon;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Support\Assets\Css;
 use Filament\Support\Facades\FilamentAsset;
@@ -49,6 +50,10 @@ class CreateEvent extends CreateRecord
             $longitude = $eventLocation['lng'] ?? null;
             $address = $eventLocation['address'] ?? null;
 
+            $date = Carbon::parse($data['day_repersent']);
+            $startDateTime = $date->copy()->setTimeFromTimeString($data['start_time'] . ':00');
+            $endDateTime = $date->copy()->setTimeFromTimeString($data['end_time'] . ':00');
+
             $create = [
                 'id' => Helper::getTimestampAsId(),
                 'name' => $data['name'],
@@ -56,8 +61,8 @@ class CreateEvent extends CreateRecord
                 'short_description' => $data['short_description'],
                 'description' => $data['description'],
                 'day_repersent' => $data['day_repersent'],
-                'start_time' => $data['start_time'],
-                'end_time' => $data['end_time'],
+                'start_time' => $startDateTime,
+                'end_time' => $endDateTime,
                 'image_represent_path' => $data['image_represent_path'],
                 'province_code' => $data['province_code'],
                 'district_code' => $data['district_code'],

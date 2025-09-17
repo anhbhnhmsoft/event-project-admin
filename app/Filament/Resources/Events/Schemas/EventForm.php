@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Events\Schemas;
 
 use App\Models\District;
-use App\Models\Event;
 use App\Models\Organizer;
 use App\Models\Province;
 use App\Models\Ward;
@@ -11,22 +10,18 @@ use App\Utils\Constants\CommonStatus;
 use App\Utils\Constants\EventStatus;
 use App\Utils\Constants\StoragePath;
 use Closure;
-use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Schemas\Components\Section as ComponentsSection;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
-use Illuminate\Support\Str;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Toggle;
 use App\Filament\Forms\Components\LocationPicker;
-use Filament\Forms\Components\TimePicker;
+use Filament\Forms\Components\DatePicker;
 
 class EventForm
 {
@@ -121,28 +116,40 @@ class EventForm
                                     'required' => 'Vui lòng tích chọn',
                                 ])
                                 ->required(),
+                            DatePicker::make('day_repersent')
+                                ->label('Ngày tổ chức sự kiện')
+                                ->columnSpanFull()
+                                ->required(),
+                            TextInput::make('start_time')
+                                ->label('Giờ mở cửa')
+                                ->placeholder('HH:MM')
+                                ->required()
+                                ->helperText('Nhập giờ mở cửa theo định dạng 24h, ví dụ: 08:00')
+                                ->mask('99:99')
+                                ->regex('/^(?:[01]\d|2[0-3]):[0-5]\d$/')
+                                ->validationMessages([
+                                    'required' => 'Vui lòng nhập giờ mở cửa.',
+                                    'regex' => 'Giờ mở cửa phải theo định dạng 24h (HH:MM), ví dụ: 08:00 hoặc 23:59.',
+                                ]),
+                            TextInput::make('end_time')
+                                ->label('Giờ đóng cửa')
+                                ->placeholder('HH:MM')
+                                ->required()
+                                ->helperText('Nhập giờ đóng cửa theo định dạng 24h, ví dụ: 22:00')
+                                ->mask('99:99')
+                                ->regex('/^(?:[01]\d|2[0-3]):[0-5]\d$/')
+                                ->validationMessages([
+                                    'required' => 'Vui lòng nhập giờ đóng cửa.',
+                                    'regex' => 'Giờ đóng cửa phải theo định dạng 24h (HH:MM), ví dụ: 08:00 hoặc 23:59.',
+                                ]),
                             Select::make('status')
                                 ->label('Trạng thái')
                                 ->required()
-                                ->default(EventStatus::ACTIVE->value)
+                                ->default(EventStatus::UPCOMING->value)
                                 ->options(EventStatus::getOptions())
                                 ->validationMessages([
                                     'required' => 'Vui lòng tích chọn',
                                 ]),
-                        ]),
-                    Tab::make('time')
-                        ->label('Thời gian')
-                        ->columns(2)
-                        ->schema([
-                                TimePicker::make('start_time')
-                                ->label('Thời gian bắt đầu')
-                                ->required(),
-                                TimePicker::make('end_time')
-                                ->label('Thời gian kết thúc')
-                                ->required(),
-                                DateTimePicker::make('day_repersent')
-                                ->label('Ngày tổ chức sự kiện')
-                                ->required(),
                         ]),
                     Tab::make('location')
                         ->label('Vị trí')
