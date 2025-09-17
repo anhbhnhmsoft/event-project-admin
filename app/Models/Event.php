@@ -19,7 +19,7 @@ class Event extends Model
         'name',
         'short_description',
         'description',
-        'day_repersent',
+        'day_represent',
         'start_time',
         'end_time',
         'image_represent_path',
