@@ -18,119 +18,170 @@ class AuthService
 {
     public function login(array $data): array
     {
-        $user = User::where('email', $data['email'])->first();
-
-        if (! $user || ! Hash::check($data['password'], $user->password)) {
-            throw new ServiceException('auth.error.invalid_credentials', 400);
+        try {
+            $user = User::query()
+                ->where('email', $data['email'])
+                ->where('organizer_id', $data['organizer_id'])
+                ->first();
+            if (!$user || ! Hash::check($data['password'], $user->password)) {
+                throw new ServiceException(__('auth.error.invalid_credentials'));
+            }
+            if (!$user->hasVerifiedEmail()) {
+                throw new ServiceException(__('auth.error.unverified_email'));
+            }
+            $user->lang = $data['locate'] ?? Language::VI->value;
+            $user->save();
+            $token = $user->createToken('api')->plainTextToken;
+            return [
+                'status' => true,
+                'token' => $token,
+                'user' => $user,
+            ];
+        } catch (ServiceException $e) {
+            return [
+                'status' => false,
+                'message' => $e->getMessage(),
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
         }
-
-        $user->lang = $data['locate'] ?? Language::VI->value;
-        $user->save();
-        $token = $user->createToken('api')->plainTextToken;
-
-        return [
-            'token' => $token,
-            'user' => $user,
-        ];
     }
 
-    public function register(array $data): void
+    public function register(array $data): array
     {
-        $exists = User::where('email', $data['email'])->exists();
-        if ($exists) {
-            throw new ServiceException('auth.error.email_duplicate', 400);
+        DB::beginTransaction();
+        try {
+            $user = User::query()->create([
+                'name' => trim($data['name']),
+                'email' => $data['email'],
+                'password' => Hash::make($data['password']),
+                'organizer_id' => (int) $data['organizer_id'],
+                'role' => RoleUser::CUSTOMER->value,
+                'lang' => request()->input('locate') ?? Language::VI->value,
+            ]);
+            $url = URL::temporarySignedRoute(
+                'api.verification.verify',
+                now()->addMinutes(60),
+                ['id' => $user->getKey(), 'hash' => sha1($user->getEmailForVerification())]
+            );
+            Mail::raw(__('auth.success.verify_email_body') . " {$url}", fn($m) => $m->to($user->email)->subject('Verify Email'));
+            DB::commit();
+            return [
+                'status' => true,
+            ];
+        }  catch (\Throwable $e) {
+            DB::rollBack();
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
         }
-        if ($data['password'] !== $data['confirm_password']) {
-            throw new ServiceException('auth.error.password_not_match', 400);
-        }
-        if (! DB::table('organizers')->where('id', $data['organizer_id'])->exists()) {
-            throw new ServiceException('auth.error.organizer_not_found', 400);
-        }
-
-        $user = new User();
-        $user->name = trim($data['name']);
-        $user->email = $data['email'];
-        $user->password = Hash::make($data['password']);
-        $user->organizer_id = (int) $data['organizer_id'];
-        $user->role = RoleUser::CUSTOMER->value;
-        $user->lang = $data['locate'] ?? Language::VI->value;
-        $user->save();
-        $url = URL::temporarySignedRoute(
-            'api.verification.verify',
-            now()->addMinutes(60),
-            ['id' => $user->getKey(), 'hash' => sha1($user->getEmailForVerification())]
-        );
-        
-        Mail::raw(__('auth.success.verify_email_body') . " {$url}", fn($m) => $m->to($user->email)->subject('Verify Email'));
     }
 
-    public function forgotPassword(array $data, string $locale = 'vi'): void
+    public function forgotPassword(array $data, string $locale = 'vi'): array
     {
-        $user = User::where('email', $data['email'])->first();
-        if (!$user) {
-            throw new ServiceException('auth.error.email_not_found', 404);
+        try {
+            $user = User::where('email', $data['email'])->first();
+
+            $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+            UserResetCode::where('user_id', $user->id)
+                ->where('email', $data['email'])
+                ->whereNull('deleted_at')
+                ->delete();
+
+            UserResetCode::create([
+                'user_id' => $user->id,
+                'email' => $data['email'],
+                'code' => $code,
+                'expires_at' => now()->addMinutes(10),
+            ]);
+
+            App::setLocale($locale);
+
+            Mail::to($user->email)->send(new ResetPasswordMail($code, $locale));
+
+            return [
+                'status' => true,
+                'message' => __('auth.success.reset_sent'),
+            ];
+        } catch (ServiceException $e) {
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
         }
-
-        $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-
-        UserResetCode::where('user_id', $user->id)
-            ->where('email', $data['email'])
-            ->whereNull('deleted_at')
-            ->delete();
-
-        UserResetCode::create([
-            'user_id' => $user->id,
-            'email' => $data['email'],
-            'code' => $code,
-            'expires_at' => now()->addMinutes(10),
-        ]);
-
-        UserResetCode::where('user_id', $user->id)
-            ->where('email', $data['email'])
-            ->where('code', $code)
-            ->first();
-
-        App::setLocale($locale);
-        
-        Mail::to($user->email)->send(new ResetPasswordMail($code, $locale));
     }
 
-    public function confirmPassword(array $data): void
+    public function confirmPassword(array $data): array
     {
-        $user = User::where('email', $data['email'])->first();
-        if (!$user) {
-            throw new ServiceException('auth.error.email_not_found', 404);
+        try {
+            $user = User::where('email', $data['email'])->first();
+
+            $resetCode = UserResetCode::where('user_id', $user->id)
+                ->where('email', $data['email'])
+                ->where('code', $data['code'])
+                ->where('expires_at', '>', now())
+                ->whereNull('deleted_at')
+                ->first();
+
+            if (!$resetCode) {
+                return [
+                    'status' => false,
+                    'message' => __('auth.error.invalid_code'),
+                ];
+            }
+
+            $user->password = Hash::make($data['password']);
+            $user->save();
+
+            $resetCode->delete();
+
+            return [
+                'status' => true,
+                'message' => __('auth.success.password_changed'),
+            ];
+
+        } catch (ServiceException $e) {
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
         }
-
-        UserResetCode::withTrashed()
-            ->where('user_id', $user->id)
-            ->where('email', $data['email'])
-            ->get();
-
-        $resetCode = UserResetCode::where('user_id', $user->id)
-            ->where('email', $data['email'])
-            ->where('code', $data['code'])
-            ->where('expires_at', '>', now())
-            ->whereNull('deleted_at')
-            ->first();
-
-        if (!$resetCode) {
-            throw new ServiceException('auth.error.invalid_code', 400);
-        }
-
-        $user->password = Hash::make($data['password']);
-        $user->save();
-
-        $resetCode->delete();
     }
 
-    public function checkExpiresAtUser(): int
+    public function checkExpiresAtUser(): array
     {
-        $count = UserResetCode::where('expires_at', '<', now())
-            ->whereNull('deleted_at')
-            ->update(['deleted_at' => now()]);
+        try {
+            $count = UserResetCode::where('expires_at', '<', now())
+                ->whereNull('deleted_at')
+                ->update(['deleted_at' => now()]);
 
-        return $count;
+            return $count;
+        } catch (ServiceException $e) {
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
+        }
     }
 }
 

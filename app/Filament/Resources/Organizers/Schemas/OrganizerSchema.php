@@ -2,9 +2,11 @@
 
 namespace App\Filament\Resources\Organizers\Schemas;
 
+use App\Utils\Constants\CommonStatus;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
 use Filament\Schemas\Schema;
 
 class OrganizerSchema
@@ -26,6 +28,11 @@ class OrganizerSchema
             Textarea::make('description')
                 ->label('Mô tả')
                 ->columnSpanFull(),
+            Select::make('status')
+                ->label('Trạng thái')
+                ->options(CommonStatus::getOptions())
+                ->default(CommonStatus::ACTIVE->value)
+                ->required(),
         ]);
     }
 }
