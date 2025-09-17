@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::table('event_seats', function (Blueprint $table) {
             $table->foreignId('user_id')->nullable()->constrained('users');
-            $table->integer('seats_per_row')->nullable()->comment('Số ghế mỗi hàng');
         });
     }
 
@@ -24,7 +23,6 @@ return new class extends Migration
     {
         Schema::table('event_seats', function (Blueprint $table) {
             $table->dropConstrainedForeignId('user_id');
-            $table->dropColumn('seats_per_row');
         });
     }
 };

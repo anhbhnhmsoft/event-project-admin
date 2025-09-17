@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('event_areas', function (Blueprint $table) {
             $table->boolean('vip')->default(false);
+            $table->integer('seats_per_row')->nullable()->comment('Số ghế mỗi hàng');
         });
     }
 
@@ -23,6 +24,7 @@ return new class extends Migration
     {
         Schema::table('event_areas', function (Blueprint $table) {
             $table->dropColumn('vip');
+            $table->dropColumn('seats_per_row');
         });
     }
 };
