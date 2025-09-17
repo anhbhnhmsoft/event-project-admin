@@ -45,7 +45,7 @@ return new class extends Migration
             $table->timestamp('phone_verified_at')->nullable();
             $table->foreignId('organizer_id')->references('id')->on('organizers')->cascadeOnDelete();
             $table->string('password');
-            $table->string('lang',10);
+            $table->string('lang', 10);
             $table->unique(['email', 'organizer_id']);
             $table->unique(['phone', 'organizer_id']);
             $table->rememberToken();
@@ -237,6 +237,7 @@ return new class extends Migration
             $table->string('name')->comment('Tên khu vực');
             $table->bigInteger('capacity')->comment('Số lượng ghế trong khu vực');
             $table->foreignId('event_id')->constrained()->cascadeOnDelete();
+            $table->boolean('vip')->default(false);
             $table->softDeletes();
             $table->timestamps();
         });
@@ -245,9 +246,11 @@ return new class extends Migration
         Schema::create('event_seats', function (Blueprint $table) {
             $table->id();
             $table->comment('Bảng event_seats lưu trữ các ghế trong khu vực sự kiện');
-            $table->foreignId('event_area_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('event_area_id')->constrained('event_areas')->cascadeOnDelete();
             $table->string('seat_code')->comment('Mã ghế, định dạng như A1, B2, C3, ...');
             $table->tinyInteger('status')->comment('Trạng thái ghế, Lưu trong enum EventSeatStatus');
+            $table->foreignId('user_id')->nullable()->constrained('user');
+            $table->integer('seats_per_row')->nullable()->comment('Số ghế mỗi hàng');
             $table->unique(['event_area_id', 'seat_code']);
             $table->softDeletes();
             $table->timestamps();
