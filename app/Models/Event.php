@@ -2,14 +2,18 @@
 
 namespace App\Models;
 
-use App\Utils\Constants\CommonStatus;
 use App\Utils\Helper;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
+/**
+ * @method static \Illuminate\Database\Eloquent\Builder|static filter(array $filters = []) // scope Filter query builder
+ * @method static \Illuminate\Database\Eloquent\Builder|static sortBy(string $sortBy = '') // scope SortBy query builder
+ *
+ */
 class Event extends Model
 {
     use HasFactory, SoftDeletes;
@@ -31,7 +35,6 @@ class Event extends Model
         'latitude',
         'longitude',
     ];
-
     protected $casts = [
         'start_time' => 'datetime',
         'end_time' => 'datetime',
@@ -39,7 +42,6 @@ class Event extends Model
         'longitude' => 'decimal:6',
         'status' => 'integer',
     ];
-
 
     protected static function booted()
     {
@@ -49,6 +51,75 @@ class Event extends Model
             }
         });
     }
+
+    public function scopeFilter(Builder $query, array $filters = [])
+    {
+        if(!empty($filters['lat']) && !empty($filters['lng'])) {
+            $lat = (float) $filters['lat'];
+            $lng = (float) $filters['lng'];
+            $query->whereNotNull('latitude')->whereNotNull('longitude');
+            $query->selectRaw(
+                'events.*, (6371 * acos( cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)) )) as distance_km',
+                [$lat, $lng, $lat]
+            );
+        }
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['start_time'])) {
+            $start = \Carbon\Carbon::parse($filters['start_time'])->startOfDay();
+            $query->whereDate('start_time', '>=', $start);
+        }
+
+        if (!empty($filters['end_time'])) {
+            $end = \Carbon\Carbon::parse($filters['end_time'])->endOfDay();
+            $query->whereDate('end_time', '<=', $end);
+        }
+
+        if (!empty($filters['province_code'])) {
+            $query->where('province_code', $filters['province_code']);
+        }
+
+        if (!empty($filters['district_code'])) {
+            $query->where('district_code', $filters['district_code']);
+        }
+
+        if (!empty($filters['ward_code'])) {
+            $query->where('ward_code', $filters['ward_code']);
+        }
+
+        if (!empty($filters['organizer_id'])) {
+            $query->where('organizer_id', $filters['organizer_id']);
+        }
+
+        if (!empty($filters['keyword'])) {
+            $keyword = trim($filters['keyword']);
+            $query->where('name', 'like', '%' . $keyword . '%')->orWhere('address', 'like', '%' . $keyword . '%');;
+        }
+    }
+
+    public function scopeSortBy(Builder $query, string $sortBy = '')
+    {
+        switch ($sortBy) {
+            case 'distance_asc':
+                if (Helper::checkColumnSelected($query, 'distance_km')) {
+                    $query->orderBy('distance_km', 'asc');
+                }
+                break;
+            case 'distance_desc':
+                if (Helper::checkColumnSelected($query, 'distance_km')) {
+                    $query->orderBy('distance_km', 'desc');
+                }
+                break;
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
+    }
+
+
     public function organizer(): BelongsTo
     {
         return $this->belongsTo(Organizer::class);
@@ -88,4 +159,6 @@ class Event extends Model
     {
         return $this->hasMany(Ticket::class);
     }
+
+
 }
