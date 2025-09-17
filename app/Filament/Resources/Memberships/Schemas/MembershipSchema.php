@@ -6,8 +6,10 @@ use App\Utils\Constants\ConfigMembership;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Flex;
 use Filament\Schemas\Schema;
 
 class MembershipSchema
@@ -39,7 +41,7 @@ class MembershipSchema
                             ->integer()
                             ->minValue(0)
                             ->required(),
-                        RichEditor::make('description')
+                        Textarea::make('description')
                             ->label('Miêu tả')
                     ]),
                 Section::make()->schema([
@@ -48,21 +50,25 @@ class MembershipSchema
                             TextInput::make('badge')
                                 ->label('Huy hiệu gói thành viên')
                                 ->maxLength(255),
-                            ColorPicker::make('badge_color_background')
-                                ->label('Màu huy hiệu trên trang chủ'),
-                            ColorPicker::make('badge_color_text')
-                                ->label('Màu chữ huy hiệu trên trang chủ'),
+                            Flex::make(
+                                [
+                                    ColorPicker::make('badge_color_background')
+                                        ->label('Màu nền huy hiệu trên trang chủ'),
+                                    ColorPicker::make('badge_color_text')
+                                        ->label('Màu chữ huy hiệu trên trang chủ'),
+                                ]
+                            ),
                             Toggle::make('status')
                                 ->label('Trạng thái kích hoạt')
                                 ->required(),
                         ]),
                     Section::make('Cấu hình quyền')
                         ->schema([
-                            Toggle::make('config.'.ConfigMembership::ALLOW_COMMENT->value)
+                            Toggle::make('config.' . ConfigMembership::ALLOW_COMMENT->value)
                                 ->label(ConfigMembership::ALLOW_COMMENT->label()),
-                            Toggle::make('config.'.ConfigMembership::ALLOW_CHOOSE_SEAT->value)
+                            Toggle::make('config.' . ConfigMembership::ALLOW_CHOOSE_SEAT->value)
                                 ->label(ConfigMembership::ALLOW_CHOOSE_SEAT->label()),
-                            Toggle::make('config.'.ConfigMembership::ALLOW_DOCUMENTARY->value)
+                            Toggle::make('config.' . ConfigMembership::ALLOW_DOCUMENTARY->value)
                                 ->label(ConfigMembership::ALLOW_DOCUMENTARY->label()),
                         ])
                 ])
