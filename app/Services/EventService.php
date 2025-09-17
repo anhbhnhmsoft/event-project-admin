@@ -63,9 +63,8 @@ class EventService
             $hasDistance = $this->distanceSelect($query, $lat, $lng);
             $query = $this->sortBy($query, $sortBy, 'desc', $hasDistance);
 
-            $total = $query->count();
-            $lastPage = (int) ceil($total / $limit);
-            $paged = $query->paginate($limit)->values();
+            $paged = $query->paginate($limit);
+
             $collection = $paged->map(function ($event) {
                 $data = $event->toArray();
                 $data['start_time'] = date('Y-m-d H:i:s', strtotime($event->start_time));
@@ -73,10 +72,10 @@ class EventService
                 return $data;
             });
             $meta = [
-                'current_page' => $page,
-                'last_page' => $lastPage,
+                'current_page' => $paged->currentPage(),
+                'last_page' => $paged->lastPage(),
                 'per_page' =>  $limit,
-                'total' => $total
+                'total' => $paged->total()
             ];
             return [
                 'data' => $collection,
