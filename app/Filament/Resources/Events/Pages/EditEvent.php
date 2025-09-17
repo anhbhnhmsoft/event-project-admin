@@ -68,7 +68,7 @@ class EditEvent extends EditRecord
                 'longitude' => $longitude,
                 'short_description' => $data['short_description'],
                 'description' => $data['description'],
-                'day_repersent' => $data['day_repersent'],
+                'day_represent' => $data['day_represent'],
                 'start_time' => $data['start_time'],
                 'end_time' => $data['end_time'],
                 'image_represent_path' => $data['image_represent_path'],

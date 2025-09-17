@@ -140,7 +140,7 @@ class EventForm
                                 TimePicker::make('end_time')
                                 ->label('Thời gian kết thúc')
                                 ->required(),
-                                DateTimePicker::make('day_repersent')
+                                DateTimePicker::make('day_represent')
                                 ->label('Ngày tổ chức sự kiện')
                                 ->required(),
                         ]),
