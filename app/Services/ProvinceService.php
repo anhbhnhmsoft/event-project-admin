@@ -11,16 +11,16 @@ class ProvinceService
 
     public function getProvinces(): \Illuminate\Database\Eloquent\Collection
     {
-        return Province::all();
+        return Province::query()->select(['code', 'name'])->get();
     }
 
     public function getDistrictsByCodeProvince(string $codeProvince): \Illuminate\Database\Eloquent\Collection
     {
-        return District::query()->where('province_code', $codeProvince)->get();
+        return District::query()->where('province_code', $codeProvince)->select(['code', 'name'])->get();
     }
 
     public function getWardsByCodeDistrict(string $codeDistrict): \Illuminate\Database\Eloquent\Collection
     {
-        return Ward::query()->where('district_code', $codeDistrict)->get();
+        return Ward::query()->where('district_code', $codeDistrict)->select(['code', 'name'])->get();
     }
 }

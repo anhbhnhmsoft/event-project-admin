@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'common_success' => [
+        'get_success' => 'Lấy dữ liệu thành công',
+    ],
     'common_error' => [
         'server_error' => 'Đã xảy ra lỗi trên máy chủ, vui lòng liên hệ quản trị viên để được hỗ trợ.',
         'request_error' => 'Không nhận được phản hồi từ máy chủ, vui lòng liên hệ quản trị viên để được hỗ trợ.',
