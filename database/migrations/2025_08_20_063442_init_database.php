@@ -239,7 +239,6 @@ return new class extends Migration
             $table->foreignId('event_id')->constrained()->cascadeOnDelete();
             $table->boolean('vip')->default(false);
             $table->integer('seats_per_row')->nullable()->comment('Số ghế mỗi hàng');
-            $table->softDeletes();
             $table->timestamps();
         });
 
@@ -252,7 +251,6 @@ return new class extends Migration
             $table->tinyInteger('status')->comment('Trạng thái ghế, Lưu trong enum EventSeatStatus');
             $table->foreignId('user_id')->nullable()->constrained('user');
             $table->unique(['event_area_id', 'seat_code']);
-            $table->softDeletes();
             $table->timestamps();
         });
 
