@@ -27,10 +27,10 @@ class EventScheduleDocument extends Model
             }
         });
     }
-    
-    public function schedule(): BelongsTo
+
+    public function eventSchedule(): BelongsTo
     {
-        return $this->belongsTo(EventSchedule::class, 'event_schedule_id');
+        return $this->belongsTo(EventSchedule::class);
     }
 
     public function files(): HasMany
