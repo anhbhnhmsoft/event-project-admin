@@ -16,7 +16,6 @@ use Filament\Support\Assets\Css;
 use Filament\Support\Facades\FilamentAsset;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Vite;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
@@ -38,7 +37,7 @@ class EditEvent extends EditRecord
         $data['start_time'] = $event->start_time ? $event->start_time->format('H:i') : '';
         $data['end_time'] = $event->end_time ? $event->end_time->format('H:i') : '';
         
-        $schedules = $event->schedules()->with(['documents.files'])->get()->map(function ($schedule) {
+        $schedules = $event->schedules()->with(['documents.files'])->orderBy('sort')->get()->map(function ($schedule) {
             $startTime = $schedule->start_time;
             $endTime = $schedule->end_time;
             
@@ -66,6 +65,7 @@ class EditEvent extends EditRecord
                 'description' => $schedule->description,
                 'start_time' => $startTime ? $startTime->format('H:i') : '',
                 'end_time' => $endTime ? $endTime->format('H:i') : '',
+                'sort' => $schedule->sort,
                 'documents' => $documents
             ];
         })->toArray();
@@ -101,7 +101,7 @@ class EditEvent extends EditRecord
             $longitude = $eventLocation['lng'] ?? null;
             $address = $eventLocation['address'] ?? null;
 
-            $date = Carbon::parse($data['day_repersent']);
+            $date = Carbon::parse($data['day_represent']);
             $startDateTime = $date->copy()->setTimeFromTimeString($data['start_time'] . ':00');
             $endDateTime = $date->copy()->setTimeFromTimeString($data['end_time'] . ':00');
 
@@ -113,7 +113,7 @@ class EditEvent extends EditRecord
                 'longitude' => $longitude,
                 'short_description' => $data['short_description'],
                 'description' => $data['description'],
-                'day_repersent' => $data['day_repersent'],
+                'day_represent' => $data['day_represent'],
                 'start_time' => $startDateTime,
                 'end_time' => $endDateTime,
                 'image_represent_path' => $data['image_represent_path'],
@@ -140,7 +140,7 @@ class EditEvent extends EditRecord
                 $processedScheduleIds = [];
                 $allFilesToDelete = [];
                 
-                foreach ($data['schedules'] as $index => $scheduleData) {
+                foreach (array_values($data['schedules']) as $index => $scheduleData) {
                     if (isset($scheduleData['title'], $scheduleData['start_time'], $scheduleData['end_time'])) {
                         $scheduleStartDateTime = $date->copy()->setTimeFromTimeString($scheduleData['start_time'] . ':00');
                         $scheduleEndDateTime = $date->copy()->setTimeFromTimeString($scheduleData['end_time'] . ':00');
@@ -155,15 +155,17 @@ class EditEvent extends EditRecord
                                 'description' => $scheduleData['description'] ?? null,
                                 'start_time' => $scheduleStartDateTime,
                                 'end_time' => $scheduleEndDateTime,
+                                'sort' => $index,
                             ]
                         );
                         
                         $processedScheduleIds[] = $eventSchedule->id;
 
-                        if (!empty($scheduleData['documents'])) {
+                        if (array_key_exists('documents', $scheduleData)) {
+
                             $processedDocumentIds = [];
                             
-                            foreach ($scheduleData['documents'] as $documentData) {
+                            foreach ($scheduleData['documents'] ?? [] as $documentData) {
                                 if (!empty($documentData['title'])) {
                                     $eventScheduleDocument = EventScheduleDocument::updateOrCreate(
                                         [
@@ -224,7 +226,36 @@ class EditEvent extends EditRecord
                                 EventScheduleDocument::where('event_schedule_id', $eventSchedule->id)
                                     ->whereNotIn('id', $processedDocumentIds)
                                     ->delete();
+                            } else {
+                                $documentsToDelete = EventScheduleDocument::where('event_schedule_id', $eventSchedule->id)
+                                    ->with('files')
+                                    ->get();
+                                foreach ($documentsToDelete as $documentToDelete) {
+                                    foreach ($documentToDelete->files as $file) {
+                                        $allFilesToDelete[] = [
+                                            'id' => $file->id,
+                                            'file_path' => $file->file_path,
+                                            'reason' => 'document_deleted_all'
+                                        ];
+                                    }
+                                }
+                                EventScheduleDocument::where('event_schedule_id', $eventSchedule->id)->delete();
                             }
+                        } else {
+                            $documentsToDelete = EventScheduleDocument::where('event_schedule_id', $eventSchedule->id)
+                                ->with('files')
+                                ->get();
+
+                            foreach ($documentsToDelete as $documentToDelete) {
+                                foreach ($documentToDelete->files as $file) {
+                                    $allFilesToDelete[] = [
+                                        'id' => $file->id,
+                                        'file_path' => $file->file_path,
+                                        'reason' => 'document_deleted_missing_key'
+                                    ];
+                                }
+                            }
+                            EventScheduleDocument::where('event_schedule_id', $eventSchedule->id)->delete();
                         }
                     }
                 }

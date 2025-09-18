@@ -107,31 +107,64 @@ class EventForm
                             ->validationMessages([
                                 'required' => 'Vui lòng chọn nhà tổ chức.',
                             ]),
-                        DatePicker::make('day_repersent')
+                        DatePicker::make('day_represent')
                             ->label('Ngày tổ chức sự kiện')
                             ->columnSpanFull()
+                            ->rules([
+                                'after_or_equal: ' .now()->format('Y-m-d'),
+                            ])
+                            ->validationMessages([
+                                'after_or_equal' => 'Ngày tổ chức sự kiện phải lớn hơn hoặc bằng ngày hiện tại',
+                            ])
                             ->required(),
                         TextInput::make('start_time')
-                            ->label('Giờ mở cửa')
+                            ->label('Giờ bắt đầu')
                             ->placeholder('HH:MM')
                             ->required()
                             ->helperText('Nhập giờ mở cửa theo định dạng 24h, ví dụ: 08:00')
                             ->mask('99:99')
                             ->regex('/^(?:[01]\d|2[0-3]):[0-5]\d$/')
                             ->live()
+                            ->rules([
+                                fn(Get $get) => (
+                                    $get('day_represent') && \Carbon\Carbon::parse($get('day_represent'))->isToday()
+                                )
+                                    ? ['date_format:H:i', 'after_or_equal:' . now()->format('H:i')]
+                                    : ['date_format:H:i'],
+                            ])
                             ->validationMessages([
+                                'after_or_equal' => 'Giờ mở cửa phải lớn hơn hoặc bằng giờ hiện tại.',
                                 'required' => 'Vui lòng nhập giờ mở cửa.',
                                 'regex' => 'Giờ mở cửa phải theo định dạng 24h (HH:MM), ví dụ: 08:00 hoặc 23:59.',
                             ]),
                         TextInput::make('end_time')
-                            ->label('Giờ đóng cửa')
+                            ->label('Giờ kết thúc')
                             ->placeholder('HH:MM')
                             ->required()
                             ->helperText('Nhập giờ đóng cửa theo định dạng 24h, ví dụ: 22:00')
                             ->mask('99:99')
                             ->regex('/^(?:[01]\d|2[0-3]):[0-5]\d$/')
                             ->live()
+                            ->rules([
+                                fn(Get $get) => function ($attr, $value, Closure $fail) use ($get) {
+                                    $start = $get('start_time');
+                                    if ($value && $start) {
+                                        $e = \App\Utils\Helper::timeToMinutes($value);
+                                        $s = \App\Utils\Helper::timeToMinutes($start);
+                                        if ($e !== null && $s !== null && $e <= $s) {
+                                            $fail('Giờ đóng cửa phải lớn hơn giờ mở cửa.');
+                                            return;
+                                        }
+                                    }
+                                },
+                                fn(Get $get) => (
+                                    $get('day_represent') && \Carbon\Carbon::parse($get('day_represent'))->isToday()
+                                )
+                                    ? ['date_format:H:i', 'after_or_equal:' . now()->format('H:i')]
+                                    : ['date_format:H:i'],
+                            ])
                             ->validationMessages([
+                                'after_or_equal' => 'Giờ đóng cửa phải lớn hơn hoặc bằng giờ hiện tại.',
                                 'required' => 'Vui lòng nhập giờ đóng cửa.',
                                 'regex' => 'Giờ đóng cửa phải theo định dạng 24h (HH:MM), ví dụ: 08:00 hoặc 23:59.',
                             ]),
@@ -151,15 +184,6 @@ class EventForm
                                 'required' => 'Vui lòng nhập Mô tả chi tiết',
                             ])
                             ->extraAttributes(['style' => 'min-height: 300px;']),
-                        Toggle::make('featured')
-                            ->label("Là sự kiện nổi bật")
-                            ->default(false)
-                            ->columnSpanFull()
-                            ->validationMessages([
-                                'required' => 'Vui lòng tích chọn',
-                            ])
-                            ->required(),
-
                         Select::make('status')
                             ->label('Trạng thái')
                             ->required()
@@ -179,6 +203,7 @@ class EventForm
                             ->addActionLabel('Thêm lịch trình')
                             ->columnSpanFull()
                             ->collapsible()
+                            ->orderColumn('sort')
                             ->reorderable()
                             ->minItems(1)
                             ->itemLabel(fn(array $state): string => (string) ($state['title'] ?? 'Lịch trình'))
@@ -238,8 +263,8 @@ class EventForm
                                 },
                             ])
                             ->schema([
-                                Hidden::make('id')
-                                    ->label('ID lịch trình'),
+                                Hidden::make('id'),
+                                Hidden::make('sort'),
                                 TextInput::make('title')
                                     ->label('Tiêu đề')
                                     ->live(debounce: 3000)
@@ -248,9 +273,10 @@ class EventForm
                                     ->validationMessages([
                                         'required' => 'Vui lòng nhập tiêu đề lịch trình.',
                                     ]),
-                                Textarea::make('description')
+                                    RichEditor::make('description')
                                     ->label('Mô tả')
-                                    ->rows(4),
+                                    ->extraAttributes(['style' => 'min-height: 300px;']),
+                                    
                                 TextInput::make('start_time')
                                     ->label('Giờ bắt đầu')
                                     ->placeholder('HH:MM')
@@ -327,13 +353,19 @@ class EventForm
                                             ->label('ID tài liệu'),
                                         TextInput::make('title')
                                             ->label('Tiêu đề tài liệu')
-                                            ->maxLength(255),
-                                        Textarea::make('description')
+                                            ->required()
+                                            ->maxLength(255)
+                                            ->validationMessages([
+                                                'required' => 'Vui lòng nhập tiêu đề tài liệu.',
+                                            ]),
+                                        RichEditor::make('description')
                                             ->label('Mô tả tài liệu')
-                                            ->rows(3),
+                                            ->required()
+                                            ->extraAttributes(['style' => 'min-height: 300px;']),
                                         FileUpload::make('files')
                                             ->label('Tệp đính kèm')
                                             ->multiple()
+                                            ->required()
                                             ->downloadable()
                                             ->openable()
                                             ->storeFiles(false)
@@ -344,6 +376,9 @@ class EventForm
                                             ->reorderable()
                                             ->appendFiles()
                                             ->live()
+                                            ->validationMessages([
+                                                'required' => 'Vui lòng chọn tệp đính kèm.',
+                                            ])
                                             ->formatStateUsing(function ($state) {
                                                 if (is_array($state)) {
                                                     return array_map(function ($file) {

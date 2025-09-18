@@ -27,6 +27,11 @@ class CreateEvent extends CreateRecord
 
     protected static bool $canCreateAnother = false;
 
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
+    }
+
     public function boot()
     {
         FilamentAsset::register([
@@ -52,7 +57,7 @@ class CreateEvent extends CreateRecord
             $longitude = $eventLocation['lng'] ?? null;
             $address = $eventLocation['address'] ?? null;
 
-            $date = Carbon::parse($data['day_repersent']);
+            $date = Carbon::parse($data['day_represent']);
             $startDateTime = $date->copy()->setTimeFromTimeString($data['start_time'] . ':00');
             $endDateTime = $date->copy()->setTimeFromTimeString($data['end_time'] . ':00');
 
@@ -62,7 +67,7 @@ class CreateEvent extends CreateRecord
                 'organizer_id' => $data['organizer_id'],
                 'short_description' => $data['short_description'],
                 'description' => $data['description'],
-                'day_repersent' => $data['day_repersent'],
+                'day_represent' => $data['day_represent'],
                 'start_time' => $startDateTime,
                 'end_time' => $endDateTime,
                 'image_represent_path' => $data['image_represent_path'],
@@ -86,7 +91,7 @@ class CreateEvent extends CreateRecord
             $event = Event::query()->create($create);
 
             if (!empty($data['schedules'])) {
-                foreach ($data['schedules'] as $scheduleData) {
+                foreach (array_values($data['schedules']) as $index => $scheduleData) {
                     if (isset($scheduleData['title'], $scheduleData['start_time'], $scheduleData['end_time'])) {
                         $scheduleStartDateTime = $date->copy()->setTimeFromTimeString($scheduleData['start_time'] . ':00');
                         $scheduleEndDateTime = $date->copy()->setTimeFromTimeString($scheduleData['end_time'] . ':00');
@@ -98,6 +103,7 @@ class CreateEvent extends CreateRecord
                             'description' => $scheduleData['description'] ?? null,
                             'start_time' => $scheduleStartDateTime,
                             'end_time' => $scheduleEndDateTime,
+                            'sort' => $index,
                         ]);
 
                         if (!empty($scheduleData['documents'])) {

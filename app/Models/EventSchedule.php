@@ -18,6 +18,7 @@ class EventSchedule extends Model
         'description',
         'start_time',
         'end_time',
+        'sort',
     ];
 
     protected static function booted()
