@@ -4,6 +4,9 @@ namespace App\Filament\Resources\Events\Pages;
 
 use App\Filament\Resources\Events\EventResource;
 use App\Models\Event;
+use App\Models\EventSchedule;
+use App\Models\EventScheduleDocument;
+use App\Models\EventScheduleDocumentFile;
 use App\Utils\Constants\StoragePath;
 use App\Utils\Helper;
 use Carbon\Carbon;
@@ -43,7 +46,6 @@ class CreateEvent extends CreateRecord
     {
         DB::beginTransaction();
         $imageRepresentPath = null;
-
         try {
             $eventLocation = json_decode($data['event_location'], true);
             $latitude = $eventLocation['lat'] ?? null;
@@ -83,7 +85,53 @@ class CreateEvent extends CreateRecord
 
             $event = Event::query()->create($create);
 
+            if (!empty($data['schedules'])) {
+                foreach ($data['schedules'] as $scheduleData) {
+                    if (isset($scheduleData['title'], $scheduleData['start_time'], $scheduleData['end_time'])) {
+                        $scheduleStartDateTime = $date->copy()->setTimeFromTimeString($scheduleData['start_time'] . ':00');
+                        $scheduleEndDateTime = $date->copy()->setTimeFromTimeString($scheduleData['end_time'] . ':00');
 
+                        $eventSchedule = EventSchedule::query()->create([
+                            'id' => Helper::getTimestampAsId(),
+                            'event_id' => $event->id,
+                            'title' => $scheduleData['title'],
+                            'description' => $scheduleData['description'] ?? null,
+                            'start_time' => $scheduleStartDateTime,
+                            'end_time' => $scheduleEndDateTime,
+                        ]);
+
+                        if (!empty($scheduleData['documents'])) {
+                            foreach ($scheduleData['documents'] as $documentData) {
+                                if (!empty($documentData['title'])) {
+                                    $eventScheduleDocument = EventScheduleDocument::query()->create([
+                                        'id' => Helper::getTimestampAsId(),
+                                        'event_schedule_id' => $eventSchedule->id,
+                                        'title' => $documentData['title'],
+                                        'description' => $documentData['description'] ?? null,
+                                    ]);
+
+                                    if (!empty($documentData['files'])) {
+                                        $files = is_array($documentData['files']) ? $documentData['files'] : [$documentData['files']];
+                                        
+                                        foreach ($files as $file) {
+                                            $tempFile = $this->extractTemporaryFile($file);
+                                            
+                                            if ($tempFile) {
+                                                $filePath = $tempFile->store(
+                                                    StoragePath::makePathById(StoragePath::EVENT_PATH, $event->id) . '/' . $eventSchedule->id . '/' . $eventScheduleDocument->id,
+                                                    'public'
+                                                );
+
+                                                $this->createFileRecord($eventScheduleDocument->id, $tempFile, $filePath);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
             DB::commit();
 
@@ -96,5 +144,30 @@ class CreateEvent extends CreateRecord
             }
             throw $exception;
         }
+    }
+    
+    /**
+     * Thêm file tạm vào database
+     */
+    private function extractTemporaryFile($file): ?TemporaryUploadedFile
+    {
+        if ($file instanceof TemporaryUploadedFile) {
+            return $file;
+        }
+        
+        return null;
+    }
+    
+    private function createFileRecord(int $documentId, TemporaryUploadedFile $tempFile, string $filePath): EventScheduleDocumentFile
+    {
+        return EventScheduleDocumentFile::create([
+            'id' => Helper::getTimestampAsId(),
+            'event_schedule_document_id' => $documentId,
+            'file_path' => $filePath,
+            'file_name' => $tempFile->getClientOriginalName(),
+            'file_extension' => $tempFile->getClientOriginalExtension(),
+            'file_size' => $tempFile->getSize(),
+            'file_type' => $tempFile->getMimeType(),
+        ]);
     }
 }   

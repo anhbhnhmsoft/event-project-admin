@@ -20,6 +20,7 @@ class EventScheduleDocumentFile extends Model
         'file_size',
         'file_type',
     ];
+
     protected static function booted()
     {
         static::creating(function ($model) {
@@ -29,8 +30,8 @@ class EventScheduleDocumentFile extends Model
         });
     }
 
-    public function document(): BelongsTo
+    public function eventScheduleDocument(): BelongsTo
     {
-        return $this->belongsTo(EventScheduleDocument::class, 'event_schedule_document_id');
+        return $this->belongsTo(EventScheduleDocument::class);
     }
 }

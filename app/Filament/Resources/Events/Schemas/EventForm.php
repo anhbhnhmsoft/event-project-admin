@@ -11,204 +11,412 @@ use App\Utils\Constants\EventStatus;
 use App\Utils\Constants\StoragePath;
 use Closure;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Schemas\Components\Tabs;
-use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Toggle;
 use App\Filament\Forms\Components\LocationPicker;
 use Filament\Forms\Components\DatePicker;
+use Filament\Schemas\Components\Wizard;
+use Filament\Schemas\Components\Wizard\Step;
+use Illuminate\Support\Facades\Auth;
+use App\Utils\Constants\RoleUser;
+use Illuminate\Validation\Rule;
+use Filament\Forms\Components\Repeater;
+use App\Utils\Helper;
 
 class EventForm
 {
     public static function configure(Schema $schema): Schema
     {
         return $schema->schema([
-            Tabs::make("tab_create")
-                ->tabs([
-                    Tab::make('info')
-                        ->label('Thông tin sự kiện')
-                        ->columns(2)
-                        ->schema([
-                            FileUpload::make('image_represent_path')
-                                ->label('Ảnh đại diện sự kiện')
-                                ->columnSpanFull()
-                                ->image()
-                                ->storeFiles(false)
-                                ->disk('public')
-                                ->helperText('Vui lòng chọn ảnh đại diện cho cửa hàng. Định dạng hợp lệ: JPG, PNG. Dung lượng tối đa 10MB.')
-                                ->imageEditor()
-                                ->maxSize(10240)
-                                ->directory(StoragePath::EVENT_PATH->value)
-                                ->downloadable()
-                                ->previewable()
-                                ->required()
-                                ->openable()
-                                ->validationMessages([
-                                    'required' => 'Vui lòng chọn ảnh đại diện cho sự kiện.',
-                                    'image' => 'Tệp tải lên phải là hình ảnh hợp lệ (JPG, PNG).',
-                                    'maxSize' => 'Dung lượng ảnh không được vượt quá 10MB.',
-                                ]),
-                            TextInput::make('name')
-                                ->label('Tên sự kiện')
-                                ->trim()
-                                ->minLength(10)
-                                ->maxLength(255)
-                                ->placeholder('Tối thiểu 10 kí tự, tối đa 255 kí tự')
-                                ->live(debounce: 500)
-                                ->required()
-                                ->validationMessages([
-                                    'required' => 'Vui lòng nhập tên địa điểm.',
-                                    'minLength' => 'Tên địa điểm phải có ít nhất 10 ký tự.',
-                                    'maxLength' => 'Tên địa điểm không được vượt quá 255 ký tự.',
-                                ]),
-                            Select::make('organizer_id')
-                                ->searchable()
-                                ->label('Thuộc nhà tổ chức')
-                                ->required()
-                                ->options(function (Get $get) {
+            Wizard::make([
+                Step::make('info')
+                    ->label('Thông tin sự kiện')
+                    ->columns(2)
+                    ->schema([
+                        FileUpload::make('image_represent_path')
+                            ->label('Ảnh đại diện sự kiện')
+                            ->columnSpanFull()
+                            ->image()
+                            ->storeFiles(false)
+                            ->disk('public')
+                            ->helperText('Vui lòng chọn ảnh đại diện cho cửa hàng. Định dạng hợp lệ: JPG, PNG. Dung lượng tối đa 10MB.')
+                            ->imageEditor()
+                            ->maxSize(10240)
+                            ->directory(StoragePath::EVENT_PATH->value)
+                            ->downloadable()
+                            ->previewable()
+                            ->required()
+                            ->openable()
+                            ->validationMessages([
+                                'required' => 'Vui lòng chọn ảnh đại diện cho sự kiện.',
+                                'image' => 'Tệp tải lên phải là hình ảnh hợp lệ (JPG, PNG).',
+                                'maxSize' => 'Dung lượng ảnh không được vượt quá 10MB.',
+                            ]),
+                        TextInput::make('name')
+                            ->label('Tên sự kiện')
+                            ->trim()
+                            ->minLength(10)
+                            ->maxLength(255)
+                            ->placeholder('Tối thiểu 10 kí tự, tối đa 255 kí tự')
+                            ->live(debounce: 500)
+                            ->required()
+                            ->validationMessages([
+                                'required' => 'Vui lòng nhập tên địa điểm.',
+                                'minLength' => 'Tên địa điểm phải có ít nhất 10 ký tự.',
+                                'maxLength' => 'Tên địa điểm không được vượt quá 255 ký tự.',
+                            ]),
+                        Select::make('organizer_id')
+                            ->searchable()
+                            ->label('Thuộc nhà tổ chức')
+                            ->required()
+                            ->default(fn() => (($user = Auth::user()) && $user->role !== RoleUser::SUPER_ADMIN->value) ? $user->organizer_id : null)
+                            ->options(function (Get $get) {
+                                $user = Auth::user();
+
+                                if ($user && in_array($user->role, [RoleUser::SUPER_ADMIN->value], true)) {
                                     return Organizer::query()
                                         ->where('status', CommonStatus::ACTIVE->value)
                                         ->orWhere('id', $get('organizer_id'))
                                         ->pluck('name', 'id')
                                         ->all();
-                                })
-                                ->loadingMessage('Chờ 1 chút...')
-                                ->noSearchResultsMessage('Không tìm thấy nhà tổ chức.')
-                                ->rules([
-                                    fn(Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
-                                        $value = Organizer::query()
-                                            ->where('status', CommonStatus::ACTIVE->value)
-                                            ->where('id', $value)->exists();
-                                        if (!$value) {
-                                            $fail('Nhà tổ chức không đúng');
-                                        }
-                                    },
-                                ])
-                                ->validationMessages([
-                                    'required' => 'Vui lòng chọn nhà tổ chức.',
-                                ]),
-                            Textarea::make('short_description')
-                                ->label('Mô tả ngắn về sự kiện')
-                                ->placeholder('Mô tả ngắn về sự kiện này')
-                                ->rows(8)
-                                ->columnSpanFull()
-                                ->validationMessages([
-                                    'required' => 'Vui lòng nhập Mô tả ngắn về sự kiện',
-                                ]),
-                            RichEditor::make('description')
-                                ->label('Chi tiết')
-                                ->required()
-                                ->columnSpanFull()
-                                ->validationMessages([
-                                    'required' => 'Vui lòng nhập Mô tả chi tiết',
-                                ])
-                                ->extraAttributes(['style' => 'min-height: 300px;']),
-                            Toggle::make('featured')
-                                ->label("Là sự kiện nổi bật")
-                                ->default(false)
-                                ->columnSpanFull()
-                                ->validationMessages([
-                                    'required' => 'Vui lòng tích chọn',
-                                ])
-                                ->required(),
-                            DatePicker::make('day_repersent')
-                                ->label('Ngày tổ chức sự kiện')
-                                ->columnSpanFull()
-                                ->required(),
-                            TextInput::make('start_time')
-                                ->label('Giờ mở cửa')
-                                ->placeholder('HH:MM')
-                                ->required()
-                                ->helperText('Nhập giờ mở cửa theo định dạng 24h, ví dụ: 08:00')
-                                ->mask('99:99')
-                                ->regex('/^(?:[01]\d|2[0-3]):[0-5]\d$/')
-                                ->validationMessages([
-                                    'required' => 'Vui lòng nhập giờ mở cửa.',
-                                    'regex' => 'Giờ mở cửa phải theo định dạng 24h (HH:MM), ví dụ: 08:00 hoặc 23:59.',
-                                ]),
-                            TextInput::make('end_time')
-                                ->label('Giờ đóng cửa')
-                                ->placeholder('HH:MM')
-                                ->required()
-                                ->helperText('Nhập giờ đóng cửa theo định dạng 24h, ví dụ: 22:00')
-                                ->mask('99:99')
-                                ->regex('/^(?:[01]\d|2[0-3]):[0-5]\d$/')
-                                ->validationMessages([
-                                    'required' => 'Vui lòng nhập giờ đóng cửa.',
-                                    'regex' => 'Giờ đóng cửa phải theo định dạng 24h (HH:MM), ví dụ: 08:00 hoặc 23:59.',
-                                ]),
-                            Select::make('status')
-                                ->label('Trạng thái')
-                                ->required()
-                                ->default(EventStatus::UPCOMING->value)
-                                ->options(EventStatus::getOptions())
-                                ->validationMessages([
-                                    'required' => 'Vui lòng tích chọn',
-                                ]),
-                        ]),
-                    Tab::make('location')
-                        ->label('Vị trí')
-                        ->columns(2)
-                        ->schema([
-                            Select::make('province_code')
-                                ->label('Tỉnh thành')
-                                ->options(Province::all()->pluck('name', 'code'))
-                                ->searchable()
-                                ->columnSpanFull()
-                                ->live()
-                                ->required()
-                                ->validationMessages([
-                                    'required' => 'Vui lòng chọn địa chỉ.',
-                                ]),
-                            Select::make('district_code')
-                                ->label('Quận, Huyện')
-                                ->options(function (Get $get) {
-                                    if ($get('province_code')) {
-                                        return District::query()->where('province_code', $get('province_code'))->pluck('name', 'code')->all();
-                                    }
-                                    return null;
-                                })
-                                ->columnSpanFull()
-                                ->searchable()
-                                ->live()
-                                ->required()
-                                ->validationMessages([
-                                    'required' => 'Vui lòng chọn địa chỉ.',
-                                ]),
-                            Select::make('ward_code')
-                                ->label('Phường, Xã')
-                                ->searchable()
-                                ->columnSpanFull()
-                                ->options(function (Get $get) {
-                                    if ($get('district_code')) {
-                                        return Ward::query()->where('district_code', $get('district_code'))->pluck('name', 'code')->all();
-                                    }
-                                    return null;
-                                })
-                                ->live()
-                                ->required()
-                                ->validationMessages([
-                                    'required' => 'Vui lòng chọn địa chỉ.',
-                                ]),
-                            LocationPicker::make('event_location')
-                                ->label('Vị trí chi tiết ')
-                                ->columnSpanFull()
-                                ->defaultLocation(21.0285, 105.8542)
-                                ->zoom(15)
-                                ->height(500)
-                                ->required()
-                                ->validationMessages([
-                                    'required' => 'Vui lòng chọn địa chỉ chi tiết.',
-                                ]),
-                        ]),
-                ])
-                ->columnSpanFull()
+                                }
 
-        ]);
+                                if ($user && $user->organizer_id) {
+                                    return Organizer::query()
+                                        ->where('id', $user->organizer_id)
+                                        ->pluck('name', 'id')
+                                        ->all();
+                                }
+
+                                return [];
+                            })
+                            ->disabled(fn() => ($user = Auth::user()) && $user->role !== RoleUser::SUPER_ADMIN->value)
+                            ->dehydrated(true)
+                            ->loadingMessage('Chờ 1 chút...')
+                            ->noSearchResultsMessage('Không tìm thấy nhà tổ chức.')
+                            ->rules([
+                                Rule::exists('organizers', 'id')
+                                    ->where(fn($query) => $query->where('status', CommonStatus::ACTIVE->value)),
+                            ])
+                            ->validationMessages([
+                                'required' => 'Vui lòng chọn nhà tổ chức.',
+                            ]),
+                        DatePicker::make('day_repersent')
+                            ->label('Ngày tổ chức sự kiện')
+                            ->columnSpanFull()
+                            ->required(),
+                        TextInput::make('start_time')
+                            ->label('Giờ mở cửa')
+                            ->placeholder('HH:MM')
+                            ->required()
+                            ->helperText('Nhập giờ mở cửa theo định dạng 24h, ví dụ: 08:00')
+                            ->mask('99:99')
+                            ->regex('/^(?:[01]\d|2[0-3]):[0-5]\d$/')
+                            ->live()
+                            ->validationMessages([
+                                'required' => 'Vui lòng nhập giờ mở cửa.',
+                                'regex' => 'Giờ mở cửa phải theo định dạng 24h (HH:MM), ví dụ: 08:00 hoặc 23:59.',
+                            ]),
+                        TextInput::make('end_time')
+                            ->label('Giờ đóng cửa')
+                            ->placeholder('HH:MM')
+                            ->required()
+                            ->helperText('Nhập giờ đóng cửa theo định dạng 24h, ví dụ: 22:00')
+                            ->mask('99:99')
+                            ->regex('/^(?:[01]\d|2[0-3]):[0-5]\d$/')
+                            ->live()
+                            ->validationMessages([
+                                'required' => 'Vui lòng nhập giờ đóng cửa.',
+                                'regex' => 'Giờ đóng cửa phải theo định dạng 24h (HH:MM), ví dụ: 08:00 hoặc 23:59.',
+                            ]),
+                        Textarea::make('short_description')
+                            ->label('Mô tả ngắn về sự kiện')
+                            ->placeholder('Mô tả ngắn về sự kiện này')
+                            ->rows(8)
+                            ->columnSpanFull()
+                            ->validationMessages([
+                                'required' => 'Vui lòng nhập Mô tả ngắn về sự kiện',
+                            ]),
+                        RichEditor::make('description')
+                            ->label('Chi tiết')
+                            ->required()
+                            ->columnSpanFull()
+                            ->validationMessages([
+                                'required' => 'Vui lòng nhập Mô tả chi tiết',
+                            ])
+                            ->extraAttributes(['style' => 'min-height: 300px;']),
+                        Toggle::make('featured')
+                            ->label("Là sự kiện nổi bật")
+                            ->default(false)
+                            ->columnSpanFull()
+                            ->validationMessages([
+                                'required' => 'Vui lòng tích chọn',
+                            ])
+                            ->required(),
+
+                        Select::make('status')
+                            ->label('Trạng thái')
+                            ->required()
+                            ->default(EventStatus::UPCOMING->value)
+                            ->options(EventStatus::getOptions())
+                            ->validationMessages([
+                                'required' => 'Vui lòng tích chọn',
+                            ]),
+                    ]),
+                Step::make('schedules')
+                    ->label('Lịch trình')
+                    ->dehydrated(true)
+                    ->columns(1)
+                    ->schema([
+                        Repeater::make('schedules')
+                            ->label('Danh sách lịch trình')
+                            ->addActionLabel('Thêm lịch trình')
+                            ->columnSpanFull()
+                            ->collapsible()
+                            ->reorderable()
+                            ->minItems(1)
+                            ->itemLabel(fn(array $state): string => (string) ($state['title'] ?? 'Lịch trình'))
+                            ->rules([
+                                fn(Get $get) => function ($_, $value, Closure $fail) use ($get) {
+                                    $eventStart = $get('start_time');
+                                    $eventEnd = $get('end_time');
+
+                                    if (empty($eventStart) || empty($eventEnd)) {
+                                        return;
+                                    }
+
+                                    $eventStartMin = Helper::timeToMinutes($eventStart);
+                                    $eventEndMin = Helper::timeToMinutes($eventEnd);
+                                    if ($eventStartMin === null || $eventEndMin === null) {
+                                        return;
+                                    }
+                                    if ($eventEndMin <= $eventStartMin) {
+                                        $fail('Khung giờ sự kiện không hợp lệ (giờ kết thúc phải sau giờ bắt đầu).');
+                                        return;
+                                    }
+
+                                    $totalMinutes = 0;
+                                    $items = array_values((array) $value);
+                                    foreach ($items as $i => $schedule) {
+                                        $scheduleStart = $schedule['start_time'] ?? null;
+                                        $scheduleEnd = $schedule['end_time'] ?? null;
+
+                                        if ($scheduleStart === null || $scheduleEnd === null) {
+                                            $fail('Lịch trình #' . ($i + 1) . ' thiếu giờ bắt đầu hoặc giờ kết thúc.');
+                                            continue;
+                                        }
+
+                                        $scheduleStartMin = Helper::timeToMinutes($scheduleStart);
+                                        $scheduleEndMin = Helper::timeToMinutes($scheduleEnd);
+                                        if ($scheduleStartMin === null || $scheduleEndMin === null) {
+                                            $fail('Lịch trình #' . ($i + 1) . ' có giờ không hợp lệ.');
+                                            continue;
+                                        }
+
+                                        if ($scheduleEndMin <= $scheduleStartMin) {
+                                            $fail('Lịch trình #' . ($i + 1) . ' có giờ kết thúc phải sau giờ bắt đầu.');
+                                            continue;
+                                        }
+
+                                        if ($scheduleStartMin < $eventStartMin || $scheduleEndMin > $eventEndMin) {
+                                            $fail('Lịch trình #' . ($i + 1) . ' vượt ngoài khung thời gian sự kiện.');
+                                        }
+
+                                        $totalMinutes += ($scheduleEndMin - $scheduleStartMin);
+                                    }
+
+                                    $eventMinutes = $eventEndMin - $eventStartMin;
+                                    if ($totalMinutes > $eventMinutes) {
+                                        $fail('Tổng thời lượng của các lịch trình vượt quá thời lượng của sự kiện.');
+                                    }
+                                },
+                            ])
+                            ->schema([
+                                Hidden::make('id')
+                                    ->label('ID lịch trình'),
+                                TextInput::make('title')
+                                    ->label('Tiêu đề')
+                                    ->live(debounce: 3000)
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->validationMessages([
+                                        'required' => 'Vui lòng nhập tiêu đề lịch trình.',
+                                    ]),
+                                Textarea::make('description')
+                                    ->label('Mô tả')
+                                    ->rows(4),
+                                TextInput::make('start_time')
+                                    ->label('Giờ bắt đầu')
+                                    ->placeholder('HH:MM')
+                                    ->mask('99:99')
+                                    ->regex('/^(?:[01]\d|2[0-3]):[0-5]\d$/')
+                                    ->required()
+                                    ->rules([
+                                        fn(Get $get) => function ($_, $value, Closure $fail) use ($get) {
+                                            $eventStart = $get('../../start_time');
+                                            $eventEnd = $get('../../end_time');
+                                            $scheduleEnd = $get('end_time');
+
+                                            if (!$value || !$eventStart || !$eventEnd) {
+                                                return;
+                                            }
+
+                                            $vMin = Helper::timeToMinutes($value);
+                                            $evtStartMin = Helper::timeToMinutes($eventStart);
+                                            $schEndMin = $scheduleEnd ? Helper::timeToMinutes($scheduleEnd) : null;
+
+                                            if ($vMin < $evtStartMin) {
+                                                $fail('Giờ bắt đầu lịch trình phải >= ' . $eventStart . ' (khung sự kiện ' . $eventStart . '–' . $eventEnd . ').');
+                                            }
+
+                                            if ($schEndMin !== null && $schEndMin <= $vMin) {
+                                                $fail('Giờ kết thúc lịch trình (' . $scheduleEnd . ') phải > giờ bắt đầu lịch trình (' . $value . ').');
+                                            }
+                                        },
+                                    ])
+                                    ->validationMessages([
+                                        'required' => 'Vui lòng nhập giờ bắt đầu.',
+                                        'regex' => 'Giờ bắt đầu phải theo định dạng 24h (HH:MM).',
+                                    ]),
+                                TextInput::make('end_time')
+                                    ->label('Giờ kết thúc')
+                                    ->placeholder('HH:MM')
+                                    ->mask('99:99')
+                                    ->regex('/^(?:[01]\d|2[0-3]):[0-5]\d$/')
+                                    ->required()
+                                    ->rules([
+                                        fn(Get $get) => function (string $attribute, $value, Closure $fail) use ($get) {
+                                            $eventStart = $get('../../start_time');
+                                            $eventEnd = $get('../../end_time');
+                                            $scheduleStart = $get('start_time');
+
+                                            if (!$value || !$eventStart || !$eventEnd || !$scheduleStart) {
+                                                return;
+                                            }
+
+                                            $vMin = Helper::timeToMinutes($value);
+                                            $evtEndMin = Helper::timeToMinutes($eventEnd);
+                                            $schStartMin = Helper::timeToMinutes($scheduleStart);
+
+                                            if ($vMin > $evtEndMin) {
+                                                $fail('Giờ kết thúc lịch trình (' . $value . ') phải ≤ ' . $eventEnd . ' (khung sự kiện ' . $eventStart . '–' . $eventEnd . ').');
+                                            }
+
+                                            if ($vMin <= $schStartMin) {
+                                                $fail('Giờ kết thúc lịch trình (' . $value . ') phải > giờ bắt đầu lịch trình (' . $scheduleStart . ').');
+                                            }
+                                        },
+                                    ])
+                                    ->validationMessages([
+                                        'required' => 'Vui lòng nhập giờ kết thúc.',
+                                        'regex' => 'Giờ kết thúc phải theo định dạng 24h (HH:MM).',
+                                    ]),
+                                Repeater::make('documents')
+                                    ->label('Tài liệu')
+                                    ->columnSpanFull()
+                                    ->collapsible()
+                                    ->reorderable()
+                                    ->schema([
+                                        Hidden::make('id')
+                                            ->label('ID tài liệu'),
+                                        TextInput::make('title')
+                                            ->label('Tiêu đề tài liệu')
+                                            ->maxLength(255),
+                                        Textarea::make('description')
+                                            ->label('Mô tả tài liệu')
+                                            ->rows(3),
+                                        FileUpload::make('files')
+                                            ->label('Tệp đính kèm')
+                                            ->multiple()
+                                            ->downloadable()
+                                            ->openable()
+                                            ->storeFiles(false)
+                                            ->disk('public')
+                                            ->directory(StoragePath::EVENT_PATH->value)
+                                            ->maxSize(10240)
+                                            ->acceptedFileTypes(['image/*', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'])
+                                            ->reorderable()
+                                            ->appendFiles()
+                                            ->live()
+                                            ->formatStateUsing(function ($state) {
+                                                if (is_array($state)) {
+                                                    return array_map(function ($file) {
+                                                        if (is_array($file) && isset($file['file_path'])) {
+                                                            return $file['file_path'];
+                                                        }
+                                                        return $file;
+                                                    }, $state);
+                                                }
+                                                return $state;
+                                            }),
+                                    ])
+                                    ->default([]),
+                            ])
+                            ->default([[]]),
+                    ]),
+                Step::make('location')
+                    ->label('Vị trí')
+                    ->columns(2)
+                    ->schema([
+                        Select::make('province_code')
+                            ->label('Tỉnh thành')
+                            ->options(Province::all()->pluck('name', 'code'))
+                            ->searchable()
+                            ->columnSpanFull()
+                            ->live()
+                            ->required()
+                            ->validationMessages([
+                                'required' => 'Vui lòng chọn địa chỉ.',
+                            ]),
+                        Select::make('district_code')
+                            ->label('Quận, Huyện')
+                            ->options(function (Get $get) {
+                                if ($get('province_code')) {
+                                    return District::query()->where('province_code', $get('province_code'))->pluck('name', 'code')->all();
+                                }
+                                return null;
+                            })
+                            ->columnSpanFull()
+                            ->searchable()
+                            ->live()
+                            ->required()
+                            ->validationMessages([
+                                'required' => 'Vui lòng chọn địa chỉ.',
+                            ]),
+                        Select::make('ward_code')
+                            ->label('Phường, Xã')
+                            ->searchable()
+                            ->columnSpanFull()
+                            ->options(function (Get $get) {
+                                if ($get('district_code')) {
+                                    return Ward::query()->where('district_code', $get('district_code'))->pluck('name', 'code')->all();
+                                }
+                                return null;
+                            })
+                            ->live()
+                            ->required()
+                            ->validationMessages([
+                                'required' => 'Vui lòng chọn địa chỉ.',
+                            ]),
+                        LocationPicker::make('event_location')
+                            ->label('Vị trí chi tiết ')
+                            ->columnSpanFull()
+                            ->defaultLocation(21.0285, 105.8542)
+                            ->zoom(15)
+                            ->height(500)
+                            ->required()
+                            ->validationMessages([
+                                'required' => 'Vui lòng chọn địa chỉ chi tiết.',
+                            ]),
+                    ]),
+
+            ])
+        ])->columns(null);
     }
 }
