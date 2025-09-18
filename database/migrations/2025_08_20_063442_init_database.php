@@ -188,6 +188,7 @@ return new class extends Migration
             $table->string('description')->nullable()->comment('Mô tả chi tiết của lịch trình');
             $table->dateTime('start_time')->comment('Thời gian bắt đầu lịch trình');
             $table->dateTime('end_time')->comment('Thời gian kết thúc lịch trình');
+            $table->integer('sort')->nullable()->comment('Sắp xếp lịch trình');
             $table->softDeletes();
             $table->timestamps();
         });
