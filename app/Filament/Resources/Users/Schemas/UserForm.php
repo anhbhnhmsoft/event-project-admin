@@ -37,7 +37,12 @@ class UserForm
                         modifyRuleUsing: function ($rule, $get) {
                             return $rule->where('organizer_id', $get('organizer_id'));
                         }
-                    ),
+                    )
+                    ->validationMessages([
+                        'required' => 'Vui lòng nhập email.',
+                        'email' => 'Email không hợp lệ.',
+                        'unique' => 'Email đã tồn tại.',
+                    ]),
                 TextInput::make('phone')
                     ->label('Số điện thoại')
                     ->tel()
@@ -109,6 +114,9 @@ class UserForm
                         return app(OrganizerService::class)->getActiveOptions();
                     })
                     ->required()
+                    ->validationMessages([
+                        'required' => 'Vui lòng chọn nhà tổ chức.',
+                    ])
                     ->searchable(),
                 FileUpload::make('avatar_path')
                     ->label('Ảnh đại diện')

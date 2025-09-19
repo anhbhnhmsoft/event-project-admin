@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'common_success' => [
+        'get_success' => 'Get data successfully',
+    ],
     'common_error' => [
         'server_error' => 'A server error has occurred, please contact the administrator for support.',
         'request_error' => 'No response received from the server, please contact the administrator for support.',
