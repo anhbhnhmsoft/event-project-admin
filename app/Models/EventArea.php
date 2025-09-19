@@ -17,6 +17,12 @@ class EventArea extends Model
         'event_id',
         'name',
         'capacity',
+        'vip',
+        'seats_per_row'
+    ];
+
+    protected $casts = [
+        'vip' => 'boolean',
     ];
 
     protected static function booted()

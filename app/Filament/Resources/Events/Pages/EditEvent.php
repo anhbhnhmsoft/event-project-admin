@@ -10,6 +10,7 @@ use App\Models\EventScheduleDocumentFile;
 use App\Utils\Constants\StoragePath;
 use App\Utils\Helper;
 use Carbon\Carbon;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Support\Assets\Css;
@@ -23,27 +24,27 @@ use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 class EditEvent extends EditRecord
 {
     protected static string $resource = EventResource::class;
-    
+
     protected static ?string $title = 'Sửa sự kiện';
 
     protected function mutateFormDataBeforeFill(array $data): array
     {
         $event = Event::query()->find($data['id']);
         $data['organizer_id'] = $event->organizer_id;
-        if ($event->image_represent_path){
+        if ($event->image_represent_path) {
             $data['image_represent_path'] = $event->image_represent_path;
         }
-        
+
         $data['start_time'] = $event->start_time ? $event->start_time->format('H:i') : '';
         $data['end_time'] = $event->end_time ? $event->end_time->format('H:i') : '';
-        
+
         $schedules = $event->schedules()->with(['documents.files'])->orderBy('sort')->get()->map(function ($schedule) {
             $startTime = $schedule->start_time;
             $endTime = $schedule->end_time;
-            
+
             $startTime = Carbon::parse($startTime);
             $endTime = Carbon::parse($endTime);
-            
+
             $documents = $schedule->documents->map(function ($document) {
                 return [
                     'id' => $document->id,
@@ -58,7 +59,7 @@ class EditEvent extends EditRecord
                     })->toArray()
                 ];
             })->toArray();
-            
+
             return [
                 'id' => $schedule->id,
                 'title' => $schedule->title,
@@ -70,7 +71,7 @@ class EditEvent extends EditRecord
             ];
         })->toArray();
         $data['schedules'] = $schedules;
-        
+
         $location = [
             'lat' => $data['latitude'],
             'lng' => $data['longitude'],
@@ -127,7 +128,7 @@ class EditEvent extends EditRecord
                 if ($record->image_represent_path && Storage::disk('public')->exists($record->image_represent_path)) {
                     Storage::disk('public')->delete($record->image_represent_path);
                 }
-                $newPath = $data['image_represent_path']->store(StoragePath::makePathById(StoragePath::EVENT_PATH, $record->id),'public');
+                $newPath = $data['image_represent_path']->store(StoragePath::makePathById(StoragePath::EVENT_PATH, $record->id), 'public');
                 $update['image_represent_path'] = $newPath;
             } else {
                 $update['image_represent_path'] = $record->image_represent_path;
@@ -136,10 +137,10 @@ class EditEvent extends EditRecord
             $record->update($update);
 
             if (isset($data['schedules'])) {
-                
+
                 $processedScheduleIds = [];
                 $allFilesToDelete = [];
-                
+
                 foreach (array_values($data['schedules']) as $index => $scheduleData) {
                     if (isset($scheduleData['title'], $scheduleData['start_time'], $scheduleData['end_time'])) {
                         $scheduleStartDateTime = $date->copy()->setTimeFromTimeString($scheduleData['start_time'] . ':00');
@@ -158,13 +159,13 @@ class EditEvent extends EditRecord
                                 'sort' => $index,
                             ]
                         );
-                        
+
                         $processedScheduleIds[] = $eventSchedule->id;
 
                         if (array_key_exists('documents', $scheduleData)) {
 
                             $processedDocumentIds = [];
-                            
+
                             foreach ($scheduleData['documents'] ?? [] as $documentData) {
                                 if (!empty($documentData['title'])) {
                                     $eventScheduleDocument = EventScheduleDocument::updateOrCreate(
@@ -177,16 +178,16 @@ class EditEvent extends EditRecord
                                             'description' => $documentData['description'] ?? null,
                                         ]
                                     );
-                                    
+
                                     $processedDocumentIds[] = $eventScheduleDocument->id;
 
                                         if (!empty($documentData['files'])) {
                                             $files = is_array($documentData['files']) ? $documentData['files'] : [$documentData['files']];
                                             $existingFilePaths = [];
-                                            
+
                                             foreach ($files as $file) {
                                                 $tempFile = $this->extractTemporaryFile($file);
-                                                
+
                                                 if ($tempFile) {
                                                     $filePath = $tempFile->store(
                                                         StoragePath::makePathById(StoragePath::EVENT_PATH, $record->id) . '/' . $eventSchedule->id . '/' . $eventScheduleDocument->id,
@@ -194,25 +195,25 @@ class EditEvent extends EditRecord
                                                     );
 
                                                     $this->createFileRecord($eventScheduleDocument->id, $tempFile, $filePath);
-                                                    
+
                                                     $existingFilePaths[] = $filePath;
                                                 } elseif (is_string($file)) {
                                                     $existingFilePaths[] = $file;
                                                 }
                                             }
-                                            
+
                                             $filesToDelete = $this->collectFilesToDelete($eventScheduleDocument->id, $existingFilePaths, $files);
                                             $allFilesToDelete = array_merge($allFilesToDelete, $filesToDelete);
                                         }
                                 }
                             }
-                            
+
                             if (!empty($processedDocumentIds)) {
                                 $documentsToDelete = EventScheduleDocument::where('event_schedule_id', $eventSchedule->id)
                                     ->whereNotIn('id', $processedDocumentIds)
                                     ->with('files')
                                     ->get();
-                                
+
                                 foreach ($documentsToDelete as $documentToDelete) {
                                     foreach ($documentToDelete->files as $file) {
                                         $allFilesToDelete[] = [
@@ -222,7 +223,7 @@ class EditEvent extends EditRecord
                                         ];
                                     }
                                 }
-                                
+
                                 EventScheduleDocument::where('event_schedule_id', $eventSchedule->id)
                                     ->whereNotIn('id', $processedDocumentIds)
                                     ->delete();
@@ -259,12 +260,12 @@ class EditEvent extends EditRecord
                         }
                     }
                 }
-                
+
                 $schedulesToDelete = EventSchedule::where('event_id', $record->id)
                     ->whereNotIn('id', $processedScheduleIds)
                     ->with(['documents.files'])
                     ->get();
-                
+
                 foreach ($schedulesToDelete as $scheduleToDelete) {
                     foreach ($scheduleToDelete->documents as $document) {
                         foreach ($document->files as $file) {
@@ -276,35 +277,35 @@ class EditEvent extends EditRecord
                         }
                     }
                 }
-                
+
                 EventSchedule::where('event_id', $record->id)
                     ->whereNotIn('id', $processedScheduleIds)
                     ->delete();
-                
+
                 $this->deleteAllFiles($allFilesToDelete);
             }
 
             DB::commit();
-            
+
             return $record;
-        }catch (\Exception $exception){
+        } catch (\Exception $exception) {
             DB::rollBack();
             throw $exception;
         }
     }
-    
+
     /**
      * Gộp các file cần xóa của document vào một mảng để xóa sau
      */
     private function collectFilesToDelete(int $documentId, array $existingFilePaths, array $files): array
     {
         $filesToDelete = [];
-        
+
         if (!empty($existingFilePaths)) {
             $dbFilesToDelete = EventScheduleDocumentFile::where('event_schedule_document_id', $documentId)
                 ->whereNotIn('file_path', $existingFilePaths)
                 ->get();
-            
+
             foreach ($dbFilesToDelete as $fileToDelete) {
                 $filesToDelete[] = [
                     'id' => $fileToDelete->id,
@@ -312,13 +313,13 @@ class EditEvent extends EditRecord
                     'reason' => 'file_removed'
                 ];
             }
-            
+
         } else {
             $hasNewFiles = $this->hasNewFiles($files);
-            
+
             if (!$hasNewFiles) {
                 $allFiles = EventScheduleDocumentFile::where('event_schedule_document_id', $documentId)->get();
-                
+
                 foreach ($allFiles as $file) {
                     $filesToDelete[] = [
                         'id' => $file->id,
@@ -326,13 +327,13 @@ class EditEvent extends EditRecord
                         'reason' => 'no_files_in_form'
                     ];
                 }
-                
+
             }
         }
-        
+
         return $filesToDelete;
     }
-    
+
     /**
      * Xóa tất cả các file đã gom vào một mảng
      */
@@ -341,21 +342,21 @@ class EditEvent extends EditRecord
         if (empty($filesToDelete)) {
             return;
         }
-        
+
         $filePaths = array_column($filesToDelete, 'file_path');
         $fileIds = array_column($filesToDelete, 'id');
-        
+
         $existingPaths = array_filter($filePaths, function($path) {
             return Storage::disk('public')->exists($path);
         });
-        
+
         if (!empty($existingPaths)) {
             Storage::disk('public')->delete($existingPaths);
         }
-        
+
         EventScheduleDocumentFile::whereIn('id', $fileIds)->delete();
     }
-    
+
     private function hasNewFiles(array $files): bool
     {
         foreach ($files as $file) {
@@ -365,16 +366,16 @@ class EditEvent extends EditRecord
         }
         return false;
     }
-    
+
     private function extractTemporaryFile($file): ?TemporaryUploadedFile
     {
         if ($file instanceof TemporaryUploadedFile) {
             return $file;
         }
-        
+
         return null;
     }
-    
+
     private function createFileRecord(int $documentId, TemporaryUploadedFile $tempFile, string $filePath): EventScheduleDocumentFile
     {
         return EventScheduleDocumentFile::create([
@@ -391,6 +392,11 @@ class EditEvent extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('seats-manager')
+                ->label('Quản lý chỗ ngồi')
+                ->icon('heroicon-o-building-office')
+                ->url(fn() => static::getResource()::getUrl('seats-manage', ['record' => $this->record]))
+                ->color('success'),
             DeleteAction::make()
                 ->label('Xóa'),
         ];
