@@ -31,6 +31,7 @@ Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
 
     Route::prefix('/event')->group(function () {
         Route::get('/', [EventController::class, 'list']);
+        Route::get('/{id}', [EventController::class, 'show']);
     });
 });
 
