@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Utils\Constants\MembershipUserStatus;
 use App\Utils\Constants\RoleUser;
 use App\Utils\Helper;
 use Filament\Models\Contracts\FilamentUser;
@@ -61,6 +62,14 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
             'password' => 'hashed',
         ];
     }
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            if (empty($model->id)) {
+                $model->id = Helper::getTimestampAsId();
+            }
+        });
+    }
 
     public function canAccessPanel(Panel $panel): bool
     {
@@ -72,12 +81,16 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
         return $this->belongsTo(Organizer::class);
     }
 
-    protected static function booted()
+    public function memberships()
     {
-        static::creating(function ($model) {
-            if (empty($model->id)) {
-                $model->id = Helper::getTimestampAsId();
-            }
-        });
+        return $this->belongsToMany(Membership::class, 'membership_user')
+            ->withPivot(['start_date', 'end_date', 'status'])
+            ->withTimestamps();
+    }
+    public function activeMemberships()
+    {
+        return $this->belongsToMany(Membership::class, 'membership_user')
+            ->withPivot(['start_date', 'end_date', 'status'])
+            ->wherePivot('status', MembershipUserStatus::ACTIVE->value);
     }
 }
