@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\EventListResource;
+use App\Http\Resources\EventDetailResource;
 use App\Services\EventService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -38,6 +39,21 @@ class EventController extends Controller
                 'current_page' => $events->currentPage(),
                 'last_page' => $events->lastPage()
             ],
+        ], 200);
+    }
+
+    public function show($id): JsonResponse
+    {
+        $result = $this->eventService->getEventDetail($id);
+        if ($result['status'] === false) {
+            return response()->json([
+                'status' => false,
+                'message' => $result['message'],
+            ], 404);
+        }
+        return response()->json([
+            'message' => __('common.common_success.get_success'),
+            'data' => EventDetailResource::make($result['event']),
         ], 200);
     }
 }
