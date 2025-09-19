@@ -7,6 +7,7 @@ use App\Models\Event;
 use App\Models\EventSchedule;
 use App\Models\EventScheduleDocument;
 use App\Models\EventScheduleDocumentFile;
+use App\Models\EventUser;
 use App\Utils\Constants\StoragePath;
 use App\Utils\Helper;
 use Carbon\Carbon;
@@ -71,6 +72,16 @@ class EditEvent extends EditRecord
             ];
         })->toArray();
         $data['schedules'] = $schedules;
+        
+        $participants = $event->participants()->get()->map(function ($participant) {
+            return [
+                'id' => $participant->id,
+                'event_id' => $participant->event_id,
+                'user_id' => $participant->user_id,
+                'role' => $participant->role,
+            ];
+        })->toArray();
+        $data['participants'] = $participants;
 
         $location = [
             'lat' => $data['latitude'],
@@ -132,6 +143,31 @@ class EditEvent extends EditRecord
                 $update['image_represent_path'] = $newPath;
             } else {
                 $update['image_represent_path'] = $record->image_represent_path;
+            }
+
+            if (isset($data['participants'])) {
+                $processedParticipantIds = [];
+                
+                foreach (array_values($data['participants']) as $participant) {
+                    if (!empty($participant['user_id']) && !empty($participant['role'])) {
+                        $eventUser = EventUser::updateOrCreate(
+                            [
+                                'id' => $participant['id'] ?? Helper::getTimestampAsId(),
+                                'event_id' => $record->id,
+                            ],
+                            [
+                                'user_id' => $participant['user_id'],
+                                'role' => $participant['role'],
+                            ]
+                        );
+                        
+                        $processedParticipantIds[] = $eventUser->id;
+                    }
+                }
+                
+                EventUser::where('event_id', $record->id)
+                    ->whereNotIn('id', $processedParticipantIds)
+                    ->delete();
             }
 
             $record->update($update);

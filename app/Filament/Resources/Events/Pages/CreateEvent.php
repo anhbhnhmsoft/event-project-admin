@@ -7,6 +7,7 @@ use App\Models\Event;
 use App\Models\EventSchedule;
 use App\Models\EventScheduleDocument;
 use App\Models\EventScheduleDocumentFile;
+use App\Models\EventUser;
 use App\Utils\Constants\StoragePath;
 use App\Utils\Helper;
 use Carbon\Carbon;
@@ -89,6 +90,19 @@ class CreateEvent extends CreateRecord
             }
 
             $event = Event::query()->create($create);
+
+            if (!empty($data['participants'])) {
+                foreach (array_values($data['participants']) as $participant) {
+                    if (!empty($participant['user_id']) && !empty($participant['role'])) {
+                        EventUser::create([
+                            'id' => Helper::getTimestampAsId(),
+                            'event_id' => $event->id,
+                            'user_id' => $participant['user_id'],
+                            'role' => $participant['role'],
+                        ]);
+                    }
+                }
+            }
 
             if (!empty($data['schedules'])) {
                 foreach (array_values($data['schedules']) as $index => $scheduleData) {
