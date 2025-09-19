@@ -6,6 +6,7 @@ use App\Filament\Resources\Events\EventResource;
 use App\Models\Event;
 use App\Utils\Constants\StoragePath;
 use Carbon\Carbon;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
@@ -21,20 +22,20 @@ use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 class EditEvent extends EditRecord
 {
     protected static string $resource = EventResource::class;
-    
+
     protected static ?string $title = 'Sửa sự kiện';
 
     protected function mutateFormDataBeforeFill(array $data): array
     {
         $event = Event::query()->find($data['id']);
         $data['organizer_id'] = $event->organizer_id;
-        if ($event->image_represent_path){
+        if ($event->image_represent_path) {
             $data['image_represent_path'] = $event->image_represent_path;
         }
-        
+
         $data['start_time'] = $event->start_time ? $event->start_time->format('H:i') : '';
         $data['end_time'] = $event->end_time ? $event->end_time->format('H:i') : '';
-        
+
         $location = [
             'lat' => $data['latitude'],
             'lng' => $data['longitude'],
@@ -91,7 +92,7 @@ class EditEvent extends EditRecord
                 if ($record->image_represent_path && Storage::disk('public')->exists($record->image_represent_path)) {
                     Storage::disk('public')->delete($record->image_represent_path);
                 }
-                $newPath = $data['image_represent_path']->store(StoragePath::makePathById(StoragePath::EVENT_PATH, $record->id),'public');
+                $newPath = $data['image_represent_path']->store(StoragePath::makePathById(StoragePath::EVENT_PATH, $record->id), 'public');
                 $update['image_represent_path'] = $newPath;
             } else {
                 $update['image_represent_path'] = $record->image_represent_path;
@@ -101,7 +102,7 @@ class EditEvent extends EditRecord
 
             DB::commit();
             return $record;
-        }catch (\Exception $exception){
+        } catch (\Exception $exception) {
             DB::rollBack();
             throw $exception;
         }
@@ -110,6 +111,11 @@ class EditEvent extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('seats-manager')
+                ->label('Quản lý chỗ ngồi')
+                ->icon('heroicon-o-building-office')
+                ->url(fn() => static::getResource()::getUrl('seats-manage', ['record' => $this->record]))
+                ->color('success'),
             DeleteAction::make()
                 ->label('Xóa'),
         ];

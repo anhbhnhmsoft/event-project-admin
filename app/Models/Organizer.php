@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Utils\Helper;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Organizer extends Model
@@ -26,5 +27,10 @@ class Organizer extends Model
                 $model->id = Helper::getTimestampAsId();
             }
         });
+    }
+
+    public function users () : HasMany
+    {
+        return $this->hasMany(User::class);
     }
 }
