@@ -308,6 +308,25 @@ return new class extends Migration
             $table->softDeletes();
             $table->timestamps();
         });
+
+        Schema::create('membership_user', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')
+                ->constrained('users')
+                ->cascadeOnDelete();
+            $table->foreignId('membership_id')
+                ->constrained('membership')
+                ->cascadeOnDelete();
+            $table->date('start_date')->nullable()
+                ->comment('Ngày bắt đầu gói membership');
+            $table->date('end_date')->nullable()
+                ->comment('Ngày kết thúc gói membership');
+            $table->smallInteger('status')->default(1)
+                ->comment('Trạng thái gói: enum định nghĩa trong MembershipUserStatus');
+            $table->timestamps();
+
+            $table->unique(['user_id', 'membership_id'], 'user_membership_unique');
+        });
     }
 
     /**
@@ -334,5 +353,6 @@ return new class extends Migration
         Schema::dropIfExists('users');
         Schema::dropIfExists('sessions');
         Schema::dropIfExists('personal_access_tokens');
+        Schema::dropIfExists('membership_user');
     }
 };

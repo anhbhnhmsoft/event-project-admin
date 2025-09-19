@@ -183,6 +183,26 @@ class AuthService
             ];
         }
     }
+
+    public function setLanguageUser(User $user, string $locale = 'vi'): array
+    {
+        try {
+            if (!in_array($locale, [Language::VI->value, Language::EN->value])) {
+                $locale = Language::VI->value;
+            }
+            $user->lang = $locale;
+            $user->save();
+            return [
+                'status' => true,
+                'message' => __('auth.success.set_lang_success'),
+            ];
+        }  catch (\Throwable $e) {
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
+        }
+    }
 }
 
 
