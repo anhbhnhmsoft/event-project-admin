@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Events;
 use App\Filament\Resources\Events\Pages\CreateEvent;
 use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Filament\Resources\Events\Pages\ListEvents;
+use App\Filament\Resources\Events\Pages\SeatsEvent;
 use App\Filament\Resources\Events\Schemas\EventForm;
 use App\Filament\Resources\Events\Tables\EventsTable;
 use App\Models\Event;
@@ -47,11 +48,11 @@ class EventResource extends Resource
     {
         $query = parent::getEloquentQuery();
         $user = Auth::user();
-        
+
         if ($user->role === RoleUser::SUPER_ADMIN->value) {
             return $query;
         }
-        
+
         return $query->where('organizer_id', $user->organizer_id);
     }
 
@@ -68,6 +69,7 @@ class EventResource extends Resource
             'index' => ListEvents::route('/'),
             'create' => CreateEvent::route('/create'),
             'edit' => EditEvent::route('/{record}/edit'),
+            'seats-manage' => SeatsEvent::route('/{record}/seats'),
         ];
     }
 

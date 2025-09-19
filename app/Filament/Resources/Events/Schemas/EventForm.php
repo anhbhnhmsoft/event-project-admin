@@ -9,6 +9,8 @@ use App\Models\Ward;
 use App\Utils\Constants\CommonStatus;
 use App\Utils\Constants\EventStatus;
 use App\Utils\Constants\StoragePath;
+use App\Utils\Constants\EventUserRole;
+use App\Models\User;
 use Closure;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
@@ -75,6 +77,7 @@ class EventForm
                             ->searchable()
                             ->label('Thuộc nhà tổ chức')
                             ->required()
+                            ->live(debounce: 500)
                             ->default(fn() => (($user = Auth::user()) && $user->role !== RoleUser::SUPER_ADMIN->value) ? $user->organizer_id : null)
                             ->options(function (Get $get) {
                                 $user = Auth::user();
@@ -184,7 +187,7 @@ class EventForm
                                 'required' => 'Vui lòng nhập Mô tả chi tiết',
                             ])
                             ->extraAttributes(['style' => 'min-height: 300px;']),
-                        Select::make('status')
+                            Select::make('status')
                             ->label('Trạng thái')
                             ->required()
                             ->default(EventStatus::UPCOMING->value)
@@ -192,6 +195,108 @@ class EventForm
                             ->validationMessages([
                                 'required' => 'Vui lòng tích chọn',
                             ]),
+                    ]),
+                Step::make('participants')
+                    ->label('Người tham gia')
+                    ->columns(1)
+                    ->schema([
+                        Repeater::make('participants')
+                            ->label('Người trong sự kiện')
+                            ->addActionLabel('Thêm người')
+                            ->columnSpanFull()
+                            ->collapsible()
+                            ->reorderable()
+                            ->minItems(1)
+                            ->itemLabel(function (array $state): string {
+                                $userName = null;
+                                if (!empty($state['user_id'])) {
+                                    $user = User::query()->select('name')->find($state['user_id']);
+                                    $userName = $user?->name;
+                                }
+
+                                $roleValue = $state['role'] ?? null;
+                                $roleOptions = EventUserRole::options();
+                                $roleLabel = ($roleValue !== null && isset($roleOptions[$roleValue])) ? $roleOptions[$roleValue] : null;
+
+                                if ($userName && $roleLabel) {
+                                    return $userName . ' - ' . $roleLabel;
+                                }
+                                if ($userName) {
+                                    return $userName;
+                                }
+                                return 'Người dùng';
+                            })
+                            ->rules([
+                                fn() => function ($attribute, $value, \Closure $fail) {
+                                    $seenPairs = [];
+                                    $validCount = 0;
+                                    $items = array_values((array) $value);
+                                    foreach ($items as $participant) {
+                                        $userId = $participant['user_id'] ?? null;
+                                        $role = $participant['role'] ?? null;
+                                        if (!$userId || !$role) {
+                                            continue;
+                                        }
+                                        $validCount++;
+                                        $pair = $userId . ':' . $role;
+                                        if (isset($seenPairs[$pair])) {
+                                            $fail('Người dùng với vai trò này đã được thêm vào sự kiện.');
+                                            return;
+                                        }
+                                        $seenPairs[$pair] = true;
+                                    }
+                                    if ($validCount === 0) {
+                                        $fail('Vui lòng thêm ít nhất 1 người dùng với vai trò.');
+                                    }
+                                },
+                            ])
+                            ->validationMessages([
+                                'required' => 'Vui lòng thêm người trong sự kiện.',
+                            ])
+                            ->schema([
+                                Hidden::make('id'),
+                                Select::make('user_id')
+                                    ->label('Người dùng')
+                                    ->searchable()
+                                    ->live()
+                                    ->options(function(Get $get) {
+                                        $user = Auth::user();
+                                        $organizerId = $get('../../organizer_id');
+                                        if($user && in_array($user->role, [RoleUser::SUPER_ADMIN->value], true)) {
+                                            if ($organizerId === null || $organizerId === '' || $organizerId === 0) {
+                                                return [
+                                                    '' => 'Vui lòng chọn nhà tổ chức trước'
+                                                ];
+                                            }
+                                            return User::query()
+                                                ->where('organizer_id', $organizerId)
+                                                ->where('role', '!=', RoleUser::SUPER_ADMIN->value)
+                                                ->pluck('name', 'id')
+                                                ->all();
+                                        }
+                                        if ($user && $user->organizer_id) {
+                                            return User::query()
+                                                ->where('organizer_id', $user->organizer_id)
+                                                ->where('role', '!=', RoleUser::SUPER_ADMIN->value)
+                                                ->pluck('name', 'id')
+                                                ->all();
+                                        }
+                                        return [];
+                                    })
+                                    ->required()
+                                    ->validationMessages([
+                                        'required' => 'Vui lòng chọn người dùng.',
+                                    ]),
+                                Select::make('role')
+                                    ->label('Vai trò')
+                                    ->required()
+                                    ->live()
+                                    ->options(EventUserRole::options())
+                                    ->validationMessages([
+                                        'required' => 'Vui lòng chọn vai trò.',
+                                    ]),
+                            ])
+                            ->default([[]]),
                     ]),
                 Step::make('schedules')
                     ->label('Lịch trình')

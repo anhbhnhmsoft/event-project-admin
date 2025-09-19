@@ -5,19 +5,17 @@ namespace App\Models;
 use App\Utils\Helper;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Organizer extends Model
+class EventUser extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+
+    protected $table = 'event_user';
 
     protected $fillable = [
-        'id',
-        'name',
-        'image',
-        'description',
-        'status'
+        'event_id',
+        'user_id',
+        'role',
     ];
 
     protected static function booted()
@@ -29,8 +27,15 @@ class Organizer extends Model
         });
     }
 
-    public function users () : HasMany
+    public function event()
     {
-        return $this->hasMany(User::class);
+        return $this->belongsTo(Event::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }
+
+

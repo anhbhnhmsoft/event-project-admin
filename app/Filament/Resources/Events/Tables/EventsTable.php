@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources\Events\Tables;
 
+use App\Filament\Resources\Events\EventResource;
 use App\Models\Organizer;
 use App\Utils\Constants\EventStatus;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -74,6 +76,12 @@ class EventsTable
                     ->label('Xem'),
                 EditAction::make()
                     ->label('Sửa'),
+                Action::make('seats-manager')
+                    ->label('Quản lý chỗ ngồi')
+                    ->icon('heroicon-o-building-office')
+                    ->url(fn($record) => EventResource::getUrl('seats-manage', ['record' => $record]))
+                    ->openUrlInNewTab()
+                    ->color('success'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

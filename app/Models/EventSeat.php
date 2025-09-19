@@ -10,12 +10,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Utils\Helper;
 class EventSeat extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $fillable = [
         'event_area_id',
         'seat_code',
         'status',
+        'user_id'
     ];
 
     protected static function booted()
@@ -35,5 +36,10 @@ class EventSeat extends Model
     public function tickets(): HasMany
     {
         return $this->hasMany(Ticket::class, 'event_seat_id');
+    }
+
+    public function user () : BelongsTo 
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

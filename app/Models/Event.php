@@ -145,6 +145,11 @@ class Event extends Model
         return $this->hasMany(EventSchedule::class);
     }
 
+    public function participants(): HasMany
+    {
+        return $this->hasMany(EventUser::class, 'event_id');
+    }
+
     public function areas(): HasMany
     {
         return $this->hasMany(EventArea::class);
