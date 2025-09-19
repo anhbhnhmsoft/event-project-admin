@@ -15,6 +15,7 @@ return [
         'reset_password_subject' => 'Reset Your Password',
         'regards' => 'Regards',
         'user_info' => 'Get user information successfully',
+        'logout_success' => 'Logout successful',
     ],
     'error' => [
         'invalid_credentials' => 'Invalid email or password',
@@ -26,6 +27,7 @@ return [
         'unauthorized' => 'Unauthorized',
         'validation_failed' => 'Validation failed',
         'server_error' => 'Server error',
+        'logout_failed' => 'Logout failed',
     ],
     'validation' => [
         'email_required' => 'Email is required',
