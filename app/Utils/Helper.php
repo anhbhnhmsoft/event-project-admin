@@ -55,4 +55,19 @@ final class Helper
             return is_string($col) && stripos($col, $name) !== false;
         });
     }
+
+    //Chuyển thời gian HH:MM sang tổng số phút.
+    public static function timeToMinutes(?string $time): ?int
+    {
+        if (empty($time)) {
+            return null;
+        }
+
+        if (!preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $time)) {
+            return null;
+        }
+
+        [$hour, $minute] = explode(':', $time);
+        return ((int) $hour) * 60 + ((int) $minute);
+    }
 }
