@@ -239,6 +239,7 @@ return new class extends Migration
             $table->foreignId('event_id')->constrained()->cascadeOnDelete();
             $table->boolean('vip')->default(false);
             $table->integer('seats_per_row')->nullable()->comment('Số ghế mỗi hàng');
+            $table->softDeletes();
             $table->timestamps();
         });
 
