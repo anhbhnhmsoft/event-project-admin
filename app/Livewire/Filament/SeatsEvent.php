@@ -28,13 +28,12 @@ class SeatsEvent extends Component
     public $showAreaModal = false;
     public $showSeatModal = false;
 
-    public $showSeatUser = false;
-    public $showAssignUser = false;
+    public $hiddenDetailSeat = false;
 
     public $areaCapacity = '';
-    public $areaSeatsPerRow = 10;
     public $areaVip = false;
 
+    public string $newSeatName = '';
     public $selectedSeat = null;
     public $selectedSeatUser = null;
 
@@ -74,15 +73,12 @@ class SeatsEvent extends Component
     {
         $this->validate([
             'areaCapacity' => 'required|integer|min:1',
-            'areaSeatsPerRow'  => 'required|integer|min:1'
-
         ]);
         $countAreas = count($this->areas);
         $area = $this->areaService->eventAreaCreateOne([
             'name' => $this->event->name . ($countAreas + 1),
             'capacity' => (int) $this->areaCapacity,
             'event_id' => $this->event->id,
-            'seats_per_row' => (int) $this->areaSeatsPerRow,
             'vip' => $this->areaVip
         ]);
         if ($area) {
@@ -95,7 +91,7 @@ class SeatsEvent extends Component
                     ->danger()
                     ->send();
             }
-            $this->reset(['areaVip', 'areaCapacity', 'areaSeatsPerRow']);
+            $this->reset(['areaVip', 'areaCapacity']);
             $this->showAreaModal = false;
             $this->loadAreas();
             Notification::make()
@@ -110,11 +106,67 @@ class SeatsEvent extends Component
         }
     }
 
-
-    public function selectSeat($seatId)
+    public function toggleSelectedUser($userId)
     {
-        $this->selectedSeat = $this->seatService->getSeatById($seatId)->toArray();
-        $this->showAssignUser = true;
+        $userId = (int) $userId;
+
+
+        if ($this->selectedSeatUser === $userId) {
+            $this->selectedSeatUser = null;
+        } else {
+            $this->selectedSeatUser = $userId;
+        }
+    }
+
+    public function updateSeatName()
+    {
+        if (! $this->seatInfo) {
+            return;
+        }
+
+        $this->validate([
+            'newSeatName' => 'required|string|max:255',
+        ]);
+
+        $this->seatInfo['seat_code'] = $this->newSeatName;
+
+        $result = $this->seatService->updateSeat($this->seatInfo);
+        $this->newSeatName = '';
+        $this->loadAreas();
+        if ($result) {
+            return  Notification::make()
+                ->title('Cập nhật thành công!')
+                ->success()
+                ->send();
+        } else {
+            return  Notification::make()
+                ->title('Cập nhật không thành công!')
+                ->danger()
+                ->send();
+        }
+    }
+
+    public function removeSeatUser()
+    {
+        if (! $this->seatInfo) {
+            return;
+        }
+        $this->seatInfo['user_id'] = null;
+        $this->seatInfo['status'] = EventSeatStatus::AVAILABLE->value;
+        $result = $this->seatService->updateSeat($this->seatInfo);
+        $this->seatUser = null;
+        $this->loadAreas();
+        if ($result) {
+            return  Notification::make()
+                ->title('Cập nhật thành công!')
+                ->success()
+                ->send();
+        } else {
+            return  Notification::make()
+                ->title('Cập nhật không thành công!')
+                ->danger()
+                ->send();
+        }
     }
 
     public function assignSeatToUser()
@@ -132,14 +184,15 @@ class SeatsEvent extends Component
                     ->send();
                 return;
             }
+
             $this->selectedSeat['status'] = EventSeatStatus::BOOKED->value;
             $this->selectedSeat['user_id'] = $this->selectedSeatUser;
-            if (!$this->seatService->updateSeat($this->selectedSeat)) {
-                Notification::make()
-                    ->title('Có lỗi xảy, vui lòng thử lại sau!')
-                    ->success()
-                    ->send();
 
+            if (! $this->seatService->updateSeat($this->selectedSeat)) {
+                Notification::make()
+                    ->title('Có lỗi xảy ra, vui lòng thử lại sau!')
+                    ->danger()
+                    ->send();
                 return;
             }
 
@@ -156,30 +209,39 @@ class SeatsEvent extends Component
                 ->success()
                 ->send();
 
-            $this->showAssignUser = false;
+            $this->hiddenDetailSeat = false;
+            $this->selectedSeatUser = null;
         }
-        return;
     }
+
+    public function closeDetailSeat()
+    {
+        $this->reset([
+            'selectedSeatUser',
+            'selectedSeat',
+            'seatInfo',
+            'seatUser',
+            'userSearch',
+        ]);
+
+        $this->resetValidation();
+        $this->resetErrorBag();
+        $this->hiddenDetailSeat = false;
+    }
+
+
 
     private function generateSeats($area): bool
     {
-        $rowArea = ceil((int) $this->areaCapacity / (int) $this->areaSeatsPerRow);
-        $seats = [];
-        for ($row = 0; $row < $rowArea; $row++) {
-            $rowLetter = $this->getRowLetter($row);
-            $seatsInThisRow = ($row == $rowArea  - 1)
-                ? (int) $this->areaCapacity - ($row * (int) $this->areaSeatsPerRow)
-                : (int) $this->areaSeatsPerRow;
-            for ($col = 1; $col <= $seatsInThisRow; $col++) {
-                $seats[] = [
-                    'event_area_id' => $area['id'],
-                    'seat_code'     => $rowLetter . $col,
-                    'status'        => EventSeatStatus::AVAILABLE->value,
-                    'created_at'    => now(),
-                    'updated_at'    => now(),
-                ];
-            }
+
+        for ($col = 1; $col <= $this->areaCapacity; $col++) {
+            $seats[] = [
+                'event_area_id' => $area['id'],
+                'seat_code'     => $col,
+                'status'        => EventSeatStatus::AVAILABLE->value,
+            ];
         }
+
         return $this->seatService->eventSeatInsert($seats);
     }
 
@@ -195,19 +257,21 @@ class SeatsEvent extends Component
 
     public function showDetailSeat($seatId)
     {
+        $this->selectedSeat = $this->seatService->getSeatById($seatId)->toArray();
+        $this->hiddenDetailSeat = true;
         $seat = $this->seatService->getSeatById($seatId);
 
         if ($seat) {
             $this->seatInfo = $seat->toArray();
             $this->seatUser = $seat->user ? $seat->user->toArray() : [];
-            $this->showSeatUser = true;
+            $this->hiddenDetailSeat = true;
         } else {
             Notification::make()
                 ->title('Không tồn tại chỗ ngồi!')
                 ->danger()
                 ->send();
 
-            $this->showSeatUser = false;
+            $this->hiddenDetailSeat = false;
         }
     }
 
@@ -223,15 +287,18 @@ class SeatsEvent extends Component
                         ->orWhere('phone', 'like', "%{$this->userSearch}%");
                 });
             })
+            ->leftJoin('event_seats', 'users.id', '=', 'event_seats.user_id')
+            ->select('users.*')
+            ->orderByRaw('CASE WHEN event_seats.user_id IS NULL THEN 0 ELSE 1 END ASC')
             ->paginate($this->usersPerPage, ['*'], 'usersPage');
     }
 
 
     public function selectArea($areaId)
     {
+
         $this->selectedArea = collect($this->areas)->firstWhere('id', $areaId);
         $this->areaCapacity = $this->selectedArea['capacity'];
-        $this->areaSeatsPerRow = $this->selectedArea['seats_per_row'];
         $this->areaVip = $this->selectedArea['vip'];
         $this->showSeatModal = true;
 
@@ -240,7 +307,9 @@ class SeatsEvent extends Component
 
     public function deleteArea($areaId)
     {
-        $result = $this->areaService->deleteArea((int) $areaId);
+        $areaDeleted = $this->areaService->deleteArea((int) $areaId);
+        $seatsDeleted = $this->seatService->deleteSeatsByAreaId((int) $areaId);
+        $result = $areaDeleted && $seatsDeleted;
 
         $this->loadAreas();
         if ($result) {
@@ -260,69 +329,34 @@ class SeatsEvent extends Component
 
     public function updateArea()
     {
-        $originalArea = $this->areaService->getAreaById($this->selectedArea['id']);
-        $nameChange         = $originalArea['name'] != $this->selectedArea['name'];
-        $capacityChange     = $originalArea['capacity'] != $this->selectedArea['capacity'];
-        $seatPerRowChange   = $originalArea['seats_per_row'] != $this->selectedArea['seats_per_row'];
-        $this->selectedArea['vip'] = $this->areaVip;
-        $vipChange          = $originalArea['vip'] != $this->areaVip;
         $this->showSeatModal = false;
-        if ($seatPerRowChange || $capacityChange) {
 
-            $this->areaCapacity     = $this->selectedArea['capacity'];
-            $this->areaSeatsPerRow = $this->selectedArea['seats_per_row'];
+        $result = $this->areaService->updateAreaAndSeats($this->selectedArea);
 
-            $result = $this->areaService->updateArea($this->selectedArea);
-            if ($result) {
-                $resultSeatRemove = $this->seatService->deleteSeatsByAreaId($this->selectedArea['id']);
-
-                if ($resultSeatRemove && $this->generateSeats($this->selectedArea)) {
-
-                    Notification::make()
-                        ->title('Khu vực đã được cập nhật!')
-                        ->success()
-                        ->send();
-                } else {
-                    Notification::make()
-                        ->title('Cập nhật không thành công!')
-                        ->danger()
-                        ->send();
-                }
-            } else {
-                Notification::make()
-                    ->title('Cập nhật không thành công!')
-                    ->danger()
-                    ->send();
-            }
-        } else if ($nameChange || $vipChange) {
-            $result = $this->areaService->updateArea($this->selectedArea);
-
-            if ($result) {
-
-                Notification::make()
-                    ->title('Khu vực đã được cập nhật!')
-                    ->success()
-                    ->send();
-            } else {
-                Notification::make()
-                    ->title('Cập nhật không thành công!')
-                    ->danger()
-                    ->send();
-            }
+        if ($result) {
+            Notification::make()
+                ->title('Khu vực đã được cập nhật!')
+                ->success()
+                ->send();
+        } else {
+            Notification::make()
+                ->title('Cập nhật không thành công!')
+                ->danger()
+                ->send();
         }
 
         $this->loadAreas();
-        return;
     }
 
-    private function getRowLetter(int $index): string
+
+    public function generateSeatsUpdate($selectedArea): bool
     {
-        $letters = '';
-        while ($index >= 0) {
-            $letters = chr($index % 26 + 65) . $letters;
-            $index = intdiv($index, 26) - 1;
+        $area = $this->areaService->getAreaById($selectedArea['id']);
+        if (! $area) {
+            return false;
         }
-        return $letters;
+
+        return $this->areaService->updateSeatsForArea($area->id, (int) $selectedArea['capacity']);
     }
 
     public function closeModalEdit()
@@ -336,12 +370,10 @@ class SeatsEvent extends Component
             'seatInfo',
             'seatUser',
             'userSearch',
-            'showSeatUser',
-            'showAssignUser',
+            'hiddenDetailSeat',
         ]);
 
         $this->seatFilter = 'all';
-        $this->areaSeatsPerRow = 10;
         $this->areaVip = false;
         $this->areaCapacity = '';
         $this->resetPage('seatsPage');

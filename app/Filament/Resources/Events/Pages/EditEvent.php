@@ -38,7 +38,6 @@ class EditEvent extends EditRecord
 
         $data['start_time'] = $event->start_time ? $event->start_time->format('H:i') : '';
         $data['end_time'] = $event->end_time ? $event->end_time->format('H:i') : '';
-
         $schedules = $event->schedules()->with(['documents.files'])->orderBy('sort')->get()->map(function ($schedule) {
             $startTime = $schedule->start_time;
             $endTime = $schedule->end_time;
@@ -241,6 +240,10 @@ class EditEvent extends EditRecord
                                             $filesToDelete = $this->collectFilesToDelete($eventScheduleDocument->id, $existingFilePaths, $files);
                                             $allFilesToDelete = array_merge($allFilesToDelete, $filesToDelete);
                                         }
+
+                                        $filesToDelete = $this->collectFilesToDelete($eventScheduleDocument->id, $existingFilePaths, $files);
+                                        $allFilesToDelete = array_merge($allFilesToDelete, $filesToDelete);
+                                    }
                                 }
                             }
 
@@ -349,7 +352,6 @@ class EditEvent extends EditRecord
                     'reason' => 'file_removed'
                 ];
             }
-
         } else {
             $hasNewFiles = $this->hasNewFiles($files);
 
@@ -363,7 +365,6 @@ class EditEvent extends EditRecord
                         'reason' => 'no_files_in_form'
                     ];
                 }
-
             }
         }
 
