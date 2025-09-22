@@ -288,4 +288,13 @@ class AuthController extends Controller
             'message' => $status['message'],
         ], 200);
     }
+
+    public function logout(Request $request)
+    {
+        $request->user()->tokens()->delete();
+        
+        return response()->json([
+            'message' => __('auth.success.logout_success'),
+        ], 200);
+    }
 }

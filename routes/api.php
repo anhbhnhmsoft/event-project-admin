@@ -27,7 +27,7 @@ Route::middleware('set-locale')->group(function () {
 Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
     Route::get('/user', [AuthController::class, 'getUserInfo']);
     Route::post('/set-lang', [AuthController::class, 'setLang']);
-
+    Route::post('/logout', [AuthController::class, 'logout']);
 
     Route::prefix('/event')->group(function () {
         Route::get('/', [EventController::class, 'list']);

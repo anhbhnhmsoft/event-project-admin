@@ -80,10 +80,7 @@ class EventSeatservice
                 throw new \Exception("Seat ID {$seat['id']} not found");
             }
 
-            $result = $seatModel->update([
-                'user_id' => $seat['user_id'],
-                'status'  => $seat['status'],
-            ]);
+            $result = $seatModel->update($seat);
 
             DB::commit();
             return $result;
