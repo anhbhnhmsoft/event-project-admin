@@ -16,6 +16,7 @@ return [
         'regards' => 'Trân trọng',
         'user_info' => 'Lấy thông tin người dùng thành công',
         'set_lang_success' => 'Cài đặt ngôn ngữ thành công',
+        'logout_success' => 'Đăng xuất thành công',
     ],
     'error' => [
         'invalid_credentials' => 'Email hoặc mật khẩu không đúng',
@@ -28,6 +29,7 @@ return [
         'validation_failed' => 'Dữ liệu không hợp lệ',
         'server_error' => 'Lỗi máy chủ',
         'unverified_email' => 'Email chưa được xác thực, vui lòng kiểm tra email để xác thực tài khoản',
+        'logout_failed' => 'Đăng xuất thất bại',
     ],
     'validation' => [
         'email_required' => 'Email là bắt buộc',
