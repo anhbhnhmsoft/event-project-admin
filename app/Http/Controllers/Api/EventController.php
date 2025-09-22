@@ -5,17 +5,22 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\EventListResource;
 use App\Http\Resources\EventDetailResource;
+use App\Http\Resources\EventUserHistoryResource;
 use App\Services\EventService;
+use App\Services\EventUserHistoryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class EventController extends Controller
 {
     protected EventService $eventService;
+    protected EventUserHistoryService $eventUserHistoryService;
 
-    public function __construct(EventService $eventService)
+    public function __construct(EventService $eventService, EventUserHistoryService $eventUserHistoryService)
     {
         $this->eventService = $eventService;
+        $this->eventUserHistoryService = $eventUserHistoryService;
     }
 
     public function list(Request $request): JsonResponse
@@ -28,7 +33,7 @@ class EventController extends Controller
         // điều kiện kiên quyết
         $filters['organizer_id'] = $request->user()->organizer_id;
 
-        $events = $this->eventService->eventPaginator($filters,$sortBy, $page, $limit);
+        $events = $this->eventService->eventPaginator($filters, $sortBy, $page, $limit);
 
         return response()->json([
             'message' => __('common.common_success.get_success'),
@@ -54,6 +59,92 @@ class EventController extends Controller
         return response()->json([
             'message' => __('common.common_success.get_success'),
             'data' => EventDetailResource::make($result['event']),
+        ], 200);
+    }
+
+    public function eventUserHistory(Request $request): JsonResponse
+    {
+        $page  = $request->integer('page', 1);
+        $limit = $request->integer('limit', 10);
+
+        $validator = Validator::make($request->all(), [
+            'event_id' => [
+                'required',
+                'integer',
+                'exists:events,id',
+            ],
+        ], [
+            'event_id.required' => __('event.validation.event_id_required'),
+            'event_id.integer' => __('event.validation.event_id_integer'),
+            'event_id.exists' => __('event.validation.event_id_exists'),
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => __('common.common_error.validation_failed'),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $user = $request->user();
+
+        $result = $this->eventUserHistoryService->getEventHistory($request->event_id, $user->id, $user->organizer_id, $page, $limit);
+
+        if ($result['status'] === false) {
+            return response()->json([
+                'message' => $result['message'],
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => $result['message'],
+            'data' => EventUserHistoryResource::collection($result['data']),
+            'pagination' => [
+                'total' => $result['data']->total(),
+                'per_page' => $result['data']->perPage(),
+                'current_page' => $result['data']->currentPage(),
+                'last_page' => $result['data']->lastPage()
+            ],
+        ], 200);
+    }
+
+    public function createEventUserHistory(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'event_id' => ['required','integer','exists:events,id'],
+            'event_seat_id' => ['required','integer','exists:event_seats,id'],
+            'status' => ['required','integer'],
+        ], [
+            'event_id.required' => __('event.validation.event_id_required'),
+            'event_id.integer' => __('event.validation.event_id_integer'),
+            'event_id.exists' => __('event.validation.event_id_exists'),
+            'event_seat_id.required' => __('event.validation.event_seat_id_required'),
+            'event_seat_id.integer' => __('event.validation.event_seat_id_integer'),
+            'event_seat_id.exists' => __('event.validation.event_seat_id_exists'),
+            'status.required' => __('event.validation.status_required'),
+            'status.integer' => __('event.validation.status_integer'),
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => __('common.common_error.validation_failed'),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $user = $request->user();
+
+        $result = $this->eventUserHistoryService->createEventHistory($validator->getData(), $user->id, $user->organizer_id);
+
+        if ($result['status'] === false) {
+            return response()->json([
+                'message' => $result['message'],
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => $result['message'],
+            'data' => EventUserHistoryResource::make($result['data']),
         ], 200);
     }
 }

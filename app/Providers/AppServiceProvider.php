@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Services\AuthService;
 use App\Services\OrganizerService;
+use App\Services\EventUserHistoryService;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\ServiceProvider;
 
@@ -16,6 +17,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(AuthService::class, fn() => new AuthService());
         $this->app->singleton(OrganizerService::class, fn() => new OrganizerService());
+        $this->app->singleton(EventUserHistoryService::class, fn() => new EventUserHistoryService());
     }
 
     /**
