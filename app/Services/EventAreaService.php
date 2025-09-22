@@ -29,17 +29,28 @@ class EventAreaService
         return EventArea::find($areaId);
     }
 
-    public function deleteArea($areaId)
+    public function deleteArea(int $areaId)
     {
         DB::beginTransaction();
         try {
-            $eventArea = EventArea::find($areaId)->delete();
+            $hasAssignedSeats = EventSeat::where('event_area_id', $areaId)
+                ->whereNotNull('user_id')
+                ->exists();
+
+            if ($hasAssignedSeats) {
+                DB::rollBack();
+                return false;
+            }
+
+            EventSeat::where('event_area_id', $areaId)->delete();
+            EventArea::find($areaId)?->delete();
+
             DB::commit();
-            return $eventArea;
+            return true;
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Delete EventArea failed: " . $e->getMessage());
-            return null;
+            return false;
         }
     }
 

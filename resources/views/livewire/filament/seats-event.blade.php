@@ -114,11 +114,6 @@
                                             </div>
                                         @endforeach
                                     </div>
-                                    @if (count($area['seats'] ?? []) > 50)
-                                        <div class="text-center mt-2 text-gray-500 text-sm">
-                                            ... và {{ count($area['seats']) - 50 }} ghế khác
-                                        </div>
-                                    @endif
                                 </div>
                             </div>
                         </div>
