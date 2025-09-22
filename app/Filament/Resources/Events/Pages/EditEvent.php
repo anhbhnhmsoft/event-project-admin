@@ -38,6 +38,7 @@ class EditEvent extends EditRecord
 
         $data['start_time'] = $event->start_time ? $event->start_time->format('H:i') : '';
         $data['end_time'] = $event->end_time ? $event->end_time->format('H:i') : '';
+
         $schedules = $event->schedules()->with(['documents.files'])->orderBy('sort')->get()->map(function ($schedule) {
             $startTime = $schedule->start_time;
             $endTime = $schedule->end_time;
