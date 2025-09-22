@@ -71,7 +71,7 @@ class UserResource extends Resource
             return $query;
         }
         if ($user->role === RoleUser::ADMIN->value) {
-            return $query->where('organizer_id', $user->organizer_id)->whereIn('role', [RoleUser::ADMIN->value, RoleUser::SPEAKER->value]);
+            return $query->where('organizer_id', $user->organizer_id)->where('role', '!=', [RoleUser::SUPER_ADMIN->value, RoleUser::ADMIN->value, RoleUser::SPEAKER->value]);
         }
         
         if($user->role === RoleUser::SPEAKER->value) {

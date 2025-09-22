@@ -7,6 +7,7 @@ use App\Models\Event;
 use App\Models\EventSchedule;
 use App\Models\EventScheduleDocument;
 use App\Models\EventScheduleDocumentFile;
+use App\Models\EventUser;
 use App\Utils\Constants\StoragePath;
 use App\Utils\Helper;
 use Carbon\Carbon;
@@ -70,6 +71,17 @@ class EditEvent extends EditRecord
             ];
         })->toArray();
         $data['schedules'] = $schedules;
+        
+        $participants = $event->participants()->get()->map(function ($participant) {
+            return [
+                'id' => $participant->id,
+                'event_id' => $participant->event_id,
+                'user_id' => $participant->user_id,
+                'role' => $participant->role,
+            ];
+        })->toArray();
+        $data['participants'] = $participants;
+
         $location = [
             'lat' => $data['latitude'],
             'lng' => $data['longitude'],
@@ -132,6 +144,31 @@ class EditEvent extends EditRecord
                 $update['image_represent_path'] = $record->image_represent_path;
             }
 
+            if (isset($data['participants'])) {
+                $processedParticipantIds = [];
+                
+                foreach (array_values($data['participants']) as $participant) {
+                    if (!empty($participant['user_id']) && !empty($participant['role'])) {
+                        $eventUser = EventUser::updateOrCreate(
+                            [
+                                'id' => $participant['id'] ?? Helper::getTimestampAsId(),
+                                'event_id' => $record->id,
+                            ],
+                            [
+                                'user_id' => $participant['user_id'],
+                                'role' => $participant['role'],
+                            ]
+                        );
+                        
+                        $processedParticipantIds[] = $eventUser->id;
+                    }
+                }
+                
+                EventUser::where('event_id', $record->id)
+                    ->whereNotIn('id', $processedParticipantIds)
+                    ->delete();
+            }
+
             $record->update($update);
 
             if (isset($data['schedules'])) {
@@ -179,25 +216,29 @@ class EditEvent extends EditRecord
 
                                     $processedDocumentIds[] = $eventScheduleDocument->id;
 
-                                    if (!empty($documentData['files'])) {
-                                        $files = is_array($documentData['files']) ? $documentData['files'] : [$documentData['files']];
-                                        $existingFilePaths = [];
+                                        if (!empty($documentData['files'])) {
+                                            $files = is_array($documentData['files']) ? $documentData['files'] : [$documentData['files']];
+                                            $existingFilePaths = [];
 
-                                        foreach ($files as $file) {
-                                            $tempFile = $this->extractTemporaryFile($file);
+                                            foreach ($files as $file) {
+                                                $tempFile = $this->extractTemporaryFile($file);
 
-                                            if ($tempFile) {
-                                                $filePath = $tempFile->store(
-                                                    StoragePath::makePathById(StoragePath::EVENT_PATH, $record->id) . '/' . $eventSchedule->id . '/' . $eventScheduleDocument->id,
-                                                    'public'
-                                                );
+                                                if ($tempFile) {
+                                                    $filePath = $tempFile->store(
+                                                        StoragePath::makePathById(StoragePath::EVENT_PATH, $record->id) . '/' . $eventSchedule->id . '/' . $eventScheduleDocument->id,
+                                                        'public'
+                                                    );
 
-                                                $this->createFileRecord($eventScheduleDocument->id, $tempFile, $filePath);
+                                                    $this->createFileRecord($eventScheduleDocument->id, $tempFile, $filePath);
 
-                                                $existingFilePaths[] = $filePath;
-                                            } elseif (is_string($file)) {
-                                                $existingFilePaths[] = $file;
+                                                    $existingFilePaths[] = $filePath;
+                                                } elseif (is_string($file)) {
+                                                    $existingFilePaths[] = $file;
+                                                }
                                             }
+
+                                            $filesToDelete = $this->collectFilesToDelete($eventScheduleDocument->id, $existingFilePaths, $files);
+                                            $allFilesToDelete = array_merge($allFilesToDelete, $filesToDelete);
                                         }
 
                                         $filesToDelete = $this->collectFilesToDelete($eventScheduleDocument->id, $existingFilePaths, $files);
@@ -342,7 +383,7 @@ class EditEvent extends EditRecord
         $filePaths = array_column($filesToDelete, 'file_path');
         $fileIds = array_column($filesToDelete, 'id');
 
-        $existingPaths = array_filter($filePaths, function ($path) {
+        $existingPaths = array_filter($filePaths, function($path) {
             return Storage::disk('public')->exists($path);
         });
 
