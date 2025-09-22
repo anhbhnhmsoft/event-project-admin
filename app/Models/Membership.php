@@ -76,4 +76,11 @@ class Membership extends Model
     {
         return $this->hasFeature(ConfigMembership::ALLOW_DOCUMENTARY);
     }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'membership_user')
+            ->withPivot(['start_date', 'end_date', 'status'])
+            ->withTimestamps();
+    }
 }

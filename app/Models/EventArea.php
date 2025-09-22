@@ -18,7 +18,6 @@ class EventArea extends Model
         'name',
         'capacity',
         'vip',
-        'seats_per_row'
     ];
 
     protected $casts = [

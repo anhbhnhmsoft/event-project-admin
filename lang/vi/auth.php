@@ -15,6 +15,7 @@ return [
         'reset_password_subject' => 'Đặt lại mật khẩu của bạn',
         'regards' => 'Trân trọng',
         'user_info' => 'Lấy thông tin người dùng thành công',
+        'set_lang_success' => 'Cài đặt ngôn ngữ thành công',
     ],
     'error' => [
         'invalid_credentials' => 'Email hoặc mật khẩu không đúng',

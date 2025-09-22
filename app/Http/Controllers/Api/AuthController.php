@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
 use App\Services\AuthService;
 use App\Mail\VerifyEmailMail;
+use App\Utils\Constants\RoleUser;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Models\User;
@@ -260,8 +261,7 @@ class AuthController extends Controller
 
     public function getUserInfo(Request $request)
     {
-        $user = $request->user();
-
+        $user = $request->user()->load('activeMemberships');
         if (!$user) {
             return response()->json([
                 'message' => __('auth.error.unauthorized'),
@@ -271,6 +271,21 @@ class AuthController extends Controller
         return response()->json([
             'message' => __('auth.success.user_info'),
             'data' => new UserResource($user),
+        ], 200);
+    }
+
+    public function setLang(Request $request)
+    {
+        $user = $request->user();
+        $lang = $request->string('lang','vi')->toString();
+        $status = $this->authService->setLanguageUser($user, $lang);
+        if ($status['status'] === false) {
+            return response()->json([
+                'message' => $status['message'],
+            ], 500);
+        }
+        return response()->json([
+            'message' => $status['message'],
         ], 200);
     }
 }
