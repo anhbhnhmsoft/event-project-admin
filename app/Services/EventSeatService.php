@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Event;
 use App\Models\EventSeat;
 use App\Utils\Constants\EventSeatStatus;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -14,6 +15,11 @@ class EventSeatservice
     {
         DB::beginTransaction();
         try {
+            $now = Carbon::now();
+            foreach ($seats as &$seat) {
+                $seat['created_at'] = $now;
+                $seat['updated_at'] = $now;
+            }
             $result =  EventSeat::insert($seats);
             DB::commit();
             return $result;
@@ -23,6 +29,7 @@ class EventSeatservice
             return false;
         }
     }
+
     public function getPaginatedSeats(?array $selectedArea, string|int $seatFilter, int $perPage = 10)
     {
         if (!$selectedArea) {
@@ -30,7 +37,7 @@ class EventSeatservice
         }
 
         $query = EventSeat::where('event_area_id', $selectedArea['id'])
-            ->orderBy('seat_code');
+            ->orderBy('created_at');
 
         if ($seatFilter !== 'all') {
             $query->where('status', EventSeatStatus::from($seatFilter)->value);

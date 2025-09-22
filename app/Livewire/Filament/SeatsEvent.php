@@ -61,7 +61,13 @@ class SeatsEvent extends Component
     }
     public function loadAreas()
     {
-        $this->areas = $this->event->areas()->with('seats')->get()->toArray();
+        $this->areas = $this->event
+            ->areas()
+            ->with(['seats' => function ($query) {
+                $query->orderBy('created_at')->limit(50);
+            }])
+            ->get()
+            ->toArray();
     }
 
     public function updatingUserSearch()
@@ -308,11 +314,8 @@ class SeatsEvent extends Component
     public function deleteArea($areaId)
     {
         $areaDeleted = $this->areaService->deleteArea((int) $areaId);
-        $seatsDeleted = $this->seatService->deleteSeatsByAreaId((int) $areaId);
-        $result = $areaDeleted && $seatsDeleted;
-
         $this->loadAreas();
-        if ($result) {
+        if ($areaDeleted) {
 
             Notification::make()
                 ->title('Khu vực đã được xóa!')
