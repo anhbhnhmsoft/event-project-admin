@@ -168,10 +168,12 @@ class AuthService
     {
         try {
             $count = UserResetCode::where('expires_at', '<', now())
-                ->whereNull('deleted_at')
-                ->update(['deleted_at' => now()]);
+                ->forceDelete();
 
-            return $count;
+            return [
+                'status' => true,
+                'message' => __('common.common_success.update_success'),
+            ];
         } catch (ServiceException $e) {
             return [
                 'status' => false,
