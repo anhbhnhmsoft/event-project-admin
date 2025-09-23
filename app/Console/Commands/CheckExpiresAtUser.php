@@ -12,8 +12,8 @@ class CheckExpiresAtUser extends Command
 
     public function handle(AuthService $authService)
     {
-        $count = $authService->checkExpiresAtUser();
-        $this->info("Check expires {$count} users success");
+        $result = $authService->checkExpiresAtUser();
+        $this->info(__($result['message']));
         return Command::SUCCESS;
     }
 }

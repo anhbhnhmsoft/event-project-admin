@@ -8,6 +8,7 @@ use App\Models\EventSeat;
 use App\Models\User;
 use App\Utils\Constants\EventSeatStatus;
 use App\Utils\Constants\EventUserHistoryStatus;
+use App\Utils\Helper;
 
 class EventUserHistoryService
 {
@@ -111,6 +112,13 @@ class EventUserHistoryService
 
             $history->event_seat_id = $data['event_seat_id'];
             $history->status = EventUserHistoryStatus::BOOKED->value;
+
+            if (empty($history->ticket_code)) {
+                do {
+                    $ticketCode = 'TICKET-' . Helper::getTimestampAsId();
+                } while (EventUserHistory::where('ticket_code', $ticketCode)->exists());
+                $history->ticket_code = $ticketCode;
+            }
             $history->save();
 
             if (! empty($data['event_seat_id'])) {
