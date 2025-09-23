@@ -25,14 +25,6 @@ class EventUserHistory extends Model
             if (empty($model->id)) {
                 $model->id = Helper::getTimestampAsId();
             }
-            
-            if (empty($model->ticket_code)) {
-                do {
-                    $ticketCode = 'TICKET-' . Helper::getTimestampAsId();
-                } while (self::where('ticket_code', $ticketCode)->exists());
-                
-                $model->ticket_code = $ticketCode;
-            }
         });
     }
 
