@@ -29,7 +29,7 @@ class EventUserHistoryService
                 ];
             }
 
-            $history = EventUserHistory::firstOrCreate(
+            $history = EventUserHistory::query()->firstOrCreate(
                 [
                     'event_id' => $data['event_id'],
                     'user_id' => $userId,
@@ -85,7 +85,8 @@ class EventUserHistoryService
                         'message' => __('event.validation.seat_taken'),
                     ];
                 }
-            } else {
+            }
+            else {
                 if (!empty($data['event_seat_id'])) {
                     return [
                         'status' => false,
