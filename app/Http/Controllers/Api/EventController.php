@@ -11,6 +11,8 @@ use App\Services\EventUserHistoryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+use App\Utils\Constants\EventUserHistoryStatus;
 
 class EventController extends Controller
 {
@@ -112,17 +114,20 @@ class EventController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'event_id' => ['required','integer','exists:events,id'],
-            'event_seat_id' => ['required','integer','exists:event_seats,id'],
-            'status' => ['required','integer'],
+            'event_seat_id' => ['nullable','integer','exists:event_seats,id'],
+            'status' => ['required','integer', Rule::in([
+                EventUserHistoryStatus::SEENED->value,
+                EventUserHistoryStatus::BOOKED->value,
+            ])],
         ], [
             'event_id.required' => __('event.validation.event_id_required'),
             'event_id.integer' => __('event.validation.event_id_integer'),
             'event_id.exists' => __('event.validation.event_id_exists'),
-            'event_seat_id.required' => __('event.validation.event_seat_id_required'),
             'event_seat_id.integer' => __('event.validation.event_seat_id_integer'),
             'event_seat_id.exists' => __('event.validation.event_seat_id_exists'),
             'status.required' => __('event.validation.status_required'),
             'status.integer' => __('event.validation.status_integer'),
+            'status.in' => __('event.validation.status_exists'),
         ]);
 
         if ($validator->fails()) {

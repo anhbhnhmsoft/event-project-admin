@@ -160,9 +160,9 @@ class Event extends Model
         return $this->hasMany(EventComment::class);
     }
 
-    public function tickets(): HasMany
+    public function eventUserHistories(): HasMany
     {
-        return $this->hasMany(Ticket::class);
+        return $this->hasMany(EventUserHistory::class);
     }
 
 
