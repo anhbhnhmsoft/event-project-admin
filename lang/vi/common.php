@@ -4,6 +4,7 @@ return [
     'common_success' => [
         'get_success' => 'Lấy dữ liệu thành công',
         'add_success' => 'Thêm dữ liệu thành công',
+        'update_success' => 'Cập nhật dữ liệu thành công',
     ],
     'common_error' => [
         'server_error' => 'Đã xảy ra lỗi trên máy chủ, vui lòng liên hệ quản trị viên để được hỗ trợ.',

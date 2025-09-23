@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Exceptions\ServiceException;
 use App\Models\Event;
+use App\Utils\Constants\EventStatus;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class EventService
@@ -40,6 +41,31 @@ class EventService
             return [
                 'status' => true,
                 'event' => $event,
+            ];
+        } catch (\Exception $e) {
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
+        }
+    }
+
+    public function checkTimeEvent(): array
+    {
+        try {
+            $now = now();
+            
+            Event::where('status', EventStatus::UPCOMING->value)
+                ->whereRaw('CONCAT(DATE(day_represent), " ", TIME(start_time)) <= ?', [$now])
+                ->update(['status' => EventStatus::ACTIVE->value]);
+            
+            Event::where('status', EventStatus::ACTIVE->value)
+                ->whereRaw('CONCAT(DATE(day_represent), " ", TIME(end_time)) < ?', [$now])
+                ->update(['status' => EventStatus::CLOSED->value]);
+            
+            return [
+                'status' => true,
+                'message' => __('common.common_success.update_success')
             ];
         } catch (\Exception $e) {
             return [
