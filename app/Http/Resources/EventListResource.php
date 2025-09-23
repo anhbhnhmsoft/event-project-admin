@@ -16,7 +16,7 @@ class EventListResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
+            'id' => (string)$this->id,
             'name' => $this->name,
             'image_represent_path' => Helper::generateURLImagePath($this->image_represent_path),
             'address' => $this->address,
