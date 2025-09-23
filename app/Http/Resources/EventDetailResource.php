@@ -17,7 +17,7 @@ class EventDetailResource extends JsonResource
     public function toArray(Request $request): array
     {
         $organizer = $this->organizer ? [
-            'id' => $this->organizer->id,
+            'id' => (string)$this->organizer->id,
             'name' => $this->organizer->name,
             'description' => $this->organizer->description,
             'url_image' => Helper::generateURLImagePath($this->organizer->image ?? ''),
@@ -25,20 +25,22 @@ class EventDetailResource extends JsonResource
 
         $userEvent = $this->participants->map(function ($participant) {
             return [
-                'id' => $participant->user?->id,
+                'id' => (string)$participant->user?->id,
                 'name' => $participant->user?->name,
+                'avatar_url' => $participant->user?->avatar_path ? Helper::generateURLImagePath($participant->user?->avatar_path) : null,
                 'role' => $participant->role,
             ];
         })->values()->all();
 
         $schedules = $this->schedules->sortBy('sort')->map(function ($schedule) {
             return [
-                'id' => $schedule->id,
+                'id' => (string)$schedule->id,
                 'name' => $schedule->title,
             ];
         })->values()->all();
 
         return [
+            'id' => (string)$this->id,
             'organizer' => $organizer,
             'name' => $this->name,
             'short_description' => $this->short_description,
