@@ -274,7 +274,7 @@ return new class extends Migration
             $table->foreignId('event_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->nullOnDelete();
             $table->foreignId('event_seat_id')->nullable()->constrained()->nullOnDelete();
-            $table->string('ticket_code')->unique()->comment('Mã vé, định dạng như TICKET-123456');
+            $table->string('ticket_code')->nullable()->unique()->comment('Mã vé, định dạng như TICKET-123456');
             $table->tinyInteger('status')->comment('Trạng thái vé trong enum EventUserHistoryStatus');
             $table->timestamps();
         });
