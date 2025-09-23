@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\App;
 use App\Models\UserResetCode;
 use App\Mail\ResetPasswordMail;
+use Illuminate\Support\Facades\Log;
 
 class AuthService
 {
@@ -196,7 +197,37 @@ class AuthService
                 'status' => true,
                 'message' => __('auth.success.set_lang_success'),
             ];
-        }  catch (\Throwable $e) {
+        } catch (\Throwable $e) {
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
+        }
+    }
+
+    public function quickRegister(array $data): array
+    {
+        DB::beginTransaction();
+        try {
+            $user = User::query()->create([
+                'name' => trim($data['name']),
+                'email' => $data['email'],
+                'password' => Hash::make($data['password']),
+                'organizer_id' => (int) $data['organizer_id'],
+                'role' => RoleUser::CUSTOMER->value,
+                'lang' => $data['lang'] ?? Language::VI->value,
+                'phone' => $data['phone'],
+                'email_verified_at' => now(),
+                'phone_verified_at' => now()
+            ]);
+
+            DB::commit();
+            return [
+                'status' => true,
+            ];
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::info($e->getMessage());
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),
@@ -204,5 +235,3 @@ class AuthService
         }
     }
 }
-
-

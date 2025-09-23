@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Events\Tables;
 use App\Filament\Resources\Events\EventResource;
 use App\Models\Organizer;
 use App\Utils\Constants\EventStatus;
+use App\Utils\Helper;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -82,6 +83,17 @@ class EventsTable
                     ->url(fn($record) => EventResource::getUrl('seats-manage', ['record' => $record]))
                     ->openUrlInNewTab()
                     ->color('success'),
+                Action::make('quick-register')
+                    ->label('Đăng ký nhanh')
+                    ->icon('heroicon-o-qr-code')
+                    ->color('primary')
+                    ->modalHeading('QR Code Đăng ký nhanh')
+                    ->modalContent(fn($record) => view('filament.event.quick-register-qr', [
+                        'event' => $record,
+                        'url' => Helper::quickRegisterUrl($record)
+                    ]))
+                    ->modalSubmitAction(false)
+                    ->modalCancelAction(fn(Action $action) => $action->label('Đóng'))
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
