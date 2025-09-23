@@ -268,14 +268,14 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // Tạo bảng event_tickets để lưu trữ vé sự kiện
-        Schema::create('tickets', function (Blueprint $table) {
+        // Tạo bảng event_user_histories để lưu trữ vé sự kiện
+        Schema::create('event_user_histories', function (Blueprint $table) {
             $table->id();
             $table->foreignId('event_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('user_id')->constrained()->nullOnDelete();
             $table->foreignId('event_seat_id')->nullable()->constrained()->nullOnDelete();
             $table->string('ticket_code')->unique()->comment('Mã vé, định dạng như TICKET-123456');
-            $table->tinyInteger('status')->comment('Trạng thái vé, Lưu trong enum TicketStatus');
+            $table->tinyInteger('status')->comment('Trạng thái vé trong enum EventUserHistoryStatus');
             $table->timestamps();
         });
 
@@ -317,7 +317,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('configs');
-        Schema::dropIfExists('tickets');
+        Schema::dropIfExists('event_user_histories');
         Schema::dropIfExists('event_comments');
         Schema::dropIfExists('event_seats');
         Schema::dropIfExists('event_areas');
