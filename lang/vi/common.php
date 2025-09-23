@@ -3,6 +3,7 @@
 return [
     'common_success' => [
         'get_success' => 'Lấy dữ liệu thành công',
+        'add_success' => 'Thêm dữ liệu thành công',
     ],
     'common_error' => [
         'server_error' => 'Đã xảy ra lỗi trên máy chủ, vui lòng liên hệ quản trị viên để được hỗ trợ.',
@@ -18,6 +19,7 @@ return [
         'data_not_found' => 'Dữ liệu trống, vui lòng thử lại sau.',
         'data_not_fields' => 'Có một số dữ liệu chưa được điền, vui lòng thử lại.',
         'data_exists' => 'Dữ liệu đã tồn tại, vui lòng thử lại.',
+        'validation_failed' => 'Dữ liệu không hợp lệ.',
         'vm_error_general' => 'VM hiện đang không sử dụng được, vui lòng liên hệ với admin',
         'project_unauthorized' => 'Project hoặc VM của bạn đang có lỗi về xác thực, vui lòng kiểm tra lại sau',
         'copy_error' => 'Lỗi khi copy'
