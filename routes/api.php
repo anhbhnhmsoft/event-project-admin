@@ -31,6 +31,8 @@ Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
 
     Route::prefix('/event')->group(function () {
         Route::get('/', [EventController::class, 'list']);
+        Route::post('/history', [EventController::class, 'eventUserHistory']);
+        Route::post('/history_register', [EventController::class, 'createEventUserHistory']);
         Route::get('/{id}', [EventController::class, 'show']);
     });
 });

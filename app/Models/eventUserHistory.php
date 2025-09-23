@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Utils\Helper;
 
-class Ticket extends Model
+class EventUserHistory extends Model
 {
     use HasFactory;
 
@@ -24,6 +24,14 @@ class Ticket extends Model
         static::creating(function ($model) {
             if (empty($model->id)) {
                 $model->id = Helper::getTimestampAsId();
+            }
+            
+            if (empty($model->ticket_code)) {
+                do {
+                    $ticketCode = 'TICKET-' . Helper::getTimestampAsId();
+                } while (self::where('ticket_code', $ticketCode)->exists());
+                
+                $model->ticket_code = $ticketCode;
             }
         });
     }

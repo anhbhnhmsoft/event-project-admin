@@ -18,6 +18,7 @@ return [
         'data_not_found' => 'Data is empty, please try again later.',
         'data_not_fields' => 'Some data has not been filled in, please try again.',
         'data_exists' => 'Data already exists, please try again.',
+        'validation_failed' => 'Data is not valid.',
         'vm_error_general' => 'VM is currently unavailable, please contact admin',
         'project_unauthorized' => 'Your project or VM has authentication issues, please check again later',
         'copy_error' => 'Error when copying'

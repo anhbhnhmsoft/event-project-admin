@@ -33,9 +33,9 @@ class EventSeat extends Model
         return $this->belongsTo(EventArea::class, 'event_area_id');
     }
 
-    public function tickets(): HasMany
+    public function eventUserHistories(): HasMany
     {
-        return $this->hasMany(Ticket::class, 'event_seat_id');
+        return $this->hasMany(EventUserHistory::class, 'event_seat_id');
     }
 
     public function user () : BelongsTo 
