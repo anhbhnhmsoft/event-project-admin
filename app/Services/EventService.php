@@ -25,7 +25,7 @@ class EventService
             $event = Event::query()
                 ->with([
                     'organizer:id,name,image,description',
-                    'participants.user:id,name',
+                    'participants.user:id,name,avatar_path',
                     'schedules:id,event_id,title,sort',
                 ])
                 ->find($id);

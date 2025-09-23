@@ -10,7 +10,7 @@ class UserResource extends JsonResource
     public function toArray($request): array
     {
         return [
-            'id' => $this->id,
+            'id' => (string)$this->id,
             'name' => $this->name,
             'email' => $this->email,
             'phone' => $this->phone,
@@ -23,7 +23,7 @@ class UserResource extends JsonResource
             'memberships'  => $this->whenLoaded('activeMemberships', function () {
                 return $this->memberships->map(function ($m) {
                     return [
-                        'id'          => $m->id,
+                        'id'          => (string)$m->id,
                         'name'        => $m->name,
                     ];
                 });

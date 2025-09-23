@@ -64,6 +64,10 @@ class Event extends Model
             );
         }
 
+        if (!empty($filters['exclude_id'])){
+            $query->whereNot('id', $filters['exclude_id']);
+        }
+
         if (!empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
