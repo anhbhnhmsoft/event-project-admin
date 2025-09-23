@@ -3,8 +3,8 @@
 <div class="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-6 sm:px-6 lg:px-8">
     <div class="w-full max-w-md sm:max-w-lg lg:max-w-2xl mx-auto">
         <div class="mb-6 sm:mb-8 p-4 bg-gray-100 rounded-lg flex items-center gap-4">
-            <img src="{{ \App\Utils\Helper::generateURLImagePath($event['image_represent_path']) }}" alt="{{ $event['name'] }}"
-                class="w-20 h-20 sm:w-24 sm:h-24 rounded-lg object-cover">
+            <img src="{{ \App\Utils\Helper::generateURLImagePath($event['image_represent_path']) }}"
+                alt="{{ $event['name'] }}" class="w-20 h-20 sm:w-24 sm:h-24 rounded-lg object-cover">
 
             <div class="flex flex-col">
                 <h3 class="text-lg sm:text-xl font-bold text-gray-800">{{ $event['name'] }}</h3>
@@ -29,27 +29,13 @@
                 </button>
             </div>
 
-            @if (session()->has('success'))
-                <div
-                    class="mb-4 sm:mb-6 p-3 sm:p-4 bg-gradient-to-r from-green-50 to-green-100 border border-green-200 text-green-800 rounded-lg">
-                    <div class="flex items-start">
-                        <svg class="w-5 h-5 mr-2 sm:mr-3 text-green-600 flex-shrink-0 mt-0.5" fill="currentColor"
-                            viewBox="0 0 20 20">
-                            <path fill-rule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                clip-rule="evenodd"></path>
-                        </svg>
-                        <span class="text-sm sm:text-base leading-relaxed">{{ session('success') }}</span>
-                    </div>
-                </div>
-            @endif
-
             @if ($resultStatus)
                 <div class="flex items-center justify-center min-h-[300px]">
                     <div
-                        class="w-full max-w-md p-6 bg-gradient-to-r from-green-50 to-green-100 border border-green-200 text-green-800 rounded-lg text-center">
+                        class="w-full max-w-md p-6 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-300 rounded-lg text-center transition-colors duration-300">
                         <div class="flex flex-col items-center">
-                            <svg class="w-12 h-12 text-green-600 mb-4" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-12 h-12 text-green-600 dark:text-green-400 mb-4 transition-colors duration-300"
+                                fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd"
                                     d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                                     clip-rule="evenodd"></path>
@@ -57,7 +43,26 @@
                             <h3 class="text-xl font-semibold mb-2">
                                 {{ $lang === 'en' ? 'Registration Successful!' : 'Đăng ký thành công!' }}
                             </h3>
-                            <p class="text-base leading-relaxed">{{ $this->getSuccessMessage() }}</p>
+                            <p class="text-base leading-relaxed">
+                                {{ $this->getSuccessMessage() }}
+                            </p>
+
+                            <div class="mt-4 pt-4 w-full border-t border-green-200 dark:border-green-700">
+                                <p class="text-sm text-green-700 dark:text-green-300 mb-2">
+                                    {{ $lang === 'en' ? 'Your login details:' : 'Thông tin đăng nhập của bạn:' }}
+                                </p>
+                                <div class="text-left bg-green-100 dark:bg-green-800 p-3 rounded-lg">
+                                    <p class="text-sm font-medium text-green-900 dark:text-green-100">
+                                        Email: <span class="font-bold">{{ $email }}</span>
+                                    </p>
+                                    <p class="text-sm font-medium text-green-900 dark:text-green-100 mt-1">
+                                         {{ $lang === 'en' ? 'Password: Your phone number.' : 'Mật khẩu: Số điện thoại của bạn' }}
+                                    </p>
+                                    <p class="text-sm font-medium text-green-900 dark:text-green-100">
+                                        {{ $lang === 'en' ? 'Organizer name' : 'Tên tổ chức' }}: <span class="font-bold">{{ $organizer['name'] }}</span>
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

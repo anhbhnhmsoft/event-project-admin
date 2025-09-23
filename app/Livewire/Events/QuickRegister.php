@@ -179,8 +179,6 @@ class QuickRegister extends Component
     private function resetForm()
     {
         $this->reset([
-            'name',
-            'email',
             'phone',
         ]);
 
