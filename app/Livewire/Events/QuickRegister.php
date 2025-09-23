@@ -46,7 +46,9 @@ class QuickRegister extends Component
                 'required',
                 'email:rfc,dns',
                 'max:255',
-                Rule::unique('users', 'email')
+                Rule::unique('users', 'email')->where(function ($query) {
+                    return $query->where('organizer_id', $this->organizer['id']);
+                })
             ],
             'phone' => [
                 'required',
@@ -54,7 +56,9 @@ class QuickRegister extends Component
                 'min:10',
                 'max:15',
                 'regex:/^[\d\s\-\+\(\)]+$/',
-                Rule::unique('users', 'phone')
+                Rule::unique('users', 'phone')->where(function ($query) {
+                    return $query->where('organizer_id', $this->organizer['id']);
+                })
             ],
         ];
     }
