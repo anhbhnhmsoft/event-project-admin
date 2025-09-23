@@ -9,7 +9,7 @@
     @livewireStyles
 </head>
 
-<body class="bg-white min-h-[100vh]">
+<body style="color-scheme: light;" class="bg-white min-h-[100vh]">
     <div class="w-full">
         {{ $slot }}
     </div>

@@ -21,7 +21,6 @@ class QuickRegister extends Component
     public $name = '';
     public $email = '';
     public $phone = '';
-    public $password = '';
     public $lang = 'vi';
 
     public $isSubmitting = false;
@@ -57,11 +56,6 @@ class QuickRegister extends Component
                 'regex:/^[\d\s\-\+\(\)]+$/',
                 Rule::unique('users', 'phone')
             ],
-            'password' => [
-                'required',
-                'string',
-                'min:6',
-            ],
         ];
     }
 
@@ -81,9 +75,6 @@ class QuickRegister extends Component
                 'phone.max' => 'Số điện thoại không được quá 15 số.',
                 'phone.regex' => 'Số điện thoại không hợp lệ.',
                 'phone.unique' => 'Số điện thoại này đã được sử dụng.',
-                'password.required' => 'Mật khẩu là bắt buộc.',
-                'password.min' => 'Mật khẩu phải có ít nhất 8 ký tự.',
-                'password.regex' => 'Mật khẩu phải chứa ít nhất 1 chữ thường, 1 chữ hoa và 1 số.',
             ];
         }
 
@@ -100,9 +91,6 @@ class QuickRegister extends Component
             'phone.max' => 'Phone number may not be greater than 15 digits.',
             'phone.regex' => 'Please enter a valid phone number.',
             'phone.unique' => 'This phone is already taken.',
-            'password.required' => 'Password is required.',
-            'password.min' => 'Password must be at least 8 characters.',
-            'password.regex' => 'Password must contain at least one lowercase letter, one uppercase letter, and one number.',
         ];
     }
 
@@ -158,7 +146,7 @@ class QuickRegister extends Component
             'email' => $this->email,
             'phone' => $this->phone,
             'lang' => $this->lang,
-            'password' => $this->password,
+            'password' => $this->phone,
             'organizer_id' => $this->organizer['id'],
         ];
 
@@ -190,7 +178,6 @@ class QuickRegister extends Component
             'name',
             'email',
             'phone',
-            'password',
         ]);
 
         $this->resetValidation();

@@ -3,8 +3,8 @@
 <div class="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-6 sm:px-6 lg:px-8">
     <div class="w-full max-w-md sm:max-w-lg lg:max-w-2xl mx-auto">
         <div class="mb-6 sm:mb-8 p-4 bg-gray-100 rounded-lg flex items-center gap-4">
-            <img src="{{ asset($event['image_represent_path'] ?? '/images/default-event.jpg') }}"
-                alt="{{ $event['name'] }}" class="w-20 h-20 sm:w-24 sm:h-24 rounded-lg object-cover">
+            <img src="{{ \App\Utils\Helper::generateURLImagePath($event['image_represent_path']) }}" alt="{{ $event['name'] }}"
+                class="w-20 h-20 sm:w-24 sm:h-24 rounded-lg object-cover">
 
             <div class="flex flex-col">
                 <h3 class="text-lg sm:text-xl font-bold text-gray-800">{{ $event['name'] }}</h3>
@@ -143,53 +143,6 @@
                                 class="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 placeholder-gray-400 @error('phone') border-red-500 ring-red-200 @enderror">
                         </div>
                         @error('phone')
-                            <p class="text-xs sm:text-sm text-red-600 flex items-start mt-1">
-                                <svg class="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0 mt-0.5" fill="currentColor"
-                                    viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd"
-                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                        clip-rule="evenodd"></path>
-                                </svg>
-                                <span>{{ $message }}</span>
-                            </p>
-                        @enderror
-                    </div>
-
-                    <div class="space-y-2" x-data="{ show: false }">
-                        <label class="block text-sm font-medium text-gray-700">
-                            {{ $lang === 'en' ? 'Password' : 'Mật khẩu' }}
-                            <span class="text-red-500">*</span>
-                        </label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
-                                    </path>
-                                </svg>
-                            </div>
-                            <input :type="show ? 'text' : 'password'" wire:model.defer="password"
-                                placeholder="{{ $lang === 'en' ? 'Enter password' : 'Nhập mật khẩu' }}"
-                                class="w-full pl-9 sm:pl-10 pr-10 sm:pr-12 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 placeholder-gray-400 @error('password') border-red-500 ring-red-200 @enderror">
-
-                            <button type="button" @click="show = !show"
-                                class="absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none">
-                                <svg x-show="!show" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5"
-                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                </svg>
-                                <svg x-show="show" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5"
-                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.058 10.058 0 012.447-4.448M6.5 6.5l11 11" />
-                                </svg>
-                            </button>
-                        </div>
-                        @error('password')
                             <p class="text-xs sm:text-sm text-red-600 flex items-start mt-1">
                                 <svg class="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0 mt-0.5" fill="currentColor"
                                     viewBox="0 0 20 20">
