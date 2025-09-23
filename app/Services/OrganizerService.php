@@ -37,8 +37,36 @@ class OrganizerService
         try {
             $query = $this->filter($filters);
             return $query->limit($limit)->select(['id', 'name'])->get()->toArray();
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             return [];
+        }
+    }
+
+    public function getOrganizerDetail($id): array
+    {
+        try {
+            $organizer = Organizer::query()
+                ->with([
+                    'users',
+                ])
+                ->find($id);
+
+            if (!$organizer) {
+                return [
+                    'status' => false,
+                    'message' => __('common.common_error.data_not_found'),
+                ];
+            }
+
+            return [
+                'status' => true,
+                'organizer' => $organizer,
+            ];
+        } catch (\Exception $e) {
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
         }
     }
 }

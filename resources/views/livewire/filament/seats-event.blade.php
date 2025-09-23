@@ -156,7 +156,7 @@
                                 </label>
 
                                 <label class="inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" wire:model.live="areaVip" class="sr-only">
+                                    <input type="checkbox" wire:model.live="areaVip">
 
                                 </label>
 
@@ -277,7 +277,7 @@
                                 </div>
                                 <div class="flex items-center space-x-3">
                                     <label class="inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" wire:model.live="selectedArea.vip" class="sr-only">
+                                        <input type="checkbox" wire:model.live="selectedArea.vip" >
 
                                     </label>
 
