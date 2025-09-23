@@ -3,6 +3,8 @@
 return [
     'common_success' => [
         'get_success' => 'Get data successfully',
+        'add_success' => 'Add data successfully',
+        'update_success' => 'Update data successfully',
     ],
     'common_error' => [
         'server_error' => 'A server error has occurred, please contact the administrator for support.',
