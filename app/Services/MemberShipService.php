@@ -22,7 +22,7 @@ class MemberShipService
     {
 
         try {
-            $memberships = Membership::query()->orderBy('sort')->paginate(perPage: $limit, page: $page);
+            $memberships = Membership::query()->orderBy('sort')->where('status', true)->paginate(perPage: $limit, page: $page);
             return [
                 'status' => true,
                 'message' => __('common.common_success.get_success'),

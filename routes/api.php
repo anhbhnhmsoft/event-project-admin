@@ -40,7 +40,6 @@ Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
 
     Route::prefix('/membership')->group(function() {
         Route::get('/list', [MembershipController::class, 'getMemberships']);
-        
     });
 });
 
@@ -49,5 +48,4 @@ Route::prefix('common')->middleware('set-locale')->group(function () {
     Route::get('/province', [ProvinceController::class, 'getProvinces']);
     Route::get('/district/{code}', [ProvinceController::class, 'getDistricts']);
     Route::get('/ward/{code}', [ProvinceController::class, 'getWards']);
-    Route::get('/qr-code-pay', [FileController::class, 'qrcodePay']);
 });
