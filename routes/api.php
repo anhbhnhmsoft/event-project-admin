@@ -2,8 +2,10 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EventController;
+use App\Http\Controllers\Api\MembershipController;
 use App\Http\Controllers\Api\OrganizerController;
 use App\Http\Controllers\Api\ProvinceController;
+use App\Http\Controllers\FileController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -35,6 +37,11 @@ Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
         Route::post('/history_register', [EventController::class, 'createEventUserHistory']);
         Route::get('/{id}', [EventController::class, 'show']);
     });
+
+    Route::prefix('/membership')->group(function() {
+        Route::get('/list', [MembershipController::class, 'getMemberships']);
+        
+    });
 });
 
 Route::prefix('common')->middleware('set-locale')->group(function () {
@@ -42,4 +49,5 @@ Route::prefix('common')->middleware('set-locale')->group(function () {
     Route::get('/province', [ProvinceController::class, 'getProvinces']);
     Route::get('/district/{code}', [ProvinceController::class, 'getDistricts']);
     Route::get('/ward/{code}', [ProvinceController::class, 'getWards']);
+    Route::get('/qr-code-pay', [FileController::class, 'qrcodePay']);
 });
