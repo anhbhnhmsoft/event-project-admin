@@ -28,6 +28,7 @@ return [
         'validation_failed' => 'Validation failed',
         'server_error' => 'Server error',
         'logout_failed' => 'Logout failed',
+        'failed' => 'These credentials do not match our records.',
     ],
     'validation' => [
         'email_required' => 'Email is required',
