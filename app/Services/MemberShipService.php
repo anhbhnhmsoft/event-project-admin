@@ -34,7 +34,7 @@ class MemberShipService
             if (!$newMembership) {
                 return [
                     'status' => false,
-                    'message' =>  __(),
+                    'message' =>  __('common.common_error.data_not_found'),
                 ];
             }
             $user = User::find($userId)->first();
@@ -70,7 +70,6 @@ class MemberShipService
             }
         } catch (Exception $e) {
             Log::info($e->getMessage());
-            dd($e);
             return [
                 'status' => false,
                 'message' =>  __('common.common_error.server_error'),

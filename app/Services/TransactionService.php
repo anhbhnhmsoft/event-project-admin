@@ -3,18 +3,11 @@
 namespace App\Services;
 
 use App\Exceptions\ServiceException;
-use App\Models\EventUserHistory;
-use App\Models\Event;
-use App\Models\EventSeat;
 use App\Models\Membership;
 use App\Models\MembershipUser;
 use App\Models\Transactions;
-use App\Models\User;
-use App\Utils\Constants\EventSeatStatus;
-use App\Utils\Constants\EventUserHistoryStatus;
 use App\Utils\Constants\MembershipUserStatus;
 use App\Utils\Constants\TransactionStatus;
-use App\Utils\Helper;
 use Exception;
 use Illuminate\Support\Facades\DB;
 
@@ -31,7 +24,7 @@ class TransactionService
             if (!$record) {
                 return [
                     'status'  => false,
-                    'message' => __()
+                    'message' =>  __('common.common_error.data_not_found'),
                 ];
             }
 
@@ -66,7 +59,7 @@ class TransactionService
                         DB::commit();
                         return [
                             'status'  => true,
-                            'message' => __()
+                            'message' => __('common.common_success.update_success')
                         ];
                     default:
                         $membershipUser->status = MembershipUserStatus::INACTIVE->value;
@@ -76,24 +69,20 @@ class TransactionService
                         DB::commit();
                         return [
                             'status'  => true,
-                            'message' => __()
+                            'message' => __('common.common_success.update_success')
                         ];
                 }
             } else {
                 return [
                     'status'  => false,
-                    'message' => __()
+                    'message' => __('common.common_success.update_success')
                 ];
             }
-            return [
-                'status'  => false,
-                'message' => __()
-            ];
         } catch (ServiceException $e) {
             DB::rollBack();
             return [
                 'status'  => false,
-                'message' => __()
+                'message' => __('common.common_success.update_success')
             ];
         }
     }

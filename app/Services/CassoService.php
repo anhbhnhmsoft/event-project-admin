@@ -22,9 +22,6 @@ class CassoService
     public function processQrCode($transactionId): array
     {
         $transactionService = app(TransactionService::class);
-        $configService = app(ConfigService::class);
-
-
         $transaction = $transactionService->getDetailTransaction($transactionId);
         if ($transaction['status'] && $transaction['transaction']) {
 
