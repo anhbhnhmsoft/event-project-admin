@@ -84,4 +84,23 @@ final class Helper
 
         return route('events.quick-register', ['token' => $token]);
     }
+
+    public static function generateQRCodeBanking($binBank, $bankNumber, $bankName, $amount, $addInfo = null): string
+    {
+
+        $url = "https://img.vietqr.io/image/{$binBank}-{$bankNumber}-print.jpg?amount={$amount}&accountName={$bankName}";
+        if ($addInfo) {
+            $url .= "&addInfo=" . urlencode($addInfo);
+        }
+        return $url;
+    }
+
+    public static function generateSignature(array $data, string $key): string
+    {
+        ksort($data);
+
+        $dataString = urldecode(http_build_query($data));
+
+        return hash_hmac('sha256', $dataString, $key);
+    }
 }
