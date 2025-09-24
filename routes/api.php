@@ -2,8 +2,10 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EventController;
+use App\Http\Controllers\Api\MembershipController;
 use App\Http\Controllers\Api\OrganizerController;
 use App\Http\Controllers\Api\ProvinceController;
+use App\Http\Controllers\FileController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -34,6 +36,10 @@ Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
         Route::post('/history', [EventController::class, 'eventUserHistory']);
         Route::post('/history_register', [EventController::class, 'createEventUserHistory']);
         Route::get('/{id}', [EventController::class, 'show']);
+    });
+
+    Route::prefix('/membership')->group(function() {
+        Route::get('/list', [MembershipController::class, 'getMemberships']);
     });
 });
 
