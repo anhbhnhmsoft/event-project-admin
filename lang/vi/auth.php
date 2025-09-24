@@ -30,6 +30,7 @@ return [
         'server_error' => 'Lỗi máy chủ',
         'unverified_email' => 'Email chưa được xác thực, vui lòng kiểm tra email để xác thực tài khoản',
         'logout_failed' => 'Đăng xuất thất bại',
+        'failed' => 'Những thông tin này không khớp với hồ sơ của chúng tôi.',
     ],
     'validation' => [
         'email_required' => 'Email là bắt buộc',
