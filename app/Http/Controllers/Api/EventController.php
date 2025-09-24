@@ -34,6 +34,7 @@ class EventController extends Controller
 
         // điều kiện kiên quyết
         $filters['organizer_id'] = $request->user()->organizer_id;
+        $filters['user_id'] = $request->user()->id;
 
         $events = $this->eventService->eventPaginator($filters, $sortBy, $page, $limit);
 

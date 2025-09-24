@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+
 /**
  * @method static \Illuminate\Database\Eloquent\Builder|static filter(array $filters = []) // scope Filter query builder
  * @method static \Illuminate\Database\Eloquent\Builder|static sortBy(string $sortBy = '') // scope SortBy query builder
@@ -54,9 +55,9 @@ class Event extends Model
 
     public function scopeFilter(Builder $query, array $filters = [])
     {
-        if(!empty($filters['lat']) && !empty($filters['lng'])) {
-            $lat = (float) $filters['lat'];
-            $lng = (float) $filters['lng'];
+        if (!empty($filters['lat']) && !empty($filters['lng'])) {
+            $lat = (float)$filters['lat'];
+            $lng = (float)$filters['lng'];
             $query->whereNotNull('latitude')->whereNotNull('longitude');
             $query->selectRaw(
                 'events.*, (6371 * acos( cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)) )) as distance_km',
@@ -64,7 +65,7 @@ class Event extends Model
             );
         }
 
-        if (!empty($filters['exclude_id'])){
+        if (!empty($filters['exclude_id'])) {
             $query->whereNot('id', $filters['exclude_id']);
         }
 
@@ -101,6 +102,21 @@ class Event extends Model
         if (!empty($filters['keyword'])) {
             $keyword = trim($filters['keyword']);
             $query->where('name', 'like', '%' . $keyword . '%')->orWhere('address', 'like', '%' . $keyword . '%');;
+        }
+
+        if (!empty($filters['user_id'])) {
+            if (!empty($filters['event_history_status'])) {
+                $query->whereHas('eventUserHistories', function (Builder $query) use ($filters) {
+                    $query->where('user_id', $filters['user_id'])
+                        ->where('status', $filters['event_history_status']);
+                });
+            }
+            if (!empty($filters['event_history_statuses'])) {
+                $query->whereHas('eventUserHistories', function (Builder $query) use ($filters) {
+                    $query->where('user_id', $filters['user_id'])
+                        ->whereIn('status', $filters['event_history_statuses']);
+                });
+            }
         }
     }
 

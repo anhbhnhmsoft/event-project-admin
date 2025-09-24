@@ -185,7 +185,7 @@ return new class extends Migration
             $table->comment('Bảng event_schedules lưu trữ lịch trình của các sự kiện');
             $table->foreignId('event_id')->constrained('events')->cascadeOnDelete();
             $table->string('title')->comment('Tiêu đề của lịch trình');
-            $table->string('description')->nullable()->comment('Mô tả chi tiết của lịch trình');
+            $table->text('description')->nullable()->comment('Mô tả chi tiết của lịch trình');
             $table->dateTime('start_time')->comment('Thời gian bắt đầu lịch trình');
             $table->dateTime('end_time')->comment('Thời gian kết thúc lịch trình');
             $table->integer('sort')->nullable()->comment('Sắp xếp lịch trình');
@@ -199,7 +199,7 @@ return new class extends Migration
             $table->comment('Bảng event_schedule_documents lưu trữ các tài liệu liên quan đến lịch trình sự kiện');
             $table->foreignId('event_schedule_id')->constrained('event_schedules')->cascadeOnDelete();
             $table->string('title')->comment('Tiêu đề của tài liệu');
-            $table->string('description')->comment('Mô tả chi tiết về tài liệu');
+            $table->text('description')->comment('Mô tả chi tiết về tài liệu');
             $table->softDeletes();
             $table->timestamps();
         });
