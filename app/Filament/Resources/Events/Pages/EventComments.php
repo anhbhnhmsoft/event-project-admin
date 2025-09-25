@@ -73,6 +73,7 @@ class EventComments extends Page implements HasTable
                 DeleteAction::make()
                     ->recordTitle('bình luận')
                     ->label('Xóa')
+                    ->successRedirectUrl(false)
                     ->action(function ($record) {
                         $record->delete();
                     })
@@ -84,7 +85,7 @@ class EventComments extends Page implements HasTable
                     DeleteBulkAction::make()
                         ->recordTitle('bình luận')
                         ->label('Xóa')
-                        ->successRedirectUrl(fn() => null)
+                        ->successRedirectUrl(false)
                         ->successNotificationTitle('Đã xóa bình luận!')
                         ->after(fn() => $this->resetTable()),
                 ]),
