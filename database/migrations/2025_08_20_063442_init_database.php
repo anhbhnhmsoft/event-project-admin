@@ -90,6 +90,9 @@ return new class extends Migration
             $table->tinyInteger('status')->comment('Trạng thái giao dịch trong enum TransactionStatus');
             $table->text('metadata')->nullable()->comment('Dữ liệu bổ sung liên quan đến giao dịch, có thể là thông tin bổ sung từ hệ thống thanh toán');
 
+            $table->foreignId('user_id')->constrained();
+            $table->timestamp('expired_at')->nullable();
+            $table->json('config_pay')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });
@@ -324,8 +327,6 @@ return new class extends Migration
             $table->smallInteger('status')->default(1)
                 ->comment('Trạng thái gói: enum định nghĩa trong MembershipUserStatus');
             $table->timestamps();
-
-            $table->unique(['user_id', 'membership_id'], 'user_membership_unique');
         });
     }
 
