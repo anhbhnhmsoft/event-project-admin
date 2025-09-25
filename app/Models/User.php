@@ -93,4 +93,11 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
             ->withPivot(['start_date', 'end_date', 'status'])
             ->wherePivot('status', MembershipUserStatus::ACTIVE->value);
     }
+
+    public function activeMembership()
+    {
+        return $this->belongsToMany(Membership::class, 'membership_user')
+            ->withPivot(['start_date', 'end_date', 'status'])
+            ->wherePivot('status', MembershipUserStatus::ACTIVE->value)->limit(1);
+    }
 }

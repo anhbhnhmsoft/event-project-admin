@@ -36,4 +36,30 @@ class MemberShipService
         }
     }
 
+    public function getMembershipUser($userId): array
+    {
+
+        try {
+
+            $user = User::query()->find($userId);
+
+            if (!$user) {
+                return [
+                    'status' => false,
+                    'message' => __('common.common_error.data_not_found')
+                ];
+            }
+
+            return [
+                'status' => true,
+                'message' => __('common.common_success.get_success'),
+                'membershipUser' => $user->activeMembership()->first()
+            ];
+        } catch (Exception $e) {
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error')
+            ];
+        }
+    }
 }

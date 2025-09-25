@@ -23,6 +23,7 @@ return [
         'validation_failed' => 'Data is not valid.',
         'vm_error_general' => 'VM is currently unavailable, please contact admin',
         'project_unauthorized' => 'Your project or VM has authentication issues, please check again later',
-        'copy_error' => 'Error when copying'
+        'copy_error' => 'Error when copying',
+        'max_content' => 'Content must not exceed :max characters.',
     ],
 ];

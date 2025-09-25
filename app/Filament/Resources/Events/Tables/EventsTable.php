@@ -93,7 +93,13 @@ class EventsTable
                         'url' => Helper::quickRegisterUrl($record)
                     ]))
                     ->modalSubmitAction(false)
-                    ->modalCancelAction(fn(Action $action) => $action->label('Đóng'))
+                    ->modalCancelAction(fn(Action $action) => $action->label('Đóng')),
+                Action::make('comments-manager')
+                    ->label('Quản lý bình luận')
+                    ->icon('heroicon-o-chat-bubble-bottom-center-text')
+                    ->url(fn($record) => EventResource::getUrl('comments-manage', ['record' => $record]))
+                    ->openUrlInNewTab()
+                    ->color('success'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

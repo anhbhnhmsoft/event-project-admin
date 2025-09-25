@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Events;
 
 use App\Filament\Resources\Events\Pages\CreateEvent;
 use App\Filament\Resources\Events\Pages\EditEvent;
+use App\Filament\Resources\Events\Pages\EventComments;
 use App\Filament\Resources\Events\Pages\ListEvents;
 use App\Filament\Resources\Events\Pages\SeatsEvent;
 use App\Filament\Resources\Events\Schemas\EventForm;
@@ -70,6 +71,7 @@ class EventResource extends Resource
             'create' => CreateEvent::route('/create'),
             'edit' => EditEvent::route('/{record}/edit'),
             'seats-manage' => SeatsEvent::route('/{record}/seats'),
+            'comments-manage' => EventComments::route('/{record}/comments'),
         ];
     }
 
