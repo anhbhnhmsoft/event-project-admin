@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\EventListResource;
 use App\Http\Resources\EventDetailResource;
+use App\Http\Resources\EventListCommentResource;
 use App\Http\Resources\EventUserHistoryResource;
+use App\Services\EventCommentService;
 use App\Services\EventService;
 use App\Services\EventUserHistoryService;
 use Illuminate\Http\JsonResponse;
@@ -17,12 +19,14 @@ use App\Utils\Constants\EventUserHistoryStatus;
 class EventController extends Controller
 {
     protected EventService $eventService;
+    protected EventCommentService $eventCommentService;
     protected EventUserHistoryService $eventUserHistoryService;
 
-    public function __construct(EventService $eventService, EventUserHistoryService $eventUserHistoryService)
+    public function __construct(EventService $eventService, EventUserHistoryService $eventUserHistoryService, EventCommentService $eventCommentService)
     {
         $this->eventService = $eventService;
         $this->eventUserHistoryService = $eventUserHistoryService;
+        $this->eventCommentService = $eventCommentService;
     }
 
     public function list(Request $request): JsonResponse
@@ -114,9 +118,9 @@ class EventController extends Controller
     public function createEventUserHistory(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'event_id' => ['required','integer','exists:events,id'],
-            'event_seat_id' => ['nullable','integer','exists:event_seats,id'],
-            'status' => ['required','integer', Rule::in([
+            'event_id' => ['required', 'integer', 'exists:events,id'],
+            'event_seat_id' => ['nullable', 'integer', 'exists:event_seats,id'],
+            'status' => ['required', 'integer', Rule::in([
                 EventUserHistoryStatus::SEENED->value,
                 EventUserHistoryStatus::BOOKED->value,
             ])],
@@ -151,6 +155,63 @@ class EventController extends Controller
         return response()->json([
             'message' => $result['message'],
             'data' => EventUserHistoryResource::make($result['data']),
+        ], 200);
+    }
+
+    public function createEventComment(Request $request): JsonResponse
+    {
+        $eventId = $request->input('event_id');
+        $content = $request->input('content');
+        $user = $request->user();
+        $event = $this->eventService->getEventDetail($eventId);
+
+        if (!$event['status']) {
+            return response()->json([
+                'message' => $event['message'],
+            ], 422);;
+        }
+
+        if ($user->organizer_id != $event['event']->organizer_id) {
+            return response()->json([
+                'message' => $event['message'],
+            ], 422);
+        }
+        $newComment = [
+            'user_id'  => $user->id,
+            'event_id' => $eventId,
+            'content'  => $content
+        ];
+        $result = $this->eventCommentService->eventCommentInsert($newComment);
+        if (!$result['status']) {
+            return response()->json([
+                'message' => $result['message'],
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => $result['message'],
+            'data'    => $result['data']
+        ], 200);
+    }
+
+    public function listComment(Request $request): JsonResponse
+    {
+        $filters = $request->array('filters', []);
+        $page  = $request->integer('page', 1);
+        $limit = $request->integer('limit', 10);
+
+        $filters['user_id'] = $request->user()->id;
+
+        $comments = $this->eventCommentService->eventCommentPaginator($filters, $page, $limit);
+        return response()->json([
+            'message' => __('common.common_success.get_success'),
+            'data' => EventListCommentResource::collection($comments),
+            'pagination' => [
+                'total' => $comments->total(),
+                'per_page' => $comments->perPage(),
+                'current_page' => $comments->currentPage(),
+                'last_page' => $comments->lastPage()
+            ],
         ], 200);
     }
 }

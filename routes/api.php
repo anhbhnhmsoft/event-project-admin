@@ -9,7 +9,7 @@ use App\Http\Controllers\FileController;
 use Illuminate\Support\Facades\Route;
 
 
-Route::prefix('auth')->middleware(['set-locale','throttle:5,1'])->group(function (){
+Route::prefix('auth')->middleware(['set-locale', 'throttle:5,1'])->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
@@ -35,10 +35,12 @@ Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
         Route::get('/', [EventController::class, 'list']);
         Route::post('/history', [EventController::class, 'eventUserHistory']);
         Route::post('/history_register', [EventController::class, 'createEventUserHistory']);
+        Route::post('/comment', [EventController::class, 'createEventComment']);
+        Route::get('/list-comment', [EventController::class, 'listComment']);
         Route::get('/{id}', [EventController::class, 'show']);
     });
 
-    Route::prefix('/membership')->group(function() {
+    Route::prefix('/membership')->group(function () {
         Route::get('/list', [MembershipController::class, 'getMemberships']);
     });
 });
