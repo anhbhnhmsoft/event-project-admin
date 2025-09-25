@@ -8,15 +8,13 @@ use App\Utils\Constants\TransactionStatus;
 use App\Utils\Constants\TransactionType;
 use App\Utils\Helper;
 use Exception;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Exception\ConnectException;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class CassoService
-{
-    protected Client $client;
-
+{   
+    public const LINK = "https://api-merchant.payos.vn/v2/";
     public ConfigService $configService;
 
     public function processQrCode($transactionId): array
@@ -67,22 +65,15 @@ class CassoService
 
             $signature = Helper::generateSignature($payload, $configService->getConfigValue(ConfigName::CHECKSUM_KEY->value));
 
-            $client = new Client([
-                'base_uri' => 'https://api-merchant.payos.vn/v2/',
-                'timeout'  => 15.0,
-            ]);
-
-            $response = $client->post('payment-requests', [
-                'headers' => [
-                    'X-Client-Id' => $configService->getConfigValue(ConfigName::CLIENT_ID_APP->value),
-                    'X-Api-Key'   => $configService->getConfigValue(ConfigName::API_KEY->value),
-                    'Content-Type' => 'application/json',
-                ],
-                'json' => array_merge($payload, [
+            $response = Http::withHeaders([
+                'X-Client-Id' => $configService->getConfigValue(ConfigName::CLIENT_ID_APP->value),
+                'X-Api-Key'   => $configService->getConfigValue(ConfigName::API_KEY->value),
+                'Content-Type' => 'application/json',
+            ])->timeout(15)
+                ->post(self::LINK .'payment-requests', array_merge($payload, [  
                     'expiredAt' => $expiredAt->timestamp,
                     'signature' => $signature
-                ]),
-            ]);
+                ]));
 
             $responseData = json_decode($response->getBody()->getContents(), true);
             Log::error("PayOS API ", ['data' => $responseData['data'], 'desc' => $responseData['desc']]);
@@ -119,12 +110,6 @@ class CassoService
             ];
         } catch (ConnectException $e) {
             Log::error("PayOS connection error", ['msg' => $e->getMessage()]);
-            return [
-                'status' => false,
-                'message' => __('common.common_error.server_error'),
-            ];
-        } catch (RequestException $e) {
-            Log::error("PayOS API request error", ['msg' => $e->getMessage(), 'response' => $e->getResponse() ? $e->getResponse()->getBody()->getContents() : 'N/A']);
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),

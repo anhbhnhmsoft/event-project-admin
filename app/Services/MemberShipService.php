@@ -25,47 +25,96 @@ class MemberShipService
         }
     }
 
+    public function getMembershipDetail($id): array
+    {
+        try {
+            $membership = Membership::query()
+                ->find($id);
 
-    public function membershipRegister($userId, $membershipId)
+            if (!$membership) {
+                return [
+                    'status' => false,
+                    'message' => __('common.common_error.data_not_found'),
+                ];
+            }
+
+            return [
+                'status' => true,
+                'membership' => $membership,
+            ];
+        } catch (\Exception $e) {
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
+        }
+    }
+
+    public function membershipRegister($userId, $newMembership)
     {
         $now = now();
         try {
-            $newMembership = Membership::query()->find($membershipId);
-            if (!$newMembership) {
-                return [
-                    'status' => false,
-                    'message' =>  __('common.common_error.data_not_found'),
-                ];
-            }
+
             $user = User::find($userId)->first();
             $membershipUserActive = MembershipUser::query()->where('user_id', $user->id)->first();
-            $cassoService = app(CassoService::class);
             if ($membershipUserActive) {
                 if ($membershipUserActive->membership()->id == $newMembership->id) {
                     $membershipCurrent = $membershipUserActive->membership;
-                    $transaction = $cassoService->registerNewTransaction(TransactionType::MEMBERSHIP, (int) $membershipCurrent->price, $membershipUserActive->id, $userId, $newMembership);
-                    return $transaction;
+                    return [
+                        'status'  => true,
+                        'message' => __('common.common_success.get_success'),
+                        'data'    => [
+                            'amount'     => (int) $membershipCurrent->price,
+                            'foreignkey' => $membershipUserActive->id,
+                            'userId'     => $userId,
+                            'item'       => $newMembership
+                        ]
+                    ];
                 } else {
-                    $transaction = $cassoService->registerNewTransaction(TransactionType::MEMBERSHIP, (int) $newMembership->price, $membershipUserActive->id, $userId, $newMembership);
-                    return $transaction;
+                    return [
+                        'status'  => true,
+                        'message' => __('common.common_success.get_success'),
+                        'data'    => [
+                            'amount'     => (int) $newMembership->price,
+                            'foreignkey' => $membershipUserActive->id,
+                            'userId'     => $userId,
+                            'item'       => $newMembership
+                        ]
+                    ];
                 }
             } else {
-                $membershipsUser = MembershipUser::query()->where('user_id', $userId)->where('membership_id', $membershipId)->first();
+                $membershipsUser = MembershipUser::query()->where('user_id', $userId)->where('membership_id', $newMembership->id)->first();
                 if ($membershipsUser) {
-
-                    $transaction = $cassoService->registerNewTransaction(TransactionType::MEMBERSHIP, (int) $newMembership->price, $membershipsUser->id, $userId, $newMembership);
-                    return $transaction;
+                    return [
+                        'status'  => true,
+                        'message' => __('common.common_success.get_success'),
+                        'data'    => [
+                            'amount'     => (int) $newMembership->price,
+                            'foreignkey' => $membershipsUser->id,
+                            'userId'     => $userId,
+                            'item'       => $newMembership
+                        ]
+                    ];
                 } else {
 
                     $newMembershipUser = MembershipUser::create([
                         'user_id' => $userId,
-                        'membership_id' => $membershipId,
+                        'membership_id' => $newMembership->id,
                         'start_date' => $now,
                         'end_date' => $now,
                         'status' => MembershipUserStatus::INACTIVE->value
                     ]);
-                    $transaction = $cassoService->registerNewTransaction(TransactionType::MEMBERSHIP, (int) $newMembership->price, $newMembershipUser->id, $userId, $newMembership);
-                    return $transaction;
+
+                    return [
+                        'status'  => true,
+                        'message' => __('common.common_success.get_success'),
+                        'data'    => [
+                            'amout'      => $newMembership->price,
+                            'foreignkey' => $newMembershipUser->id,
+                            'userId'     => $userId,
+                            'item'       => $newMembership
+                        ]
+                    ];
                 }
             }
         } catch (Exception $e) {
