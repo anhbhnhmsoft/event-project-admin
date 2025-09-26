@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Utils\Constants\ConfigMembership;
 use App\Utils\Helper;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -40,7 +41,39 @@ class Membership extends Model
     {
         return [
             'config' => 'array',
+            'status' => 'boolean'
         ];
+    }
+
+
+
+    public function scopeFilter(Builder $query, array $filters = [])
+    {
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['duration'])) {
+            $query->where('duration', $filters['duration']);
+        }
+
+
+        if (!empty($filters['keyword'])) {
+            $keyword = trim($filters['keyword']);
+            $query->where('name', 'like', '%' . $keyword . '%')->orWhere('description', 'like', '%' . $keyword . '%');;
+        }
+    }
+
+    public function scopeSortBy(Builder $query, string $sortBy = '')
+    {
+        switch ($sortBy) {
+            case 'sort':
+                $query->orderBy('created_at', 'asc');
+                break;
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
     }
 
     protected static function booted()

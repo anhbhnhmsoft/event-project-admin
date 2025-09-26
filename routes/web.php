@@ -9,3 +9,4 @@ Route::get('/image/{file_path}', [FileController::class, 'image'])
     ->name('public_image');
 
 Route::get('/event/quick-register', QuickRegister::class)->name('events.quick-register');
+Route::get("/")->name('home');

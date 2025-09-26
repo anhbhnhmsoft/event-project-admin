@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\CassoService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
@@ -50,5 +52,21 @@ class FileController extends Controller
     public function video($file_path)
     {
         return $this->serveFile($file_path, 'video');
+    }
+
+    public function qrcodePay(int $transactionId): JsonResponse
+    {
+
+
+        $cassoService = app(CassoService::class);
+
+        $response = $cassoService->processQrCode($transactionId);
+
+
+        if (!$response['status']) {
+            return response()->json($response, 404);
+        }
+
+        return response()->json($response, 200);
     }
 }
