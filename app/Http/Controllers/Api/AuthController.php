@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
 use App\Services\AuthService;
 use App\Mail\VerifyEmailMail;
-use App\Utils\Constants\RoleUser;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Models\User;
@@ -28,14 +27,13 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
-            'password' => ['required', 'string', 'min:8', 'regex:/[a-z]/', 'regex:/[A-Z]/'],
+            'password' => ['required', 'string', 'min:8'],
             'organizer_id' => ['required', 'integer', 'exists:organizers,id'],
         ], [
             'email.required' => __('auth.validation.email_required'),
             'email.email' => __('auth.validation.email_email'),
             'password.required' => __('auth.validation.password_required'),
             'password.min' => __('auth.validation.password_min'),
-            'password.regex' => __('auth.validation.password_regex'),
             'organizer_id.required' => __('auth.validation.organizer_id_required'),
             'organizer_id.integer' => __('auth.validation.organizer_id_integer'),
             'organizer_id.exists' => __('auth.validation.organizer_id_exists'),
@@ -63,6 +61,98 @@ class AuthController extends Controller
             'user' => new UserResource($user),
         ], 200);
     }
+
+   public function edit(Request $request)
+   {
+       $user = $request->user();
+       $validator = Validator::make($request->all(), [
+           'name' => ['required', 'string', 'min:4', 'max:255'],
+           'phone' => [
+               'nullable',
+               'regex:/^0[0-9]{9,10}$/',
+               Rule::unique('users', 'phone')->where(function ($query) use ($user) {
+                   return $query->where('organizer_id', $user->organizer_id)
+                                ->where('id', '!=', $user->id);
+               })
+           ],
+           'address' => ['nullable', 'string', 'max:255'],
+           'introduce' => ['nullable', 'string'],
+           'password' => ['nullable', 'string', 'min:8'],
+           'confirm_password' => ['nullable', 'same:password'],
+       ],[
+           'name.required' => __('auth.validation.name_required'),
+           'name.string' => __('auth.validation.name_required'),
+           'name.min' => __('auth.validation.name_min'),
+           'name.max' => __('auth.validation.name_max'),
+           'phone.regex' => __('auth.validation.phone_regex'),
+           'phone.unique' => __('auth.validation.phone_unique'),
+           'address.string' => __('auth.validation.address_invalid'),
+           'address.max' => __('auth.validation.address_max'),
+           'introduce.string' => __('auth.validation.introduce_invalid'),
+           'password.string' => __('auth.validation.password_required'),
+           'password.min' => __('auth.validation.password_min'),
+           'confirm_password.same' => __('auth.validation.confirm_password_same'),
+       ]);
+
+       if ($validator->fails()) {
+           return response()->json([
+               'message' => __('auth.error.validation_failed'),
+               'errors' => $validator->errors(),
+           ], 422);
+       }
+       $data = $validator->validated();
+       $result = $this->authService->editInfoUser($data);
+       if ($result['status'] === false) {
+           return response()->json([
+               'message' => $result['message'],
+           ], 500);
+       }
+       return response()->json([
+           'message' => __('common.common_success.update_success'),
+           'data' => UserResource::make($result['data']),
+       ], 200);
+   }
+
+   public function editAvatar(Request $request)
+   {
+       $validator = Validator::make($request->all(), [
+           'file' => 'required|image|mimes:jpeg,png,jpg|max:10240'
+       ],[
+           'file.required' => __('auth.validation.avatar_invalid'),
+           'file.image' => __('auth.validation.avatar_invalid'),
+           'file.mimes' => __('auth.validation.avatar_invalid'),
+       ]);
+       if ($validator->fails()) {
+           return response()->json([
+               'message' => __('auth.error.validation_failed'),
+               'errors' => $validator->errors(),
+           ], 422);
+       }
+       $result = $this->authService->editInfoAvatar($request->file('file'));
+       if ($result['status'] === false) {
+           return response()->json([
+               'message' => $result['message'],
+           ], 500);
+       }
+       return response()->json([
+           'message' => __('common.common_success.update_success'),
+           'data' => UserResource::make($result['data']),
+       ], 200);
+   }
+
+   public function deleteAvatar()
+   {
+       $result = $this->authService->deleteAvatar();
+       if ($result['status'] === false) {
+           return response()->json([
+               'message' => $result['message'],
+           ], 500);
+       }
+       return response()->json([
+           'message' => __('common.common_success.update_success'),
+           'data' => UserResource::make($result['data']),
+       ], 200);
+   }
 
     public function register(Request $request)
     {
@@ -292,9 +382,9 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         $request->user()->tokens()->delete();
-        
+
         return response()->json([
-            'message' => __('auth.success.logout_success'),
+            'message' => __('auth .success.logout_success'),
         ], 200);
     }
 }
