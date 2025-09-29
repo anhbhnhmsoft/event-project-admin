@@ -6,9 +6,13 @@ use App\Exceptions\ServiceException;
 use App\Models\User;
 use App\Utils\Constants\Language;
 use App\Utils\Constants\RoleUser;
+use App\Utils\Constants\StoragePath;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\App;
 use App\Models\UserResetCode;
@@ -75,6 +79,87 @@ class AuthService
             ];
         }  catch (\Throwable $e) {
             DB::rollBack();
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
+        }
+    }
+
+    public function editInfoUser(array $data)
+    {
+        $user = Auth::user();
+        try {
+            $user->name = $data['name'];
+            $user->address= $data['address'] ?? null;
+            $user->phone = $data['phone'] ?? null;
+            $user->introduce = $data['introduce'] ?? null;
+            if (!empty($data['password'])) {
+                $user->password = Hash::make($data['password']);
+            }
+            $user->save();
+            return [
+                'status' => true,
+                'data' => $user
+            ];
+        }catch (\Throwable $e) {
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
+        }
+    }
+
+    public function editInfoAvatar($file): array
+    {
+        $user = Auth::user();
+        try {
+            if (!$file instanceof UploadedFile) {
+                throw new ServiceException(__('auth.validation.avatar_invalid'));
+            }
+            $avatarPathNew = $file->store(StoragePath::makePathById(
+                type: StoragePath::AVATAR_USER_PATH,
+                id: $user->id
+            ), 'public');
+            if (!$avatarPathNew){
+                throw new ServiceException(__('common.common_error.server_error'));
+            }
+            if ($user->avatar_path) {
+                Storage::delete($user->avatar_path);
+            }
+            $user->avatar_path = $avatarPathNew;
+            $user->save();
+            return [
+                'status' => true,
+                'data' => $user
+            ];
+        } catch (ServiceException $e) {
+            return [
+                'status' => false,
+                'message' => $e->getMessage(),
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
+        }
+    }
+
+    public function deleteAvatar(): array
+    {
+        $user = Auth::user();
+        try {
+            if ($user->avatar_path) {
+                Storage::delete($user->avatar_path);
+                $user->avatar_path = null;
+                $user->save();
+            }
+            return [
+                'status' => true,
+                'data' => $user
+            ];
+        } catch (\Throwable $e) {
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),

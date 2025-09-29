@@ -16,7 +16,8 @@ class FileController extends Controller
     {
         // Ngăn người dùng nhập path kiểu ../../
         $file_path = ltrim($file_path, '/');
-
+        // chuẩn hóa path: thay \ thành /
+        $file_path = str_replace('\\', '/', $file_path);
         if (!Storage::disk('public')->exists($file_path)) {
             abort(404, 'File not found');
         }

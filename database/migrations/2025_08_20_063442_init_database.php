@@ -264,9 +264,6 @@ return new class extends Migration
             $table->foreignId('event_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->text('content')->comment('Nội dung bình luận');
-            $table->tinyInteger('evaluation')
-                ->comment('Đánh giá của người dùng về sự kiện, Lưu trong enum EventCommentEvaluation');
-            $table->boolean('is_anonymous')->default(false)->comment('Cho phép bình luận ẩn danh');
             $table->timestamps();
         });
 
