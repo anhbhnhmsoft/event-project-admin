@@ -87,7 +87,7 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
             ->withPivot(['start_date', 'end_date', 'status'])
             ->withTimestamps();
     }
-    
+
     public function activeMemberships()
     {
         return $this->belongsToMany(Membership::class, 'membership_user')
@@ -95,7 +95,14 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
             ->wherePivot('status', MembershipUserStatus::ACTIVE->value);
     }
 
-    public function membershipsUser () 
+    public function activeMembership()
+    {
+        return $this->belongsToMany(Membership::class, 'membership_user')
+            ->withPivot(['start_date', 'end_date', 'status'])
+            ->wherePivot('status', MembershipUserStatus::ACTIVE->value)->limit(1);
+    }
+
+    public function membershipsUser ()
     {
         return $this->hasMany(MembershipUser::class);
     }

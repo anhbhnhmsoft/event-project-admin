@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Utils\Helper;
+use Illuminate\Database\Eloquent\Builder;
 
 class EventComment extends Model
 {
@@ -15,13 +16,21 @@ class EventComment extends Model
         'event_id',
         'user_id',
         'content',
-        'evaluation',
-        'is_anonymous',
     ];
+    public function scopeFilter(Builder $query, array $filters = [])
+    {
+        if (!empty($filters['user_id'])) {
+            $query->where('user_id', $filters['user_id']);
+        }
+        if (!empty($filters['event_id'])) {
+            $query->where('event_id', $filters['event_id']);
+        }
 
-    protected $casts = [
-        'is_anonymous' => 'boolean',
-    ];
+        if (!empty($filters['keyword'])) {
+            $keyword = trim($filters['keyword']);
+            $query->where('content', 'like', '%' . $keyword . '%');
+        }
+    }
 
     protected static function booted()
     {
@@ -31,7 +40,7 @@ class EventComment extends Model
             }
         });
     }
-    
+
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class);

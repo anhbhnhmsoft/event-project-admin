@@ -23,6 +23,7 @@ return [
         'validation_failed' => 'Dữ liệu không hợp lệ.',
         'vm_error_general' => 'VM hiện đang không sử dụng được, vui lòng liên hệ với admin',
         'project_unauthorized' => 'Project hoặc VM của bạn đang có lỗi về xác thực, vui lòng kiểm tra lại sau',
-        'copy_error' => 'Lỗi khi copy'
+        'copy_error' => 'Lỗi khi copy',
+        'max_content' => 'Nội dung không được vượt quá :max ký tự.',
     ],
 ];
