@@ -21,5 +21,6 @@ return [
         'data_not_fields' => 'Có một số dữ liệu chưa được điền, vui lòng thử lại.',
         'data_exists' => 'Dữ liệu đã tồn tại, vui lòng thử lại.',
         'validation_failed' => 'Dữ liệu không hợp lệ.',
+        'max_content' => 'Nội dung không được vượt quá :max ký tự.',
     ],
 ];
