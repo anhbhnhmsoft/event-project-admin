@@ -52,5 +52,11 @@ return [
         'email_exists' => 'Email đã tồn tại',
         'email_error' => 'Email không tồn tại trong hệ thống',
         'email_unique' => 'Email đã tồn tại',
+        'phone_regex' => 'Số điện thoại không hợp lệ',
+        'phone_unique' => 'Số điện thoại này đã được sử dụng',
+        'address_invalid' => 'Địa chỉ không hợp lệ',
+        'address_max' => 'Địa chỉ tối đa 255 kí tự',
+        'introduce_invalid' => 'Giới thiệu bản thân không hợp lệ',
+        'avatar_invalid' => "Ảnh đại diện không hợp lệ"
     ],
 ];

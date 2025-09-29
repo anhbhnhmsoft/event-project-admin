@@ -21,6 +21,7 @@ final class Helper
     public static function generateURLImagePath(?string $filePath): ?string
     {
         if (!empty($filePath)) {
+            $filePath = str_replace('\\', '/', $filePath);
             return route('public_image', ['file_path' => $filePath]);
         }
         return null;
