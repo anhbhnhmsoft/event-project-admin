@@ -191,10 +191,12 @@ class NotificationService
     private function sendExpoPushNotification(string $expoPushToken, string $title, string $body, array $data = []): array
     {
         try {
+            $plainBody  = trim(strip_tags($body ?? ''));
+
             $message = [
                 'to' => $expoPushToken,
                 'title' => $title,
-                'body' => $body,
+                'body' => $plainBody,
                 'data' => $data,
                 'sound' => 'default',
                 'badge' => 1,
