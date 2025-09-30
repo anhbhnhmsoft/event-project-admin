@@ -8,6 +8,7 @@ use App\Services\ConfigService;
 use App\Services\OrganizerService;
 use App\Services\EventUserHistoryService;
 use App\Services\TransactionService;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\ServiceProvider;
 
@@ -24,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(TransactionService::class, fn() => new TransactionService());
         $this->app->singleton(CassoService::class, fn() => new CassoService());
         $this->app->singleton(ConfigService::class, fn() => new ConfigService());
+        $this->app->singleton(NotificationService::class, fn() => new NotificationService());
     }
 
     /**

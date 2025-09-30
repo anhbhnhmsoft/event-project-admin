@@ -7,7 +7,10 @@ use App\Utils\Helper;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
+/**
+ * @method static \Illuminate\Database\Eloquent\Builder|static filter(array $filters = []) // scope Filter query builder
+ * @method static \Illuminate\Database\Eloquent\Builder|static sortBy(string $sortBy = '') // scope SortBy query builder
+ */
 class Membership extends Model
 {
     use  SoftDeletes;
@@ -67,9 +70,10 @@ class Membership extends Model
     public function scopeSortBy(Builder $query, string $sortBy = '')
     {
         switch ($sortBy) {
-            case 'sort':
-                $query->orderBy('created_at', 'asc');
+            case 'order':
+                $query->orderBy('sort', 'asc');
                 break;
+            case 'created_at':
             default:
                 $query->orderBy('created_at', 'desc');
                 break;

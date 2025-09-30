@@ -29,7 +29,8 @@ class Transactions extends Model
         'metadata',
         'user_id',
         'expired_at',
-        'config_pay'
+        'config_pay',
+        'type_trans'
     ];
 
     protected function casts(): array

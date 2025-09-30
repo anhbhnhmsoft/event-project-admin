@@ -54,20 +54,4 @@ class FileController extends Controller
     {
         return $this->serveFile($file_path, 'video');
     }
-
-    public function qrcodePay(int $transactionId): JsonResponse
-    {
-
-
-        $cassoService = app(CassoService::class);
-
-        $response = $cassoService->processQrCode($transactionId);
-
-
-        if (!$response['status']) {
-            return response()->json($response, 404);
-        }
-
-        return response()->json($response, 200);
-    }
 }
