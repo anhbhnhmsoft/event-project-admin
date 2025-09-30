@@ -330,7 +330,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('expo_push_token')->unique();
-            $table->string('platform', 20)->nullable();
+            $table->string('device_id')->nullable();
+            $table->string('device_type', 20)->nullable();
             $table->dateTime('last_seen_at')->nullable();
             $table->boolean('is_active')->default(true);
             $table->softDeletes();
