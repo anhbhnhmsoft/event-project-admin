@@ -9,28 +9,29 @@ use Illuminate\Support\Facades\Log;
 
 class WebhookCassoController extends Controller
 {
+
+    private TransactionService $transactionService;
+
+    public function __construct(TransactionService $transactionService)
+    {
+        $this->transactionService = $transactionService;
+    }
+
     public function handle(Request $request)
     {
-        $transactionService = app(TransactionService::class);
         Log::info('PayOS Webhook:', $request->all());
-
-        if ($request->all()['data']['orderCode'] == 123) {
-            return response()->json(['message' => 'success']);
-        }
         $data = $request->all();
-        $orderCode = $data['data']['orderCode'] ?? null;
+        $paymentLinkId = $data['data']['paymentLinkId'] ?? null;
+        $success = $data["success"] ?? false;
 
-        if (!$orderCode) {
-            Log::info('PayOS Webhook order code:', $orderCode);
-            return response()->json(['message' => 'Missing orderCode'], 400);
+        if (empty($paymentLinkId)) {
+            return response()->json(['message' => 'Missing reference'], 400);
         }
-        $transactionId = null;
-        if ($data["success"]) {
-
-            $transactionService->confirmMembershipTransaction(TransactionStatus::SUCCESS, $orderCode);
+        if ($success) {
+            $this->transactionService->confirmMembershipTransaction(TransactionStatus::SUCCESS, $paymentLinkId);
             return response()->json(['message' => 'success'], 200);
         } else {
-            $transactionService->confirmMembershipTransaction(TransactionStatus::FAILED, $orderCode);
+            $this->transactionService->confirmMembershipTransaction(TransactionStatus::FAILED, $paymentLinkId);
             return response()->json(['message' => 'failed'],  200);
         }
     }

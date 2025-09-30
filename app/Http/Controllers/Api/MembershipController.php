@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\MembershipListResource;
+use App\Http\Resources\MembershipUserResource;
 use App\Services\CassoService;
 use App\Services\MemberShipService;
-use App\Utils\Constants\TransactionType;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class MembershipController extends Controller
 {
@@ -24,14 +26,17 @@ class MembershipController extends Controller
         $this->cassoService      = $cassoService;
     }
 
-    public function listMembership(Request  $request): JsonResponse
+    public function listMembership(Request $request): JsonResponse
     {
         $filters = $request->array('filters', []);
-        $sortBy =  $request->string('sort_by', '')->toString();
         $page  = $request->integer('page', 1);
         $limit = $request->integer('limit', 10);
 
+        // Mặc định
+        $sortBy = 'order';
+        $filters['status'] = true;
         $memberships  = $this->membershipService->membershipsPaginator($filters, $sortBy, $page, $limit);
+
         return response()->json([
             'message' => __('common.common_success.get_success'),
             'data' => MembershipListResource::collection($memberships),
@@ -44,42 +49,71 @@ class MembershipController extends Controller
         ], 200);
     }
 
+    public function listAccountMembership(Request $request)
+    {
+        $filters = $request->array('filters', []);
+        $page  = $request->integer('page', 1);
+        $limit = $request->integer('limit', 10);
 
+        // Mặc định
+        $filters['user_id'] = Auth::user()->id;
+        $memberships  = $this->membershipService->membershipUserPaginator(
+            filters: $filters,
+            with: ['membership'],
+            page: $page,
+            limit: $limit
+        );
+        return response()->json([
+            'message' => __('common.common_success.get_success'),
+            'data' => MembershipUserResource::collection($memberships),
+            'pagination' => [
+                'total' => $memberships->total(),
+                'per_page' => $memberships->perPage(),
+                'current_page' => $memberships->currentPage(),
+                'last_page' => $memberships->lastPage()
+            ],
+        ], 200);
+    }
     public function membershipRegister(Request $request): JsonResponse
     {
-
-        $user = $request->user();
-
-        $membershipId = $request->input('membership_id');
-
-        $newMembership = $this->membershipService->getMembershipDetail($membershipId);
-
-        if (!$newMembership['status']) {
+        $validator = Validator::make($request->all(), [
+            'membership_id' => [
+                'required',
+                'exists:membership,id',
+            ],
+        ], [
+            'membership_id.required' => __('common.common_error.data_not_found'),
+            'membership_id.exists' => __('common.common_error.data_not_found'),
+        ]);
+        if ($validator->fails()) {
             return response()->json([
-                'message' => $newMembership['message']
+                'message' => __('common.common_error.validation_failed'),
+                'errors' => $validator->errors(),
             ], 422);
         }
 
-        $resultMembership = $this->membershipService->membershipRegister($user->id, $newMembership['membership']);
+        $membership = $this->membershipService->getMembershipDetail($validator->getData()['membership_id']);
 
-        if (!$resultMembership['status']) {
-            return response()->json([
-                'message' => $resultMembership['message']
-            ], 422);
+        if (!$membership['status']) {
+            return response()->json(['message' => $membership['message']], 422);
         }
 
-        $dataMembership = $resultMembership['data'];
-        $resultTransaction = $this->cassoService->registerNewTransaction(TransactionType::MEMBERSHIP, $dataMembership['amount'], $dataMembership['foreignkey'], $dataMembership['userId'], $dataMembership['item']);
-
-        if (!$resultTransaction['status']) {
+        $result = $this->membershipService->membershipRegister($membership['membership']);
+        if (!$result['status']) {
             return response()->json([
-                'message' => $resultMembership['message']
+                'message' => $result['message']
             ], 500);
         }
-
+        $trans = $result['data'];
         return response()->json([
-            'message' => $resultTransaction['message'],
-            'data'    => $resultTransaction['data']
+            'message' => __('common.common_success.add_success'),
+            'data'    => [
+                'trans_id' => (string)$trans->id,
+                'expired_at' => $trans->expired_at,
+                'config_pay' => $trans->config_pay,
+                'money' => (string)$trans->money,
+                'description' => $trans->description
+            ]
         ], 200);
     }
 }

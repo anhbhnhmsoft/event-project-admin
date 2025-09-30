@@ -36,7 +36,7 @@ class AuthService
             }
             $user->lang = $data['locate'] ?? Language::VI->value;
             $user->save();
-            $token = $user->createToken('api')->plainTextToken;
+            $token = $user->createToken('api',expiresAt: now()->addDays(30))->plainTextToken;
             return [
                 'status' => true,
                 'token' => $token,

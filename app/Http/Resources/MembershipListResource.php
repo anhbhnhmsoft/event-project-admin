@@ -16,7 +16,7 @@ class MembershipListResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
+            'id' => (string)$this->id,
             'name' => $this->name,
             'description' => $this->description,
             'price' => $this->price,
@@ -27,8 +27,6 @@ class MembershipListResource extends JsonResource
             'badge_color_text' => $this->badge_color_text,
             'config' => $this->config,
             'status' => $this->status,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
         ];
     }
 }
