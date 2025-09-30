@@ -45,7 +45,7 @@ return new class extends Migration
             $table->timestamp('phone_verified_at')->nullable();
             $table->foreignId('organizer_id')->references('id')->on('organizers')->cascadeOnDelete();
             $table->string('password');
-            $table->string('lang',10);
+            $table->string('lang', 10);
             $table->unique(['email', 'organizer_id']);
             $table->unique(['phone', 'organizer_id']);
             $table->rememberToken();
@@ -241,6 +241,7 @@ return new class extends Migration
             $table->string('name')->comment('Tên khu vực');
             $table->bigInteger('capacity')->comment('Số lượng ghế trong khu vực');
             $table->foreignId('event_id')->constrained()->cascadeOnDelete();
+            $table->boolean('vip')->default(false);
             $table->softDeletes();
             $table->timestamps();
         });
@@ -249,11 +250,11 @@ return new class extends Migration
         Schema::create('event_seats', function (Blueprint $table) {
             $table->id();
             $table->comment('Bảng event_seats lưu trữ các ghế trong khu vực sự kiện');
-            $table->foreignId('event_area_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('event_area_id')->constrained('event_areas')->cascadeOnDelete();
             $table->string('seat_code')->comment('Mã ghế, định dạng như A1, B2, C3, ...');
             $table->tinyInteger('status')->comment('Trạng thái ghế, Lưu trong enum EventSeatStatus');
+            $table->foreignId('user_id')->nullable()->constrained('user');
             $table->unique(['event_area_id', 'seat_code']);
-            $table->softDeletes();
             $table->timestamps();
         });
 
@@ -276,7 +277,7 @@ return new class extends Migration
             $table->foreignId('event_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->nullOnDelete();
             $table->foreignId('event_seat_id')->nullable()->constrained()->nullOnDelete();
-            $table->string('ticket_code')->unique()->comment('Mã vé, định dạng như TICKET-123456');
+            $table->string('ticket_code')->nullable()->unique()->comment('Mã vé, định dạng như TICKET-123456');
             $table->tinyInteger('status')->comment('Trạng thái vé trong enum EventUserHistoryStatus');
             $table->timestamps();
         });
@@ -312,21 +313,33 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('membership_user', function (Blueprint $table) {
+        // Tạo bảng user_notifications để lưu trữ các thông báo cho người dùng
+        Schema::create('user_notifications', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')
-                ->constrained('users')
-                ->cascadeOnDelete();
-            $table->foreignId('membership_id')
-                ->constrained('membership')
-                ->cascadeOnDelete();
-            $table->date('start_date')->nullable()
-                ->comment('Ngày bắt đầu gói membership');
-            $table->date('end_date')->nullable()
-                ->comment('Ngày kết thúc gói membership');
-            $table->smallInteger('status')->default(1)
-                ->comment('Trạng thái gói: enum định nghĩa trong MembershipUserStatus');
+            $table->foreignId('organizer_id')->constrained('organizers')->cascadeOnDelete();
+            $table->foreignId('event_id')->constrained('events')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->string('title');
+            $table->text('description');
+            $table->json('data')->nullable()->comment('Dữ liệu thông báo, lưu trữ các dữ liệu liên quan đến thông báo');
+            $table->tinyInteger('notification_type')->comment('Loại thông báo, Lưu trong enum UserNotificationType');
+            $table->tinyInteger('status')->comment('Trạng thái thông báo, Lưu trong enum UserNotificationStatus');
+            $table->softDeletes();
             $table->timestamps();
+        });
+
+        // Tạo bảng user_devices để lưu trữ các thiết bị của người dùng
+        Schema::create('user_devices', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->string('expo_push_token')->unique();
+            $table->string('device_id')->nullable();
+            $table->string('device_type', 20)->nullable();
+            $table->dateTime('last_seen_at')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->softDeletes();
+            $table->timestamps();
+            $table->index('user_id');
         });
     }
 
@@ -354,6 +367,8 @@ return new class extends Migration
         Schema::dropIfExists('users');
         Schema::dropIfExists('sessions');
         Schema::dropIfExists('personal_access_tokens');
-        Schema::dropIfExists('membership_user');
+        Schema::dropIfExists('user_reset_codes');
+        Schema::dropIfExists('user_notifications');
+        Schema::dropIfExists('user_devices');
     }
 };

@@ -25,4 +25,18 @@ return [
         'project_unauthorized' => 'Project hoặc VM của bạn đang có lỗi về xác thực, vui lòng kiểm tra lại sau',
         'copy_error' => 'Lỗi khi copy'
     ],
+    'validation' => [
+        'status_integer' => 'Trạng thái phải là số nguyên.',
+        'status_in' => 'Trạng thái không hợp lệ.',
+        'notification_type_integer' => 'Loại thông báo phải là số nguyên.',
+        'notification_type_in' => 'Loại thông báo không hợp lệ.',
+        'notification_ids_required' => 'Danh sách ID thông báo là bắt buộc.',
+        'notification_ids_array' => 'Danh sách ID thông báo phải là mảng.',
+        'notification_ids_min' => 'Danh sách ID thông báo phải có ít nhất 1 phần tử.',
+        'notification_id_required' => 'ID thông báo là bắt buộc.',
+        'notification_id_integer' => 'ID thông báo phải là số nguyên.',
+        'notification_id_exists' => 'ID thông báo không tồn tại.',
+    ],
+    'mark_as_read_success' => 'Đánh dấu đã đọc thành công.',
+    'push_token_saved' => 'Lưu thành công.',
 ];

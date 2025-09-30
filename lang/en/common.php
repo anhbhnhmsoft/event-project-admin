@@ -25,4 +25,18 @@ return [
         'project_unauthorized' => 'Your project or VM has authentication issues, please check again later',
         'copy_error' => 'Error when copying'
     ],
+    'validation' => [
+       'status_integer' => 'Status must be an integer.',
+        'status_in' => 'Status is not valid.',
+        'notification_type_integer' => 'Notification type must be an integer.',
+        'notification_type_in' => 'Notification type is not valid.',
+        'notification_ids_required' => 'Notification IDs are required.',
+        'notification_ids_array' => 'Notification IDs must be an array.',
+        'notification_ids_min' => 'Notification IDs must have at least 1 element.',
+        'notification_id_required' => 'Notification ID is required.',
+        'notification_id_integer' => 'Notification ID must be an integer.',
+        'notification_id_exists' => 'Notification ID does not exist.',
+    ],
+    'mark_as_read_success' => 'Mark as read successfully.',
+    'push_token_saved' => 'Push token saved successfully',
 ];
