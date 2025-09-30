@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Notifications;
 use App\Filament\Resources\Notifications\Pages;
 use App\Filament\Resources\Notifications\Schemas\NotificationSchema;
 use App\Filament\Resources\Notifications\Tables\NotificationTable;
+use App\Models\User;
 use App\Models\UserNotification;
 use App\Utils\Constants\RoleUser;
 use Filament\Resources\Resource;
@@ -39,7 +40,10 @@ class NotificationResource extends Resource
         $user = Auth::user();
         if ($user->role === RoleUser::ADMIN->value) {
             $organizerId = $user->organizer_id;
-            $query->where('organizer_id', $organizerId);
+            $userIds = User::query()
+                ->where('organizer_id', $organizerId)
+                ->pluck('id');
+            $query->whereIn('user_id', $userIds);
         }
 
         return $query;

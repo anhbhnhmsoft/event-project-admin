@@ -15,8 +15,6 @@ class UserNotification extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'organizer_id',
-        'event_id',
         'user_id',
         'title',
         'description',
@@ -38,15 +36,6 @@ class UserNotification extends Model
         });
     }
 
-    public function organizer(): BelongsTo
-    {
-        return $this->belongsTo(Organizer::class);
-    }
-
-    public function event(): BelongsTo
-    {
-        return $this->belongsTo(Event::class);
-    }
 
     public function user(): BelongsTo
     {
