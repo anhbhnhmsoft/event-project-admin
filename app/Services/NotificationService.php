@@ -13,8 +13,7 @@ class NotificationService
     {
         try {
             $query = UserNotification::query()
-                ->where('user_id', $userId)
-                ->with(['organizer', 'event']);
+                ->where('user_id', $userId);
 
             if (isset($datas['status'])) {
                 $query->where('status', $datas['status']);
@@ -240,13 +239,11 @@ class NotificationService
         }
     }
 
-    public function createAndSendNotification(int $userId, int $organizerId, int $eventId, string $title, string $description, int $notificationType, array $data = []): array
+    public function createAndSendNotification(int $userId, string $title, string $description, int $notificationType, array $data = []): array
     {
         try {
             $notification = UserNotification::create([
                 'user_id' => $userId,
-                'organizer_id' => $organizerId,
-                'event_id' => $eventId,
                 'title' => $title,
                 'description' => $description,
                 'data' => $data,

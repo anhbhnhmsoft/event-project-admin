@@ -64,7 +64,6 @@ Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
         Route::post('/read-all', [NotificationController::class, 'markAllAsRead']);
         Route::post('/push-token', [NotificationController::class, 'storePushToken']);
         Route::post('/send', [NotificationController::class, 'sendNotification']);
-        Route::post('/test-send/{userId}', [NotificationController::class, 'testSendNotification']);
     });
 });
 

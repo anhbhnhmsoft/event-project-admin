@@ -34,8 +34,6 @@ class SendEventNotification implements ShouldQueue
         foreach ($users as $user) {
             $this->notificationService->createAndSendNotification(
                 $user->id,
-                $eventModel->organizer_id,
-                $eventModel->id,
                 $eventModel->name,
                 $eventModel->short_description ?? $eventModel->description,
                 UserNotificationType::EVENT_REMINDER->value,
