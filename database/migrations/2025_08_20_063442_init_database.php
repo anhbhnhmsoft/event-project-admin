@@ -85,11 +85,12 @@ return new class extends Migration
 
             // Mã giao dịch từ hệ thống (nội bộ)
             $table->string('transaction_code');
+            $table->tinyInteger('type_trans')->comment('Loại giao dịch (Casso, Momo,...)');
             $table->string('transaction_id')->nullable()->comment('ID giao dịch từ hệ thống thanh toán bên ngoài');
             $table->string('description')->nullable()->comment('Mô tả giao dịch');
             $table->tinyInteger('status')->comment('Trạng thái giao dịch trong enum TransactionStatus');
             $table->text('metadata')->nullable()->comment('Dữ liệu bổ sung liên quan đến giao dịch, có thể là thông tin bổ sung từ hệ thống thanh toán');
-
+            $table->unique(['type_trans','transaction_id']);
             $table->foreignId('user_id')->constrained();
             $table->timestamp('expired_at')->nullable();
             $table->json('config_pay')->nullable();

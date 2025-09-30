@@ -73,7 +73,7 @@ class TransactionsTable
                         $transactionService = app(TransactionService::class);
                         switch ($record->type) {
                             case TransactionType::MEMBERSHIP->value:
-                                $result = $transactionService->confirmMembershipTransaction(TransactionStatus::SUCCESS, $record->transaction_code);
+                                $result = $transactionService->confirmMembershipTransaction(TransactionStatus::SUCCESS, $record->transaction_id);
 
                                 if ($result['status']) {
                                     Notification::make()
@@ -103,7 +103,7 @@ class TransactionsTable
                         $transactionService = app(TransactionService::class);
                         switch ($record->type) {
                             case TransactionType::MEMBERSHIP->value:
-                                $result = $transactionService->confirmMembershipTransaction(TransactionStatus::FAILED, $record->transaction_code);
+                                $result = $transactionService->confirmMembershipTransaction(TransactionStatus::FAILED, $record->transaction_id);
                                 if ($result['status']) {
                                     Notification::make()
                                         ->title('Thành công')
