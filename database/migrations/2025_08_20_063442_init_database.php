@@ -309,6 +309,35 @@ return new class extends Migration
             $table->softDeletes();
             $table->timestamps();
         });
+
+        // Tạo bảng user_notifications để lưu trữ các thông báo cho người dùng
+        Schema::create('user_notifications', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('organizer_id')->constrained('organizers')->cascadeOnDelete();
+            $table->foreignId('event_id')->constrained('events')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->string('title');
+            $table->text('description');
+            $table->json('data')->nullable()->comment('Dữ liệu thông báo, lưu trữ các dữ liệu liên quan đến thông báo');
+            $table->tinyInteger('notification_type')->comment('Loại thông báo, Lưu trong enum NotificationType');
+            $table->tinyInteger('status')->comment('Trạng thái thông báo, Lưu trong enum NotificationStatus');
+            $table->softDeletes();
+            $table->timestamps();
+        });
+
+        // Tạo bảng user_devices để lưu trữ các thiết bị của người dùng
+        Schema::create('user_devices', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->string('expo_push_token')->unique();
+            $table->string('device_id')->nullable();
+            $table->string('device_type', 20)->nullable();
+            $table->dateTime('last_seen_at')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->softDeletes();
+            $table->timestamps();
+            $table->index('user_id');
+        });
     }
 
     /**
@@ -335,5 +364,8 @@ return new class extends Migration
         Schema::dropIfExists('users');
         Schema::dropIfExists('sessions');
         Schema::dropIfExists('personal_access_tokens');
+        Schema::dropIfExists('user_reset_codes');
+        Schema::dropIfExists('user_notifications');
+        Schema::dropIfExists('user_devices');
     }
 };
