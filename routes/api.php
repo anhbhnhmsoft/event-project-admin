@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EventController;
+use App\Http\Controllers\Api\GameEventController;
 use App\Http\Controllers\Api\MembershipController;
 use App\Http\Controllers\Api\OrganizerController;
 use App\Http\Controllers\Api\ProvinceController;
@@ -37,6 +38,7 @@ Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
         Route::delete('/delete-avatar', [AuthController::class, 'deleteAvatar']);
         Route::post('/set-lang', [AuthController::class, 'setLang']);
     });
+
     Route::prefix('/event')->group(function () {
         Route::get('/', [EventController::class, 'list']);
         Route::post('/history', [EventController::class, 'eventUserHistory']);
@@ -48,13 +50,29 @@ Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
 
     Route::prefix('/membership')->group(function () {
         Route::get('/', [MembershipController::class, 'listMembership']);
+        Route::get('/account', [MembershipController::class, 'listAccountMembership']);
         Route::post('/register', [MembershipController::class, 'membershipRegister']);
         Route::get('/{id}', [MembershipController::class, 'show']);
     });
 
     Route::prefix('/transaction')->group(function () {
+        Route::get('/check-payment/{id}', [TransactionController::class, 'checkPayment']);
         Route::get('/{id}', [TransactionController::class, 'show']);
     });
+    Route::prefix('/notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'index']);
+        Route::post('/', [NotificationController::class, 'markAsRead']);
+        Route::post('/read-all', [NotificationController::class, 'markAllAsRead']);
+        Route::post('/push-token', [NotificationController::class, 'storePushToken']);
+        Route::post('/send', [NotificationController::class, 'sendNotification']);
+    });
+});
+
+Route::prefix('/event-game')->group(function () {
+    Route::get('/gifts/{gameId}', [GameEventController::class, 'getGiftsEventGame']);
+    Route::get('/history-gifts/{gameId}', [GameEventController::class, 'getHistoryGifts']);
+    Route::post('/history-gifts/{gameId}', [GameEventController::class, 'insertHistoryGift']);
+        Route::get('/users/{gameId}', [GameEventController::class, 'getUsers']);
 });
 
 Route::prefix('common')->middleware('set-locale')->group(function () {
@@ -62,8 +80,6 @@ Route::prefix('common')->middleware('set-locale')->group(function () {
     Route::get('/province', [ProvinceController::class, 'getProvinces']);
     Route::get('/district/{code}', [ProvinceController::class, 'getDistricts']);
     Route::get('/ward/{code}', [ProvinceController::class, 'getWards']);
-
-    Route::get('/qr-code-pay/{transactionId}', [FileController::class, 'qrcodePay']);
 });
 
 

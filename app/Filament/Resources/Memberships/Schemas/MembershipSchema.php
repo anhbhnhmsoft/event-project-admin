@@ -32,6 +32,7 @@ class MembershipSchema
                         TextInput::make('duration')
                             ->label('Thời gian sử dụng')
                             ->numeric()
+                            ->helperText('Đơn vị: Tháng')
                             ->placeholder('Bao nhiêu tháng')
                             ->minValue(0)
                             ->required(),
@@ -42,6 +43,7 @@ class MembershipSchema
                             ->minValue(0)
                             ->required(),
                         Textarea::make('description')
+                            ->required()
                             ->label('Miêu tả')
                     ]),
                 Section::make()->schema([
@@ -70,6 +72,8 @@ class MembershipSchema
                                 ->label(ConfigMembership::ALLOW_CHOOSE_SEAT->label()),
                             Toggle::make('config.' . ConfigMembership::ALLOW_DOCUMENTARY->value)
                                 ->label(ConfigMembership::ALLOW_DOCUMENTARY->label()),
+                            Toggle::make('config.' . ConfigMembership::ALLOW_PLAYGAME->value)
+                                ->label(ConfigMembership::ALLOW_PLAYGAME->label()),
                         ])
                 ])
             ]);

@@ -85,11 +85,12 @@ return new class extends Migration
 
             // Mã giao dịch từ hệ thống (nội bộ)
             $table->string('transaction_code');
+            $table->tinyInteger('type_trans')->comment('Loại giao dịch (Casso, Momo,...)');
             $table->string('transaction_id')->nullable()->comment('ID giao dịch từ hệ thống thanh toán bên ngoài');
             $table->string('description')->nullable()->comment('Mô tả giao dịch');
             $table->tinyInteger('status')->comment('Trạng thái giao dịch trong enum TransactionStatus');
             $table->text('metadata')->nullable()->comment('Dữ liệu bổ sung liên quan đến giao dịch, có thể là thông tin bổ sung từ hệ thống thanh toán');
-
+            $table->unique(['type_trans','transaction_id']);
             $table->foreignId('user_id')->constrained();
             $table->timestamp('expired_at')->nullable();
             $table->json('config_pay')->nullable();
@@ -234,6 +235,30 @@ return new class extends Migration
             $table->timestamps();
         });
 
+
+        // Tạo bảng event_game_gifts để lưu trữ các phần quà trong trò chơi của sự kiện
+        Schema::create('event_game_gifts', function (Blueprint $table) {
+            $table->id();
+            $table->comment('Bảng event_game_gifts để lưu trữ các phần quà trong trò chơi của sự kiện');
+            $table->foreignId('event_game_id')->constrained('event_games')->cascadeOnDelete();
+            $table->string('name')->comment('Tên món quà');
+            $table->text('description')->nullable()->comment('Mô tả món quà');
+            $table->text('image')->comment('Hình ảnh món quà');
+            $table->interger('quantity')->comment('Số lượng món quà');
+            $table->softDeletes();
+            $table->timestamps();
+        });
+
+
+        Schema::create('event_user_gift', function (Blueprint $table) {
+            $table->id();
+            $table->comment('Bảng event_user_gift lưu trữ kết quả nhận quà của sự kiện');
+            $table->foreignId('event_game_gift_id')->constrained('event_game_gifts')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->softDeletes();
+            $table->timestamps();
+        });
+
         // Tạo bảng event_areas để lưu trữ các khu vực trong sự kiện
         Schema::create('event_areas', function (Blueprint $table) {
             $table->id();
@@ -352,5 +377,7 @@ return new class extends Migration
         Schema::dropIfExists('sessions');
         Schema::dropIfExists('personal_access_tokens');
         Schema::dropIfExists('membership_user');
+        Schema::dropIfExists('event_game_gifts');
+        Schema::dropIfExists('event_user_gift');
     }
 };

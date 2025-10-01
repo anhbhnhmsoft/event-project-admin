@@ -2,6 +2,8 @@
 
 namespace App\Utils\Constants;
 
+use App\Utils\Helper;
+
 enum TransactionType: int
 {
     case MEMBERSHIP = 1;
@@ -13,10 +15,10 @@ enum TransactionType: int
         };
     }
 
-    public static function typeLabel(int $type): string
+    public function getDescTrans(): string
     {
-        return match ($type) {
-            self::MEMBERSHIP->value => 'MBS',
+        return match ($this) {
+            self::MEMBERSHIP => 'MBS' . Helper::getTimestampAsId(),
         };
     }
 

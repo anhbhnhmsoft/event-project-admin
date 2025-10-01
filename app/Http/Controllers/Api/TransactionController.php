@@ -17,9 +17,9 @@ class TransactionController extends Controller
         $this->transactionService = $transactionService;
     }
 
-    public function show($id): JsonResponse
+    public function checkPayment($id): JsonResponse
     {
-        $result = $this->transactionService->getDetailTransaction($id);
+        $result = $this->transactionService->checkPayment($id);
         if ($result['status'] === false) {
             return response()->json([
                 'status' => false,
@@ -28,7 +28,7 @@ class TransactionController extends Controller
         }
         return response()->json([
             'message' => __('common.common_success.get_success'),
-            'data' => TransactionDetailResource::make($result['transaction']),
+            'data' => $result['data'],
         ], 200);
     }
 }

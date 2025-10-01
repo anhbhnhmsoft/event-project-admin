@@ -2,9 +2,11 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Config;
 use App\Models\District;
 use App\Models\Province;
 use App\Models\Ward;
+use App\Utils\Constants\ConfigName;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -42,22 +44,22 @@ class InitApplication extends Command
             return Command::FAILURE;
         }
 
-        $this->info('--- Seeding tỉnh thành');
+        $this->info('--- Seeding ---');
         $rProvince = $this->initProvinces();
-        if ($rProvince === true) {
-            $this->info('Seeding tỉnh thành thành công');
-        }else{
-            $this->error('Lỗi khi chạy Seeding tỉnh thành!');
+        if ($rProvince === false) {
+            $this->error('Lỗi khi chạy Seeding initProvinces');
             return Command::FAILURE;
         }
-        $this->info('--- Seeding demo database');
-        DB::beginTransaction();
-        DB::commit();
+        $rConfig = $this->initSeedConfig();
+        if ($rConfig === false) {
+            $this->error('Lỗi khi chạy initSeedConfig');
+            return Command::FAILURE;
+        }
         $this->info('Seeding database thành công');
         return Command::SUCCESS;
     }
 
-        private function initProvinces(): bool
+    private function initProvinces(): bool
     {
         DB::beginTransaction();
         try {
@@ -123,5 +125,33 @@ class InitApplication extends Command
             DB::rollBack();
             return false;
         }
+    }
+
+    private function initSeedConfig()
+    {
+        DB::beginTransaction();
+        try {
+            Config::query()->create([
+                'config_key' => ConfigName::CLIENT_ID_APP,
+                'config_value' => "4fd8acf9-513d-4c49-85ae-4316e708ab5f",
+                'description' => 'ID app casso ở kênh thanh toán',
+            ]);
+            Config::query()->create([
+                'config_key' => ConfigName::API_KEY,
+                'config_value' => 'af86c50a-adc1-452a-af1a-00924bb3d1d5',
+                'description' => 'mã api key casso ở kênh thanh toán'
+            ]);
+            Config::query()->create([
+                'config_key' => ConfigName::CHECKSUM_KEY,
+                'config_value' => 'eb035b04d7ad00367f362de8cdede95c73d68392bbc0c5cb0ac53441f0a18176',
+                'description' => 'mã checksum casso ở kênh thanh toán'
+            ]);
+            DB::commit();
+            return true;
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            return false;
+        }
+
     }
 }
