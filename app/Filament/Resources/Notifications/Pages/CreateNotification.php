@@ -42,7 +42,6 @@ class CreateNotification extends CreateRecord
 
         $organizerId = $data['organizer_id'] ?? (Auth::user()->organizer_id ?? null);
 
-        $eventId = $data['event_id'];
         $notificationType = $data['notification_type'];
         $title = $data['title'];
         $description = $data['description'];
@@ -59,8 +58,6 @@ class CreateNotification extends CreateRecord
             foreach ($userIds as $uid) {
                 $result = $this->notificationService->createAndSendNotification(
                     $uid,
-                    $organizerId,
-                    $eventId,
                     $title,
                     $description,
                     $notificationType,
@@ -74,8 +71,6 @@ class CreateNotification extends CreateRecord
             foreach ($userIds as $uid) {
                 $result = $this->notificationService->createAndSendNotification(
                     $uid,
-                    $organizerId,
-                    $eventId,
                     $title,
                     $description,
                     $notificationType,

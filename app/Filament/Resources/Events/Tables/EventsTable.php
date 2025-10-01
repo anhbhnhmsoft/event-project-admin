@@ -7,6 +7,7 @@ use App\Models\Organizer;
 use App\Utils\Constants\EventStatus;
 use App\Utils\Helper;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -73,33 +74,41 @@ class EventsTable
                 TrashedFilter::make(),
             ])
             ->recordActions([
-                ViewAction::make()
-                    ->label('Xem'),
-                EditAction::make()
-                    ->label('Sửa'),
-                Action::make('seats-manager')
-                    ->label('Quản lý chỗ ngồi')
-                    ->icon('heroicon-o-building-office')
-                    ->url(fn($record) => EventResource::getUrl('seats-manage', ['record' => $record]))
-                    ->openUrlInNewTab()
-                    ->color('success'),
-                Action::make('quick-register')
-                    ->label('Đăng ký nhanh')
-                    ->icon('heroicon-o-qr-code')
-                    ->color('primary')
-                    ->modalHeading('QR Code Đăng ký nhanh')
-                    ->modalContent(fn($record) => view('filament.event.quick-register-qr', [
-                        'event' => $record,
-                        'url' => Helper::quickRegisterUrl($record)
-                    ]))
-                    ->modalSubmitAction(false)
-                    ->modalCancelAction(fn(Action $action) => $action->label('Đóng')),
-                Action::make('comments-manager')
-                    ->label('Quản lý bình luận')
-                    ->icon('heroicon-o-chat-bubble-bottom-center-text')
-                    ->url(fn($record) => EventResource::getUrl('comments-manage', ['record' => $record]))
-                    ->openUrlInNewTab()
-                    ->color('success'),
+                ActionGroup::make([
+                    ViewAction::make()
+                        ->label('Xem'),
+                    EditAction::make()
+                        ->label('Sửa'),
+                    Action::make('seats-manager')
+                        ->label('Quản lý chỗ ngồi')
+                        ->icon('heroicon-o-building-office')
+                        ->url(fn($record) => EventResource::getUrl('seats-manage', ['record' => $record]))
+                        ->openUrlInNewTab()
+                        ->color('success'),
+                    Action::make('quick-register')
+                        ->label('Đăng ký nhanh')
+                        ->icon('heroicon-o-qr-code')
+                        ->color('primary')
+                        ->modalHeading('QR Code Đăng ký nhanh')
+                        ->modalContent(fn($record) => view('filament.event.quick-register-qr', [
+                            'event' => $record,
+                            'url' => Helper::quickRegisterUrl($record)
+                        ]))
+                        ->modalSubmitAction(false)
+                        ->modalCancelAction(fn(Action $action) => $action->label('Đóng')),
+                    Action::make('comments-manager')
+                        ->label('Quản lý bình luận')
+                        ->icon('heroicon-o-chat-bubble-bottom-center-text')
+                        ->url(fn($record) => EventResource::getUrl('comments-manage', ['record' => $record]))
+                        ->openUrlInNewTab()
+                        ->color('success'),
+                    Action::make('games-manager')
+                        ->label('Quản lý trò chơi')
+                        ->icon('heroicon-o-cube')
+                        ->url(fn($record) => EventResource::getUrl('games-manage', ['record' => $record]))
+                        ->openUrlInNewTab()
+                        ->color('primary'),
+                ])
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

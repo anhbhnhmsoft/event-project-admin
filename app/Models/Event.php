@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -185,5 +186,13 @@ class Event extends Model
         return $this->hasMany(EventUserHistory::class);
     }
 
+    public function games(): HasMany
+    {
+        return $this->hasMany(EventGame::class);
+    }
 
+    public function usersHasTicket(): HasManyThrough
+    {
+        return $this->hasManyThrough(User::class, EventUserHistory::class, 'event_id', 'id', 'id', 'user_id');
+    }
 }

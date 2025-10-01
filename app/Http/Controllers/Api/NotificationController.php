@@ -117,8 +117,6 @@ class NotificationController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'user_id' => ['required', 'integer', 'exists:users,id'],
-            'organizer_id' => ['required', 'integer', 'exists:organizers,id'],
-            'event_id' => ['required', 'integer', 'exists:events,id'],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
             'notification_type' => ['required', 'integer'],
@@ -136,8 +134,6 @@ class NotificationController extends Controller
         $validated = $validator->validated();
         $result = $this->notificationService->createAndSendNotification(
             $validated['user_id'],
-            $validated['organizer_id'],
-            $validated['event_id'],
             $validated['title'],
             $validated['description'],
             $validated['notification_type'],
@@ -152,30 +148,6 @@ class NotificationController extends Controller
 
         return response()->json([
             'message' => $result['message'],
-            'data' => $result['data'],
-        ], 200);
-    }
-
-    public function testSendNotification(Request $request, int $userId)
-    {
-        $result = $this->notificationService->createAndSendNotification(
-            $userId,
-            1,
-            250918033855337395,
-            'Test Notification',
-            'test notification description',
-            1,
-            ['test' => true]
-        );
-
-        if ($result['status'] === false) {
-            return response()->json([
-                'message' => $result['message'],
-            ], 500);
-        }
-
-        return response()->json([
-            'message' => 'Test notification sent successfully!',
             'data' => $result['data'],
         ], 200);
     }

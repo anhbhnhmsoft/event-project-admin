@@ -72,6 +72,8 @@ class MembershipSchema
                                 ->label(ConfigMembership::ALLOW_CHOOSE_SEAT->label()),
                             Toggle::make('config.' . ConfigMembership::ALLOW_DOCUMENTARY->value)
                                 ->label(ConfigMembership::ALLOW_DOCUMENTARY->label()),
+                            Toggle::make('config.' . ConfigMembership::ALLOW_PLAYGAME->value)
+                                ->label(ConfigMembership::ALLOW_PLAYGAME->label()),
                         ])
                 ])
             ]);

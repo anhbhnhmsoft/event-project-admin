@@ -20,8 +20,6 @@ class NotificationTable
         return $table
             ->defaultSort('created_at', 'desc')
             ->columns([
-                TextColumn::make('organizer.name')->label('Organizer')->toggleable(),
-                TextColumn::make('event.name')->label('Sự kiện')->toggleable(),
                 TextColumn::make('user.name')->label('Người nhận')->toggleable(),
                 TextColumn::make('title')->label('Tiêu đề')->wrap()->toggleable(),
                 BadgeColumn::make('notification_type')
