@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\GameEventController;
 use App\Http\Controllers\Api\MembershipController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OrganizerController;
 use App\Http\Controllers\Api\ProvinceController;
 use App\Http\Controllers\Api\TransactionController;
@@ -58,6 +59,13 @@ Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
     Route::prefix('/transaction')->group(function () {
         Route::get('/check-payment/{id}', [TransactionController::class, 'checkPayment']);
         Route::get('/{id}', [TransactionController::class, 'show']);
+    });
+    Route::prefix('/notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'index']);
+        Route::post('/', [NotificationController::class, 'markAsRead']);
+        Route::post('/read-all', [NotificationController::class, 'markAllAsRead']);
+        Route::post('/push-token', [NotificationController::class, 'storePushToken']);
+        Route::post('/send', [NotificationController::class, 'sendNotification']);
     });
     Route::prefix('/notifications')->group(function () {
         Route::get('/', [NotificationController::class, 'index']);
