@@ -222,6 +222,17 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        // Tạo bảng event_schedule_document_user để lưu trữ các file trong lịch trình sự kiện người dùng từng tham gia
+
+        Schema::create('event_schedule_document_user', function (Blueprint $table) {
+            $table->id();
+            $table->comment('Bảng event_schedule_document_user để lưu trữ các file trong lịch trình sự kiện người dùng từng tham gia');
+            $table->foreignId('user_id')->constrained('user')->cascadeOnDelete();
+            $table->foreignId('event_schedule_document_id')->constrained('event_schedule_documents')->cascadeOnDelete();
+            $table->softDeletes();
+            $table->timestamps();
+        });
+
         // Tạo bảng event_games để lưu trữ các trò chơi trong lịch trình sự kiện
         Schema::create('event_games', function (Blueprint $table) {
             $table->id();
@@ -378,6 +389,7 @@ return new class extends Migration
         Schema::dropIfExists('event_games');
         Schema::dropIfExists('event_schedule_document_files');
         Schema::dropIfExists('event_schedule_documents');
+        Schema::dropIfExists('event_schedule_document_user');
         Schema::dropIfExists('event_schedules');
         Schema::dropIfExists('event_user');
         Schema::dropIfExists('events');

@@ -139,7 +139,7 @@ class CreateEvent extends CreateRecord
                                             if ($tempFile) {
                                                 $filePath = $tempFile->store(
                                                     StoragePath::makePathById(StoragePath::EVENT_PATH, $event->id) . '/' . $eventSchedule->id . '/' . $eventScheduleDocument->id,
-                                                    'public'
+                                                    'private'
                                                 );
 
                                                 $this->createFileRecord($eventScheduleDocument->id, $tempFile, $filePath);
