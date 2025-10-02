@@ -6,8 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\EventListResource;
 use App\Http\Resources\EventDetailResource;
 use App\Http\Resources\EventListCommentResource;
+use App\Http\Resources\EventScheduleDetailResource;
+use App\Http\Resources\EventScheduleDocumentResource;
 use App\Http\Resources\EventUserHistoryResource;
 use App\Services\EventCommentService;
+use App\Services\EventScheduleService;
 use App\Services\EventService;
 use App\Services\EventUserHistoryService;
 use App\Services\MemberShipService;
@@ -18,6 +21,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use App\Utils\Constants\EventUserHistoryStatus;
 use App\Utils\Constants\RoleUser;
+use Illuminate\Support\Facades\Storage;
 
 class EventController extends Controller
 {
@@ -25,17 +29,20 @@ class EventController extends Controller
     protected EventCommentService $eventCommentService;
     protected EventUserHistoryService $eventUserHistoryService;
     protected MemberShipService $membershipService;
+    protected EventScheduleService $eventScheduleService;
 
     public function __construct(
         EventService $eventService,
         EventUserHistoryService $eventUserHistoryService,
         EventCommentService $eventCommentService,
-        MemberShipService $membershipService
+        MemberShipService $membershipService,
+        EventScheduleService $eventScheduleService,
     ) {
         $this->eventService            = $eventService;
         $this->eventUserHistoryService = $eventUserHistoryService;
         $this->eventCommentService     = $eventCommentService;
         $this->membershipService       = $membershipService;
+        $this->eventScheduleService    = $eventScheduleService;
     }
 
     public function list(Request $request): JsonResponse
@@ -256,5 +263,112 @@ class EventController extends Controller
                 'last_page' => $comments->lastPage()
             ],
         ], 200);
+    }
+
+    public function getDetailSchedule(Request $request, string $id): JsonResponse
+    {
+
+        $schedule = $this->eventScheduleService->getDetailSchedule($id);
+
+        if (!$schedule['status']) {
+            return response()->json([
+                'status'  => false,
+                'message' => __('event.validation.validation_failed'),
+            ], 422);
+        }
+        $user = $request->user();
+        $allowDocument = true;
+        if ($user->role == RoleUser::CUSTOMER->value) {
+            if (!$user->activeMembership->first() || !$user->activeMembership->first()->config[ConfigMembership::ALLOW_COMMENT->value]) {
+                $allowDocument = false;
+            }
+        }
+
+        if ($schedule['schedule']->event->organizer_id != $user->organizer_id) {
+            return response()->json([
+                'status'  => false,
+                'message' => __('common.common_error.permission_error'),
+            ], 403);
+        }
+
+        return response()->json([
+            'status'        => true,
+            'message'       => __('common.common_success.success'),
+            'data'    => (new EventScheduleDetailResource($schedule['schedule']))
+                ->additional(['allowDocument' => $allowDocument]),
+        ]);
+    }
+
+    public function getDetailScheduleDocument(Request $request, string $id): JsonResponse
+    {
+        $document = $this->eventScheduleService->getDetailDocument($id);
+
+        if (!$document['status']) {
+            return response()->json([
+                'status'  => false,
+                'message' => __('event.validation.validation_failed'),
+            ], 422);
+        }
+        $user = $request->user();
+
+        if ($user->role == RoleUser::CUSTOMER->value) {
+            if (!$user->activeMembership->first() || !$user->activeMembership->first()->config[ConfigMembership::ALLOW_COMMENT->value]) {
+                return response()->json([
+                    'message' => __('common.common_error.permission_error'),
+                ], 403);
+            }
+        }
+
+        if ($document['document']->eventSchedule->event->organizer_id != $user->organizer_id) {
+            return response()->json([
+                'status'  => false,
+                'message' => __('common.common_error.permission_error'),
+            ], 403);
+        }
+
+        $eventScheduleDocumentUser = $this->eventScheduleService->insertEventScheduleDocumentUser($user->id, $document['document']->id);
+        if (!$eventScheduleDocumentUser['status']) {
+            return response()->json([
+                'status'  => false,
+                'message' => __('common.common_error.server_error'),
+            ], 500);
+        }
+        return response()->json([
+            'status'        => true,
+            'message'       => __('common.common_success.success'),
+            'data'          => new EventScheduleDocumentResource($document['document']),
+        ]);
+    }
+
+    public function downloadDocumentFile(Request $request, $documentId, $fileId)
+    {
+        $document = $this->eventScheduleService->getDetailDocument($documentId);
+        if (!$document['status']) {
+            return response()->json([
+                'status'  => false,
+                'message' => __('common.common_error.data_not_found'),
+            ], 404);
+        }
+
+        $files = $document['document']->files ?? [];
+        $file = collect($files)->firstWhere('id', (int) $fileId) ?? null;
+        $filePath = str_replace('\\', '/', ltrim($file->file_path, '/'));
+
+        if (!$filePath || !Storage::disk('private')->exists($filePath)) {
+            return response()->json([
+                'status'  => false,
+                'message' => __('common.common_error.data_not_found'),
+            ], 404);
+        }
+
+        $user = $request->user();
+        if ($document['document']->eventSchedule->event->organizer_id !== $user->organizer_id) {
+            return response()->json([
+                'status'  => false,
+                'message' => __('common.common_error.permission_error'),
+            ], 403);
+        }
+
+        return Storage::disk('private')->download($filePath);
     }
 }

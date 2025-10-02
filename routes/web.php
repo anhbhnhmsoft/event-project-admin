@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\EventController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FileController;
 use App\Livewire\Events\QuickRegister;
@@ -8,6 +9,12 @@ use App\Http\Controllers\Api\GameEventController;
 Route::get('/image/{file_path}', [FileController::class, 'image'])
     ->where('file_path', '.*')
     ->name('public_image');
+
+Route::middleware(['auth:sanctum'])->get('/document/{file_path}', [FileController::class, 'document'])
+    ->where('file_path', '.*')
+    ->name('file_document');
+
+Route::middleware(['auth:sanctum'])->get('/file-private/{document_id}/{file_id}', [EventController::class, 'downloadDocumentFile']);
 
 Route::get('/event/quick-register', QuickRegister::class)->name('events.quick-register');
 Route::get("/")->name('home');

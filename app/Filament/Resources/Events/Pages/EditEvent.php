@@ -226,7 +226,7 @@ class EditEvent extends EditRecord
                                             if ($tempFile) {
                                                 $filePath = $tempFile->store(
                                                     StoragePath::makePathById(StoragePath::EVENT_PATH, $record->id) . '/' . $eventSchedule->id . '/' . $eventScheduleDocument->id,
-                                                    'public'
+                                                    'private'
                                                 );
 
                                                 $this->createFileRecord($eventScheduleDocument->id, $tempFile, $filePath);
@@ -383,11 +383,11 @@ class EditEvent extends EditRecord
         $fileIds = array_column($filesToDelete, 'id');
 
         $existingPaths = array_filter($filePaths, function ($path) {
-            return Storage::disk('public')->exists($path);
+            return Storage::disk('private')->exists($path);
         });
 
         if (!empty($existingPaths)) {
-            Storage::disk('public')->delete($existingPaths);
+            Storage::disk('private')->delete($existingPaths);
         }
 
         EventScheduleDocumentFile::whereIn('id', $fileIds)->delete();

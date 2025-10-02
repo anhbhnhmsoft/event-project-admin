@@ -20,7 +20,6 @@ use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Forms\Components\RichEditor;
-use Filament\Forms\Components\Toggle;
 use App\Filament\Forms\Components\LocationPicker;
 use Filament\Forms\Components\DatePicker;
 use Filament\Schemas\Components\Wizard;
@@ -31,6 +30,7 @@ use Illuminate\Validation\Rule;
 use Filament\Forms\Components\Repeater;
 use App\Utils\Helper;
 
+use Illuminate\Support\Facades\Log;
 class EventForm
 {
     public static function configure(Schema $schema): Schema
@@ -187,7 +187,7 @@ class EventForm
                                 'required' => 'Vui lòng nhập Mô tả chi tiết',
                             ])
                             ->extraAttributes(['style' => 'min-height: 300px;']),
-                            Select::make('status')
+                        Select::make('status')
                             ->label('Trạng thái')
                             ->required()
                             ->default(EventStatus::UPCOMING->value)
@@ -378,10 +378,10 @@ class EventForm
                                     ->validationMessages([
                                         'required' => 'Vui lòng nhập tiêu đề lịch trình.',
                                     ]),
-                                    RichEditor::make('description')
+                                RichEditor::make('description')
                                     ->label('Mô tả')
                                     ->extraAttributes(['style' => 'min-height: 300px;']),
-                                    
+
                                 TextInput::make('start_time')
                                     ->label('Giờ bắt đầu')
                                     ->placeholder('HH:MM')
@@ -474,7 +474,6 @@ class EventForm
                                             ->downloadable()
                                             ->openable()
                                             ->storeFiles(false)
-                                            ->disk('public')
                                             ->directory(StoragePath::EVENT_PATH->value)
                                             ->maxSize(10240)
                                             ->acceptedFileTypes(['image/*', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'])
