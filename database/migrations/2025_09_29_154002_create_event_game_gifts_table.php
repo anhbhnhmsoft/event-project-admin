@@ -19,6 +19,7 @@ return new class extends Migration
             $table->text('description')->nullable()->comment('Mô tả món quà');
             $table->text('image')->comment('Hình ảnh món quà');
             $table->integer('quantity')->comment('Số lượng món quà');
+            $table->unsignedInteger('rate')->comment('Tỉ lệ xuất hiện món quà');
             $table->softDeletes();
             $table->timestamps();
         });
