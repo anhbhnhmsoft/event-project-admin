@@ -255,6 +255,7 @@ return new class extends Migration
             $table->comment('Bảng event_user_gift lưu trữ kết quả nhận quà của sự kiện');
             $table->foreignId('event_game_gift_id')->constrained('event_game_gifts')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->unsignedInteger('rate')->comment('Tỉ lệ xuất hiện món quà');
             $table->softDeletes();
             $table->timestamps();
         });
