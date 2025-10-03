@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Exceptions\ServiceException;
 use App\Models\Event;
+use App\Models\Organizer;
 use App\Utils\Constants\EventStatus;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -18,6 +19,24 @@ class EventService
         } catch (\Exception $e) {
             return new LengthAwarePaginator([], 0, $limit, $page);
         }
+    }
+
+    public function getAllOrganizersList()
+    {
+        return Organizer::query()->pluck('name', 'id');
+    }
+
+    public function getEventsListByOrganizerId(?string $organizerId)
+    {
+        $query = Event::query();
+
+        if ($organizerId) {
+            $query->where('organizer_id', $organizerId);
+        }else {
+            return [];
+        }
+
+        return $query->pluck('name', 'id');
     }
 
     public function getEventDetail($id): array
@@ -54,15 +73,15 @@ class EventService
     {
         try {
             $now = now();
-            
+
             Event::where('status', EventStatus::UPCOMING->value)
                 ->whereRaw('CONCAT(DATE(day_represent), " ", TIME(start_time)) <= ?', [$now])
                 ->update(['status' => EventStatus::ACTIVE->value]);
-            
+
             Event::where('status', EventStatus::ACTIVE->value)
                 ->whereRaw('CONCAT(DATE(day_represent), " ", TIME(end_time)) < ?', [$now])
                 ->update(['status' => EventStatus::CLOSED->value]);
-            
+
             return [
                 'status' => true,
                 'message' => __('common.common_success.update_success')

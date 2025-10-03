@@ -227,7 +227,7 @@ return new class extends Migration
         Schema::create('event_schedule_document_user', function (Blueprint $table) {
             $table->id();
             $table->comment('Bảng event_schedule_document_user để lưu trữ các file trong lịch trình sự kiện người dùng từng tham gia');
-            $table->foreignId('user_id')->constrained('user')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('event_schedule_document_id')->constrained('event_schedule_documents')->cascadeOnDelete();
             $table->softDeletes();
             $table->timestamps();
@@ -255,7 +255,8 @@ return new class extends Migration
             $table->string('name')->comment('Tên món quà');
             $table->text('description')->nullable()->comment('Mô tả món quà');
             $table->text('image')->comment('Hình ảnh món quà');
-            $table->interger('quantity')->comment('Số lượng món quà');
+            $table->integer('quantity')->comment('Số lượng món quà');
+            $table->unsignedInteger('rate')->comment('Tỉ lệ xuất hiện món quà');
             $table->softDeletes();
             $table->timestamps();
         });
@@ -266,7 +267,6 @@ return new class extends Migration
             $table->comment('Bảng event_user_gift lưu trữ kết quả nhận quà của sự kiện');
             $table->foreignId('event_game_gift_id')->constrained('event_game_gifts')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->unsignedInteger('rate')->comment('Tỉ lệ xuất hiện món quà');
             $table->softDeletes();
             $table->timestamps();
         });
@@ -290,7 +290,7 @@ return new class extends Migration
             $table->foreignId('event_area_id')->constrained('event_areas')->cascadeOnDelete();
             $table->string('seat_code')->comment('Mã ghế, định dạng như A1, B2, C3, ...');
             $table->tinyInteger('status')->comment('Trạng thái ghế, Lưu trong enum EventSeatStatus');
-            $table->foreignId('user_id')->nullable()->constrained('user');
+            $table->foreignId('user_id')->nullable()->constrained('users');
             $table->unique(['event_area_id', 'seat_code']);
             $table->timestamps();
         });
@@ -309,7 +309,7 @@ return new class extends Migration
         Schema::create('event_user_histories', function (Blueprint $table) {
             $table->id();
             $table->foreignId('event_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('user_id')->constrained()->nullOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('event_seat_id')->nullable()->constrained()->nullOnDelete();
             $table->string('ticket_code')->nullable()->unique()->comment('Mã vé, định dạng như TICKET-123456');
             $table->tinyInteger('status')->comment('Trạng thái vé trong enum EventUserHistoryStatus');
