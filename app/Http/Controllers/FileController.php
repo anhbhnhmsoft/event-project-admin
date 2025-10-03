@@ -15,6 +15,7 @@ class FileController extends Controller
     // Hàm chung để xử lý ảnh và video
     protected function serveFile($file_path, $type, $request)
     {
+        $file_path = trim($file_path);
         // Ngăn người dùng nhập path kiểu ../../
         $file_path = ltrim($file_path, '/');
         // chuẩn hóa path: thay \ thành /
@@ -40,8 +41,10 @@ class FileController extends Controller
         });
 
         // Kiểm tra loại tệp
-        if (strpos($fileInfo['mime'], $type) === false) {
-            abort(415, 'Unsupported Media Type');
+        if ($type !== 'application') {
+            if (strpos($fileInfo['mime'], $type) === false) {
+                abort(415, 'Unsupported Media Type');
+            }
         }
 
         // Trả về tệp với Content-Type tương ứng

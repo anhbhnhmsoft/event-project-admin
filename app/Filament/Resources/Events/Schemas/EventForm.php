@@ -29,7 +29,7 @@ use App\Utils\Constants\RoleUser;
 use Illuminate\Validation\Rule;
 use Filament\Forms\Components\Repeater;
 use App\Utils\Helper;
-
+use Filament\Forms\Components\ViewField;
 use Illuminate\Support\Facades\Log;
 class EventForm
 {
@@ -381,7 +381,10 @@ class EventForm
                                 RichEditor::make('description')
                                     ->label('Mô tả')
                                     ->extraAttributes(['style' => 'min-height: 300px;']),
-
+                                ViewField::make('documents')
+                                    ->label('Danh sách file')
+                                    ->view('filament.forms.components.event-existing-files')
+                                    ->dehydrated(false),
                                 TextInput::make('start_time')
                                     ->label('Giờ bắt đầu')
                                     ->placeholder('HH:MM')

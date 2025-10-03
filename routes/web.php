@@ -10,7 +10,7 @@ Route::get('/image/{file_path}', [FileController::class, 'image'])
     ->where('file_path', '.*')
     ->name('public_image');
 
-Route::middleware(['auth:sanctum'])->get('/document/{file_path}', [FileController::class, 'document'])
+Route::middleware(['auth:sanctum', 'auth:web'])->get('/document/{file_path}', [FileController::class, 'document'])
     ->where('file_path', '.*')
     ->name('file_document');
 

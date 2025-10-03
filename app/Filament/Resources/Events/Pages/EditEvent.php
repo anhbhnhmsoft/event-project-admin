@@ -28,12 +28,14 @@ class EditEvent extends EditRecord
 
     protected static ?string $title = 'Sửa sự kiện';
 
+    public array $filesMarkedForDeletion = [];
+
     protected function mutateFormDataBeforeFill(array $data): array
     {
         $event = Event::query()->find($data['id']);
         $data['organizer_id'] = $event->organizer_id;
         if ($event->image_represent_path) {
-            $data['image_represent_path'] = $event->image_represent_path;
+            $data['image_represent_path'] = str_replace('\\', '/', $event->image_represent_path);
         }
 
         $data['start_time'] = $event->start_time ? $event->start_time->format('H:i') : '';
@@ -53,7 +55,7 @@ class EditEvent extends EditRecord
                     'files' => $document->files->map(function ($file) {
                         return [
                             'id' => $file->id,
-                            'file_path' => $file->file_path,
+                            'file_path' => str_replace('\\', '/', $file->file_path),
                             'file_name' => $file->file_name,
                         ];
                     })->toArray()
@@ -320,8 +322,11 @@ class EditEvent extends EditRecord
             EventSchedule::where('event_id', $record->id)
                 ->whereNotIn('id', $processedScheduleIds)
                 ->delete();
+            $allFilesToDelete = array_merge($allFilesToDelete, $this->filesMarkedForDeletion);
 
             $this->deleteAllFiles($allFilesToDelete);
+
+            $this->filesMarkedForDeletion = [];
 
             DB::commit();
 
@@ -436,5 +441,50 @@ class EditEvent extends EditRecord
             DeleteAction::make()
                 ->label('Xóa'),
         ];
+    }
+
+    public function markFileForDeletion( $filePath)
+    {
+        $this->filesMarkedForDeletion[] = [
+            'file_path' => $filePath,
+        ];
+
+        $this->dispatch('file-marked-for-deletion', path: $filePath);
+    }
+
+    public function removeFile($filePath)
+    {
+        try {
+            if (Storage::disk('private')->exists($filePath)) {
+                Storage::disk('private')->delete($filePath);
+            }
+
+            $this->record->schedules->each(function ($schedule) use ($filePath) {
+                $schedule->documents->each(function ($doc) use ($filePath) {
+                    $files = collect($doc->files ?? [])
+                        ->filter(fn($f) => $f['file_path'] !== $filePath)
+                        ->values()
+                        ->toArray();
+
+                    $doc->update(['files' => $files]);
+                });
+            });
+
+
+            \Filament\Notifications\Notification::make()
+                ->title('Đã xóa file')
+                ->success()
+                ->send();
+        } catch (\Throwable $e) {
+            \Filament\Notifications\Notification::make()
+                ->title('Lỗi xóa file')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+        }
+    }
+    protected function afterSave(): void
+    {
+        $this->dispatch('files-updated');
     }
 }
