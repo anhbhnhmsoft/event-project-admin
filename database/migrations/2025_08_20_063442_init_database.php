@@ -313,8 +313,6 @@ return new class extends Migration
         // Tạo bảng user_notifications để lưu trữ các thông báo cho người dùng
         Schema::create('user_notifications', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('organizer_id')->constrained('organizers')->cascadeOnDelete();
-            $table->foreignId('event_id')->constrained('events')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('title');
             $table->text('description');
@@ -345,6 +343,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('user_notifications');
+        Schema::dropIfExists('user_devices');
         Schema::dropIfExists('configs');
         Schema::dropIfExists('event_user_histories');
         Schema::dropIfExists('event_comments');
@@ -365,7 +365,6 @@ return new class extends Migration
         Schema::dropIfExists('sessions');
         Schema::dropIfExists('personal_access_tokens');
         Schema::dropIfExists('user_reset_codes');
-        Schema::dropIfExists('user_notifications');
-        Schema::dropIfExists('user_devices');
+
     }
 };
