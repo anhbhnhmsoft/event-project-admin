@@ -6,6 +6,7 @@ use App\Filament\Resources\Events\Pages\CreateEvent;
 use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Filament\Resources\Events\Pages\EventComments;
 use App\Filament\Resources\Events\Pages\EventGames;
+use App\Filament\Resources\Events\Pages\EventVotes;
 use App\Filament\Resources\Events\Pages\ListEvents;
 use App\Filament\Resources\Events\Pages\SeatsEvent;
 use App\Filament\Resources\Events\Schemas\EventForm;
@@ -74,6 +75,7 @@ class EventResource extends Resource
             'seats-manage' => SeatsEvent::route('/{record}/seats'),
             'comments-manage' => EventComments::route('/{record}/comments'),
             'games-manage'     => EventGames::route('/{record}/games'),
+            'votes-manage'     => EventVotes::route('/{record}/votes'),
         ];
     }
 

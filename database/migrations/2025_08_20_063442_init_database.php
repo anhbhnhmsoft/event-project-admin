@@ -375,6 +375,90 @@ return new class extends Migration
             $table->timestamps();
             $table->index('user_id');
         });
+
+        // Tạo bảng event_polls để lưu trữ các cuộc khảo sát/bình chọn
+        Schema::create('event_polls', function (Blueprint $table) {
+            $table->id();
+            $table->comment('Lưu trữ thông tin về một đợt Khảo sát/Bình chọn cụ thể trong sự kiện.');
+            $table->foreignId('event_id')
+                ->comment('Khóa ngoại liên kết với bảng "events".')
+                ->constrained('events')
+                ->cascadeOnDelete();
+            $table->text('title')->comment('Tiêu đề của cuộc khảo sát.');
+            $table->tinyInteger('access_type')
+                ->comment('Phạm vi truy cập lưu trữ tại constant access type poll ');
+            $table->timestamp('start_time')->comment('Thời điểm bắt đầu mở khảo sát.');
+            $table->timestamp('end_time')->comment('Thời điểm kết thúc khảo sát.');
+            $table->tinyInteger('duration_unit')->comment('Đơn vị duration lưu trữ ở constant type unit duration');
+            $table->integer('duration')->comment('Thời lượng (giờ/phút/ngày) kéo dài khảo sát.');
+            $table->tinyInteger('is_active')->comment('Trạng thái kích hoạt (1: Active, 0: Inactive).');
+            $table->softDeletes();
+            $table->timestamps();
+        });
+
+        // Tạo bảng event_poll_user để lưu trữ danh sách người dùng được phép tham gia bình chọn/khảo sát
+        Schema::create('event_poll_user', function (Blueprint $table) {
+            $table->id();
+            $table->comment('Lưu trữ danh sách User (đã Check-in) được phép tham gia một cuộc Khảo sát cụ thể.');
+            $table->foreignId('user_id')
+                ->constrained('users')
+                ->cascadeOnDelete();
+            $table->foreignId('event_poll_id')
+                ->constrained('event_polls')
+                ->cascadeOnDelete();
+            // Đảm bảo mỗi User chỉ được ghi nhận một lần cho mỗi Poll
+            $table->unique(['user_id', 'event_poll_id'], 'unique_user_poll');
+            $table->softDeletes();
+            $table->timestamps();
+        });
+
+        // Tạo bảng event_poll_questions để lưu trữ các câu hỏi trong cuộc khảo sát/bình chọn
+        Schema::create('event_poll_questions', function (Blueprint $table) {
+            $table->id();
+            $table->comment('Lưu trữ các câu hỏi thuộc về một khảo sát/bình chọn.');
+            $table->foreignId('event_poll_id')
+                ->constrained('event_polls')
+                ->cascadeOnDelete();
+            $table->tinyInteger('type')->comment('Loại câu hỏi lưu ở constant QuestionType');
+            $table->text('question')->comment('Nội dung chi tiết của câu hỏi.');
+            $table->tinyInteger('order')->comment('Thứ tự hiển thị của câu hỏi trong khảo sát.');
+            $table->softDeletes();
+            $table->timestamps();
+        });
+
+        // Tạo bảng event_poll_question_options để lưu trữ các câu trả lời cho câu hỏi trong cuộc khảo sát/bình chọn
+        Schema::create('event_poll_question_options', function (Blueprint $table) {
+            $table->id();
+            $table->comment('Lưu trữ các tùy chọn/đáp án cho các câu hỏi dạng trắc nghiệm (Single/Multiple Choice).');
+            $table->foreignId('event_poll_question_id')
+                ->constrained('event_poll_questions')
+                ->cascadeOnDelete();
+            $table->char('label', length: 255)->comment('Nội dung của tùy chọn/đáp án.');
+            $table->tinyInteger('order')->comment('Thứ tự hiển thị của tùy chọn.');
+            // Đánh dấu đáp án đúng (Chỉ dùng cho nghiệp vụ Quiz/Thi đấu. Có thể bỏ nếu chỉ là bình chọn)
+            $table->tinyInteger('is_correct')->nullable()->comment('Đánh dấu đáp án đúng (0: Sai, 1: Đúng). Chỉ áp dụng cho kiểu câu hỏi Quiz.');
+            $table->softDeletes();
+            $table->timestamps();
+        });
+
+        // Tạo bảng event_poll_votes để lưu trữ phản hồi/bình chọn từ các câu trả lời cho câu hỏi trong cuộc khảo sát/bình chọn
+        Schema::create('event_poll_votes', function (Blueprint $table) {
+            $table->id();
+            $table->comment('Lưu trữ phản hồi/bình chọn của người dùng đối với các câu hỏi.');
+            $table->foreignId('user_id')
+                ->constrained('users')
+                ->cascadeOnDelete();
+            $table->foreignId('event_poll_question_id')
+                ->constrained('event_poll_questions')
+                ->cascadeOnDelete();
+            $table->foreignId('event_poll_question_option_id')
+                ->nullable()
+                ->comment('Khóa ngoại liên kết với tùy chọn/đáp án đã chọn.')
+                ->constrained('event_poll_question_options')
+                ->cascadeOnDelete();
+            $table->softDeletes();
+            $table->timestamps();
+        });
     }
 
     /**
@@ -408,5 +492,10 @@ return new class extends Migration
         Schema::dropIfExists('user_reset_codes');
         Schema::dropIfExists('user_notifications');
         Schema::dropIfExists('user_devices');
+        Schema::dropIfExists('event_polls');
+        Schema::dropIfExists('event_poll_user');
+        Schema::dropIfExists('event_poll_questions');
+        Schema::dropIfExists('event_poll_question_options');
+        Schema::dropIfExists('event_poll_votes');
     }
 };
