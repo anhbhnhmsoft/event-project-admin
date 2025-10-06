@@ -6,7 +6,7 @@
 
 
     @php
-        $scheduleState = $getState();
+        $scheduleState = $documentData;
         $files = collect();
         $scheduleItems = is_array($scheduleState) ? array_values($scheduleState) : [];
 
