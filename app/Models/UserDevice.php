@@ -20,7 +20,7 @@ class UserDevice extends Model
         'last_seen_at',
         'is_active',
     ];
-    
+
     protected static function booted()
     {
         static::creating(function ($model) {
@@ -29,6 +29,4 @@ class UserDevice extends Model
             }
         });
     }
-    
-    
 }

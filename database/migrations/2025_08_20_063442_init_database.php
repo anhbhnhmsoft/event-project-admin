@@ -350,8 +350,6 @@ return new class extends Migration
         // Tạo bảng user_notifications để lưu trữ các thông báo cho người dùng
         Schema::create('user_notifications', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('organizer_id')->constrained('organizers')->cascadeOnDelete();
-            $table->foreignId('event_id')->constrained('events')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('title');
             $table->text('description');
