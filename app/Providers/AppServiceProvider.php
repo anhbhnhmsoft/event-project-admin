@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Services\AuthService;
 use App\Services\CassoService;
 use App\Services\ConfigService;
+use App\Services\DashboardService;
 use App\Services\OrganizerService;
 use App\Services\EventUserHistoryService;
 use App\Services\TransactionService;
@@ -26,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(CassoService::class, fn() => new CassoService());
         $this->app->singleton(ConfigService::class, fn() => new ConfigService());
         $this->app->singleton(NotificationService::class, fn() => new NotificationService());
+        $this->app->singleton(DashboarService::class, fn() => new DashboardService());
     }
 
     /**

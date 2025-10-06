@@ -108,6 +108,12 @@ class EventsTable
                         ->url(fn($record) => EventResource::getUrl('games-manage', ['record' => $record]))
                         ->openUrlInNewTab()
                         ->color('primary'),
+                    Action::make('games-manager')
+                        ->label('Quản lý khảo sát/bình chọn')
+                        ->icon('heroicon-o-cube')
+                        ->url(fn($record) => EventResource::getUrl('votes-manage', ['record' => $record]))
+                        ->openUrlInNewTab()
+                        ->color('success'),
                 ])
             ])
             ->toolbarActions([
