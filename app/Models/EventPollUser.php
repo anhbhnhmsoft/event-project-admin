@@ -3,11 +3,11 @@
 namespace App\Models;
 
 use App\Utils\Helper;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class EventPollUser extends Model
+class EventPollUser extends Pivot 
 {
 
     use SoftDeletes;

@@ -27,8 +27,14 @@ class EventPollVote extends Model
         });
     }
 
-    public function event(): BelongsTo
+    public function question()
     {
-        return $this->belongsTo(Event::class);
+        return $this->belongsTo(EventPollQuestion::class, 'event_poll_question_id');
+    }
+
+
+    public function option(): BelongsTo
+    {
+        return $this->belongsTo(EventPollQuestionOption::class, 'event_poll_question_option_id');
     }
 }

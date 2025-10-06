@@ -383,8 +383,6 @@ return new class extends Migration
                 ->constrained('events')
                 ->cascadeOnDelete();
             $table->text('title')->comment('Tiêu đề của cuộc khảo sát.');
-            $table->tinyInteger('access_type')
-                ->comment('Phạm vi truy cập lưu trữ tại constant access type poll ');
             $table->timestamp('start_time')->comment('Thời điểm bắt đầu mở khảo sát.');
             $table->timestamp('end_time')->comment('Thời điểm kết thúc khảo sát.');
             $table->tinyInteger('duration_unit')->comment('Đơn vị duration lưu trữ ở constant type unit duration');
@@ -454,6 +452,7 @@ return new class extends Migration
                 ->comment('Khóa ngoại liên kết với tùy chọn/đáp án đã chọn.')
                 ->constrained('event_poll_question_options')
                 ->cascadeOnDelete();
+            $table->unique(['user_id', 'event_poll_question_id'], 'unique_user_answer');
             $table->softDeletes();
             $table->timestamps();
         });
