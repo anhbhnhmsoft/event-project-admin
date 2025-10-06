@@ -19,8 +19,6 @@ return new class extends Migration
                 ->constrained('events')
                 ->cascadeOnDelete();
             $table->text('title')->comment('Tiêu đề của cuộc khảo sát.');
-            $table->tinyInteger('access_type')
-                ->comment('Phạm vi truy cập lưu trữ tại constant access type poll ');
             $table->timestamp('start_time')->comment('Thời điểm bắt đầu mở khảo sát.');
             $table->timestamp('end_time')->comment('Thời điểm kết thúc khảo sát.');
             $table->tinyInteger('duration_unit')->comment('Đơn vị duration lưu trữ ở constant type unit duration');
