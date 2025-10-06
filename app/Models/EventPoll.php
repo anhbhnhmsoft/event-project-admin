@@ -16,7 +16,6 @@ class EventPoll extends Model
     protected $fillable = [
         'event_id',
         'title',
-        'access_type',
         'start_time',
         'end_time',
         'duration_unit',

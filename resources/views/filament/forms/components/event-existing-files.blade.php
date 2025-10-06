@@ -6,7 +6,6 @@
 
 
     @php
-        Log::info(json_encode($getState(), JSON_PRETTY_PRINT));
         $scheduleState = $getState();
         $files = collect();
         $scheduleItems = is_array($scheduleState) ? array_values($scheduleState) : [];

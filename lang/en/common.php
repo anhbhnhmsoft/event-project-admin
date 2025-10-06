@@ -27,7 +27,7 @@ return [
         'max_content' => 'Content must not exceed :max characters.',
     ],
     'validation' => [
-       'status_integer' => 'Status must be an integer.',
+        'status_integer' => 'Status must be an integer.',
         'status_in' => 'Status is not valid.',
         'notification_type_integer' => 'Notification type must be an integer.',
         'notification_type_in' => 'Notification type is not valid.',
@@ -37,6 +37,13 @@ return [
         'notification_id_required' => 'Notification ID is required.',
         'notification_id_integer' => 'Notification ID must be an integer.',
         'notification_id_exists' => 'Notification ID does not exist.',
+
+        'poll_not_available' => 'This poll is no longer valid or has not yet started.',
+        'user_not_in_poll' => 'You are not eligible to participate in this poll.',
+        'answers_required' => 'Please submit at least one answer.',
+        'answer_already_exists' => 'You have already submitted an answer to this question.',
+        'question_not_found' => 'No question found in the poll.',
+        'option_not_found' => 'No valid options found.',
     ],
     'mark_as_read_success' => 'Mark as read successfully.',
     'push_token_saved' => 'Push token saved successfully',
