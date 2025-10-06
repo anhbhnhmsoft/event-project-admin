@@ -12,11 +12,14 @@
         "concurrently": "^9.0.1",
         "laravel-vite-plugin": "^2.0.0",
         "tailwindcss": "^4.0.0",
-        "vite": "^7.0.4"
+        "vite": "7.1.5"
     },
     "dependencies": {
         "@inertiajs/react": "^2.2.2",
         "@vitejs/plugin-react": "^5.0.4",
+        "dotenv": "^17.2.3",
+        "expo-server-sdk": "^4.0.0",
+        "express": "^5.1.0",
         "lucide-react": "^0.544.0",
         "react": "^18.3.1",
         "react-custom-roulette": "^1.4.1",

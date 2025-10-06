@@ -34,9 +34,12 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
-
     'google' => [
         'map_key_api' => env('GOOGLE_MAPS_API_KEY'),
         'map_id' => env('GOOGLE_MAP_ID'),
+    ],
+    'node_server' => [
+        'access_token' => env('APP_KEY_NODE_SERVER'),
+        'notification_url' => env('APP_URL_NODE') . 'send-notification',
     ]
 ];

@@ -8,7 +8,6 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OrganizerController;
 use App\Http\Controllers\Api\ProvinceController;
 use App\Http\Controllers\Api\TransactionController;
-use App\Http\Controllers\FileController;
 use App\Http\Controllers\WebhookCassoController;
 use Illuminate\Support\Facades\Route;
 
@@ -60,19 +59,13 @@ Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
         Route::get('/check-payment/{id}', [TransactionController::class, 'checkPayment']);
         Route::get('/{id}', [TransactionController::class, 'show']);
     });
+
     Route::prefix('/notifications')->group(function () {
         Route::get('/', [NotificationController::class, 'index']);
-        Route::post('/', [NotificationController::class, 'markAsRead']);
-        Route::post('/read-all', [NotificationController::class, 'markAllAsRead']);
+        Route::get('/unread', [NotificationController::class, 'getUnReadCount']);
         Route::post('/push-token', [NotificationController::class, 'storePushToken']);
-        Route::post('/send', [NotificationController::class, 'sendNotification']);
-    });
-    Route::prefix('/notifications')->group(function () {
-        Route::get('/', [NotificationController::class, 'index']);
-        Route::post('/', [NotificationController::class, 'markAsRead']);
+        Route::post('/read', [NotificationController::class, 'markAsRead']);
         Route::post('/read-all', [NotificationController::class, 'markAllAsRead']);
-        Route::post('/push-token', [NotificationController::class, 'storePushToken']);
-        Route::post('/send', [NotificationController::class, 'sendNotification']);
     });
 });
 
@@ -89,6 +82,5 @@ Route::prefix('common')->middleware('set-locale')->group(function () {
     Route::get('/district/{code}', [ProvinceController::class, 'getDistricts']);
     Route::get('/ward/{code}', [ProvinceController::class, 'getWards']);
 });
-
 
 Route::post('/webhook/payos', [WebhookCassoController::class, 'handle']);
