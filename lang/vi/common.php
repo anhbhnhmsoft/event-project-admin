@@ -34,6 +34,13 @@ return [
         'notification_id_required' => 'ID thông báo là bắt buộc.',
         'notification_id_integer' => 'ID thông báo phải là số nguyên.',
         'notification_id_exists' => 'ID thông báo không tồn tại.',
+
+        'poll_not_available'   => 'Poll này không còn hiệu lực hoặc chưa bắt đầu.',
+        'user_not_in_poll'     => 'Bạn không nằm trong danh sách tham gia poll này.',
+        'answers_required'     => 'Vui lòng gửi ít nhất một câu trả lời.',
+        'answer_already_exists'=> 'Bạn đã gửi câu trả lời cho câu hỏi này rồi.',
+        'question_not_found'   => 'Không tìm thấy câu hỏi trong poll.',
+        'option_not_found'     => 'Không tìm thấy lựa chọn hợp lệ.',
     ],
     'mark_as_read_success' => 'Đánh dấu đã đọc thành công.',
     'push_token_saved' => 'Lưu thành công.',

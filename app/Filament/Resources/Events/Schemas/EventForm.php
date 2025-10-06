@@ -30,7 +30,7 @@ use Illuminate\Validation\Rule;
 use Filament\Forms\Components\Repeater;
 use App\Utils\Helper;
 use Filament\Forms\Components\ViewField;
-use Illuminate\Support\Facades\Log;
+
 class EventForm
 {
     public static function configure(Schema $schema): Schema
@@ -114,7 +114,7 @@ class EventForm
                             ->label('Ngày tổ chức sự kiện')
                             ->columnSpanFull()
                             ->rules([
-                                'after_or_equal: ' .now()->format('Y-m-d'),
+                                'after_or_equal: ' . now()->format('Y-m-d'),
                             ])
                             ->validationMessages([
                                 'after_or_equal' => 'Ngày tổ chức sự kiện phải lớn hơn hoặc bằng ngày hiện tại',
@@ -259,10 +259,10 @@ class EventForm
                                     ->label('Người dùng')
                                     ->searchable()
                                     ->live()
-                                    ->options(function(Get $get) {
+                                    ->options(function (Get $get) {
                                         $user = Auth::user();
                                         $organizerId = $get('../../organizer_id');
-                                        if($user && in_array($user->role, [RoleUser::SUPER_ADMIN->value], true)) {
+                                        if ($user && in_array($user->role, [RoleUser::SUPER_ADMIN->value], true)) {
                                             if ($organizerId === null || $organizerId === '' || $organizerId === 0) {
                                                 return [
                                                     '' => 'Vui lòng chọn nhà tổ chức trước'
@@ -381,7 +381,7 @@ class EventForm
                                 RichEditor::make('description')
                                     ->label('Mô tả')
                                     ->extraAttributes(['style' => 'min-height: 300px;']),
-                                ViewField::make('documents')
+                                ViewField::make('existing_documents')
                                     ->label('Danh sách file')
                                     ->view('filament.forms.components.event-existing-files')
                                     ->dehydrated(false),
@@ -455,7 +455,10 @@ class EventForm
                                     ->label('Tài liệu')
                                     ->columnSpanFull()
                                     ->collapsible()
+                                    ->addActionLabel('Thêm vào tài liệu')
                                     ->reorderable()
+                                    ->dehydrated(true)
+                                    ->default([])
                                     ->schema([
                                         Hidden::make('id')
                                             ->label('ID tài liệu'),

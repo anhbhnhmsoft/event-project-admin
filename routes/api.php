@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EventController;
+use App\Http\Controllers\Api\EventPollController;
 use App\Http\Controllers\Api\GameEventController;
 use App\Http\Controllers\Api\MembershipController;
 use App\Http\Controllers\Api\NotificationController;
@@ -70,6 +71,15 @@ Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
     Route::prefix('/schedule')->group(function () {
         Route::get('/document/{id}', [EventController::class, 'getDetailScheduleDocument']);
         Route::get('/{id}', [EventController::class, 'getDetailSchedule']);
+    });
+
+    Route::prefix('poll')->group(function () {
+        Route::get('/', [EventPollController::class, 'list']);
+        Route::get('/{pollId}', [EventPollController::class, 'poll']);
+        Route::get('/{pollId}/users', [EventPollController::class, 'listUsersPoll']);
+        Route::get('/{pollId}/questions', [EventPollController::class, 'listQuestionsPoll']);
+        Route::get('/{pollId}/answers', [EventPollController::class, 'listAnswerPoll']);
+        Route::post('/{pollId}/answers', [EventPollController::class, 'pushAnswerPoll']);
     });
 });
 
