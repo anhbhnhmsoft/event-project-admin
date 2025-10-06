@@ -3,22 +3,19 @@
 namespace App\Models;
 
 use App\Utils\Helper;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class UserDevice extends Model
+class EventScheduleDocumentUser extends Model
 {
-    use HasFactory, SoftDeletes;
+    use SoftDeletes;
+
+    protected $table = 'event_schedule_document_user';
 
     protected $fillable = [
         'user_id',
-        'expo_push_token',
-        'device_id',
-        'device_type',
-        'last_seen_at',
-        'is_active',
+        'event_schedule_document_id'
     ];
 
     protected static function booted()
@@ -28,5 +25,15 @@ class UserDevice extends Model
                 $model->id = Helper::getTimestampAsId();
             }
         });
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function document(): BelongsTo
+    {
+        return $this->belongsTo(EventScheduleDocumentFile::class);
     }
 }

@@ -4,7 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\NotificationResource;
+use App\Jobs\SendNotifications;
 use App\Services\NotificationService;
+use App\Utils\Constants\QueueName;
+use App\Utils\Constants\UserNotificationStatus;
+use App\Utils\Constants\UserNotificationType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -17,39 +21,63 @@ class NotificationController extends Controller
     {
         $this->notificationService = $notificationService;
     }
-
-    public function index(Request $request)
+    public function index(Request $request): \Illuminate\Http\JsonResponse
     {
-        $user = Auth::user();
-        $page  = $request->integer('page', 1);
+        $page = $request->integer('page', 1);
         $limit = $request->integer('limit', 10);
-        $filters = $request->only(['status', 'notification_type']);
-        $result = $this->notificationService->listForUser($user->id, $filters, $page, $limit);
-
-        if ($result['status'] === false) {
-            return response()->json([
-                'message' => $result['message'],
-            ], 500);
-        }
+        $notifications = $this->notificationService->userNotificationPaginator(
+            filters: [
+                'user_id' => $request->user()->id,
+                'statuses' => [UserNotificationStatus::SENT->value,UserNotificationStatus::READ->value],
+            ],
+            page: $page,
+            limit: $limit
+        );
 
         return response()->json([
-            'message' => $result['message'],
-            'data' => NotificationResource::collection($result['data']),
-            'unread_count' => $result['unread_count'],
+            'message' => __('common.common_success.get_success'),
+            'data' => NotificationResource::collection($notifications),
             'pagination' => [
-                'total' => $result['data']->total(),
-                'per_page' => $result['data']->perPage(),
-                'current_page' => $result['data']->currentPage(),
-                'last_page' => $result['data']->lastPage()
+                'total' => $notifications->total(),
+                'per_page' => $notifications->perPage(),
+                'current_page' => $notifications->currentPage(),
+                'last_page' => $notifications->lastPage()
             ],
         ], 200);
     }
 
-    public function markAsRead(Request $request)
+    public function getUnReadCount(Request $request): \Illuminate\Http\JsonResponse
     {
-        $user = Auth::user();
-        $notificationId = (int) $request->input('notification_id');
-        $result = $this->notificationService->markAsRead($user->id, $notificationId);
+        $unread = $this->notificationService->getNotificationUnread($request->user()->id);
+        return response()->json([
+            'message' => __('common.common_success.get_success'),
+            'data' => [
+                'unread' => $unread
+            ],
+        ], 200);
+    }
+
+    public function markAsRead(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'id' => [
+                'required',
+                'exists:user_notifications,id',
+            ],
+        ], [
+            'id.required' => __('common.common_error.data_not_found'),
+            'id.exists' => __('common.common_error.data_not_found'),
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => __('common.common_error.validation_failed'),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+        $data = $validator->getData();
+
+        $result = $this->notificationService->markAsRead($request->user()->id, $data['id']);
 
         if ($result['status'] === false) {
             return response()->json([
@@ -59,15 +87,12 @@ class NotificationController extends Controller
 
         return response()->json([
             'message' => $result['message'],
-            'data' => $result['data'],
         ], 200);
     }
 
-    public function markAllAsRead()
+    public function markAllAsRead(Request $request): \Illuminate\Http\JsonResponse
     {
-        $user = Auth::user();
-
-        $result = $this->notificationService->markAllAsRead($user->id);
+        $result = $this->notificationService->markAllAsRead($request->user()->id);
 
         if ($result['status'] === false) {
             return response()->json([
@@ -77,11 +102,10 @@ class NotificationController extends Controller
 
         return response()->json([
             'message' => $result['message'],
-            'data' => $result['data'],
         ], 200);
     }
 
-    public function storePushToken(Request $request)
+    public function storePushToken(Request $request): \Illuminate\Http\JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'expo_push_token' => ['required', 'string'],
@@ -97,48 +121,9 @@ class NotificationController extends Controller
             ], 422);
         }
 
-        $user = Auth::user();
-        $validated = $validator->validated();
+        $validated = $validator->getData();
 
-        $result = $this->notificationService->storePushToken($user->id, $validated);
-
-        if ($result['status'] === false) {
-            return response()->json([
-                'message' => $result['message'],
-            ], 500);
-        }
-
-        return response()->json([
-            'message' => $result['message'],
-        ], 200);
-    }
-
-    public function sendNotification(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'user_id' => ['required', 'integer', 'exists:users,id'],
-            'title' => ['required', 'string', 'max:255'],
-            'description' => ['required', 'string'],
-            'notification_type' => ['required', 'integer'],
-            'data' => ['nullable', 'array'],
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => __('common.common_error.validation_failed'),
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        $validated = $validator->validated();
-        $result = $this->notificationService->createAndSendNotification(
-            $validated['user_id'],
-            $validated['title'],
-            $validated['description'],
-            $validated['notification_type'],
-            $validated['data'] ?? []
-        );
+        $result = $this->notificationService->storePushToken($request->user()->id, $validated);
 
         if ($result['status'] === false) {
             return response()->json([
@@ -148,7 +133,6 @@ class NotificationController extends Controller
 
         return response()->json([
             'message' => $result['message'],
-            'data' => $result['data'],
         ], 200);
     }
 }

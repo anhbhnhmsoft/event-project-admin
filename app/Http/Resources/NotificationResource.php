@@ -19,10 +19,9 @@ class NotificationResource extends JsonResource
             'id' => (string) $this->id,
             'title' => $this->title,
             'description' => $this->description,
-            'data' => $this->data,
             'notification_type' => $this->notification_type,
             'status' => $this->status,
-            'create_at' => $this->created_at ? Carbon::parse($this->created_at)->format('Y-m-d H:i:s') : null,
+            'create_at' => $this->created_at,
         ];
     }
 }

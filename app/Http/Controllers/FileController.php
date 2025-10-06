@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\CassoService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
@@ -12,18 +13,26 @@ class FileController extends Controller
     const CACHE_TIME = 60 * 60 * 48; // 2 ngày
 
     // Hàm chung để xử lý ảnh và video
-    protected function serveFile($file_path, $type)
+    protected function serveFile($file_path, $type, $request)
     {
+        $file_path = trim($file_path);
         // Ngăn người dùng nhập path kiểu ../../
         $file_path = ltrim($file_path, '/');
         // chuẩn hóa path: thay \ thành /
         $file_path = str_replace('\\', '/', $file_path);
-        if (!Storage::disk('public')->exists($file_path)) {
+        if (!Storage::disk('public')->exists($file_path) && !Storage::disk('private')->exists($file_path)) {
             abort(404, 'File not found');
         }
         // Lấy path và mime type từ cache (hoặc tính toán)
-        $fileInfo = Cache::remember("file_info:$file_path", self::CACHE_TIME, function () use ($file_path) {
-            $path = Storage::disk('public')->path($file_path);
+        $fileInfo = Cache::remember("file_info:$file_path", self::CACHE_TIME, function () use ($file_path, $request) {
+            if (Storage::disk('private')->exists($file_path)) {
+                if (!$request->user()) {
+                    abort(403, 'Unauthorized');
+                }
+                $path = Storage::disk('private')->path($file_path);
+            } else {
+                $path = Storage::disk('public')->path($file_path);
+            }
             $mime = mime_content_type($path);
             return [
                 'path' => $path,
@@ -32,8 +41,10 @@ class FileController extends Controller
         });
 
         // Kiểm tra loại tệp
-        if (strpos($fileInfo['mime'], $type) === false) {
-            abort(415, 'Unsupported Media Type');
+        if ($type !== 'application') {
+            if (strpos($fileInfo['mime'], $type) === false) {
+                abort(415, 'Unsupported Media Type');
+            }
         }
 
         // Trả về tệp với Content-Type tương ứng
@@ -44,14 +55,19 @@ class FileController extends Controller
     }
 
     // Phương thức xử lý hình ảnh
-    public function image($file_path)
+    public function image(Request $request, $file_path)
     {
-        return $this->serveFile($file_path, 'image');
+        return $this->serveFile($file_path, 'image', $request);
     }
 
     // Phương thức xử lý video
-    public function video($file_path)
+    public function video(Request $request, $file_path)
     {
-        return $this->serveFile($file_path, 'video');
+        return $this->serveFile($file_path, 'video', $request);
+    }
+    // Phương thức xử lý tài liệu
+    public function document(Request $request, $file_path)
+    {
+        return $this->serveFile($file_path, 'application', $request);
     }
 }

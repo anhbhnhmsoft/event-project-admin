@@ -4,13 +4,15 @@ namespace App\Utils\Constants;
 
 enum UserNotificationStatus: int
 {
-    case SENT = 1; // Đã gửi
-    case READ = 2; // Đã đọc
-    case FAILED = 3; // Gửi thất bại
+    case PENDING = 1; // Chờ
+    case SENT = 2; // Đã gửi
+    case READ = 3; // Đã đọc
+    case FAILED = 4; // Gửi thất bại
 
     public function label(): string
     {
         return match ($this) {
+            self::PENDING => 'Chờ gửi',
             self::SENT => 'Đã gửi',
             self::READ => 'Đã đọc',
             self::FAILED => 'Gửi thất bại',
