@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('event_user_gift', function (Blueprint $table) {
+        Schema::create('event_user_gift', function (Blueprint $table) {
             $table->id();
             $table->comment('Bảng event_user_gift lưu trữ kết quả nhận quà của sự kiện');
             $table->foreignId('event_game_gift_id')->constrained('event_game_gifts')->cascadeOnDelete();
