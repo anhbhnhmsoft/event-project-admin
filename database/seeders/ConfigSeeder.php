@@ -35,7 +35,6 @@ class ConfigSeeder extends Seeder
                 'config_value' => 'eb035b04d7ad00367f362de8cdede95c73d68392bbc0c5cb0ac53441f0a18176',
                 'description' => 'Mã CHECKSUM ở kênh thanh toán',
             ],
-
             [
                 'config_key' => ConfigName::LINK_ZALO_SUPPORT->value,
                 'config_type' => ConfigType::STRING->value,

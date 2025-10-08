@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class EventScheduleDocumentFileResource extends JsonResource
+class EventAreaResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -16,10 +16,10 @@ class EventScheduleDocumentFileResource extends JsonResource
     {
         return [
             'id' => (string)$this->id,
-            'file_path' => route('private_file', ['document_id' => $this->event_schedule_document_id, 'file_id' => $this->id]),
-            'file_name' => $this->file_name,
-            'file_size' => $this->file_size,
-            'file_type' => $this->file_type,
+            'name' => (string)$this->name,
+            'capacity' => (int)$this->capacity,
+            'vip' => $this->vip,
+            'seat_available_count' => $this->seat_available_count ?? 0
         ];
     }
 }

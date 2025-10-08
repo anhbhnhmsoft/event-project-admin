@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\Event;
 use App\Models\EventGame;
 use App\Models\EventGameGift;
 use App\Models\EventUserGift;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Jobs\SendNotifications;
@@ -14,6 +16,17 @@ use Carbon\Carbon;
 
 class EventGameService
 {
+    public function eventUserGiftPagination(array $filters = [], int $page = 1, int $limit = 10)
+    {
+          try {
+              return EventUserGift::filter($filters)->orderBy('created_at','desc')
+                  ->paginate(perPage: $limit, page: $page);
+
+          } catch (\Exception $e) {
+              return new LengthAwarePaginator([], 0, $limit, $page);
+          }
+    }
+
     public function getDetailGameEvent($id): array
     {
         try {
@@ -241,7 +254,7 @@ class EventGameService
                 try {
                     $payload = new NotificationPayload(
                         title: __('event.success.congratulartion_prize'),
-                        description: __('event.success.congratulartion_desc', [$gift->name, $game->name]),
+                        description: __('event.success.congratulartion_desc',['gift_name' => $gift->name, 'game' =>$game->name]),
                         data: [
                             'game_id' => $game->id,
                             'gift_id' => $gift->id,

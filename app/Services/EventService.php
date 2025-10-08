@@ -4,8 +4,12 @@ namespace App\Services;
 
 use App\Exceptions\ServiceException;
 use App\Models\Event;
+use App\Models\EventArea;
+use App\Models\EventSeat;
 use App\Models\Organizer;
+use App\Utils\Constants\EventSeatStatus;
 use App\Utils\Constants\EventStatus;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class EventService
@@ -37,6 +41,50 @@ class EventService
         }
 
         return $query->pluck('name', 'id');
+    }
+
+    public function getEventArea($eventId)
+    {
+        return EventArea::query()
+            ->where('event_id', $eventId)
+            ->withCount(['seats as seat_available_count' => function ($q) {
+                $q->where('status', EventSeatStatus::AVAILABLE->value);
+            }])
+            ->get();
+    }
+
+    public function getAreaById($areaId,$eventId)
+    {
+        try {
+            $area = EventArea::query()
+                ->where('event_id', $eventId)
+                ->where('id', $areaId)
+                ->first();
+            if (!$area) {
+                return [
+                    'status' => false,
+                    'message' => __('common.common_error.data_not_found'),
+                ];
+            }
+
+            return [
+                'status' => true,
+                'data' => $area,
+            ];
+        } catch (\Exception $e) {
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
+        }
+    }
+
+    public function getSeatsByAreaId($areaId)
+    {
+        return EventSeat::query()
+            ->where('event_area_id',$areaId)
+            ->orderByRaw('CAST(seat_code AS UNSIGNED) ASC')
+            ->get();
     }
 
     public function getEventDetail($id): array

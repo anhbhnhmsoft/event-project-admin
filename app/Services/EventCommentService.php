@@ -31,7 +31,7 @@ class EventCommentService
     public function eventCommentPaginator(array $filters = [], int $page = 1, int $limit = 10): LengthAwarePaginator
     {
         try {
-            return EventComment::filter($filters)->orderBy('created_at')
+            return EventComment::filter($filters)->orderBy('created_at','desc')
                 ->paginate(perPage: $limit, page: $page);
         } catch (\Exception $e) {
             return new LengthAwarePaginator([], 0, $limit, $page);
