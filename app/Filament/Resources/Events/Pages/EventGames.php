@@ -3,11 +3,14 @@
 namespace App\Filament\Resources\Events\Pages;
 
 use App\Filament\Resources\Events\EventResource;
+use App\Models\Event;
 use App\Models\EventGame;
 use App\Models\EventGameGift;
 use App\Models\User;
-use App\Utils\Constants\ConfigGameEvent;
+use Illuminate\Support\Arr;
 use App\Utils\Constants\EventGameType;
+use App\Utils\Constants\EventUserHistoryStatus;
+use App\Services\EventGameService;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
@@ -16,39 +19,30 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
 use Filament\Resources\Pages\Page;
-use Filament\Schemas\Components\Flex;
-use Filament\Schemas\Components\Section;
-use Filament\Support\Assets\Css;
-use Filament\Support\Facades\FilamentAsset;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Filament\Actions\ActionGroup;
-use Filament\Tables\Columns\IconColumn;
-use Illuminate\Support\Facades\Vite;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 
 class EventGames extends Page implements HasTable
 {
     use InteractsWithRecord;
     use InteractsWithTable;
 
-    protected static ?string $title = 'Trò chơi';
-    protected static ?string $modelLabel = 'Trò chơi';
-    protected static ?string $pluralModelLabel = 'Trò chơi';
+    protected static ?string $title = "Trò chơi";
+    protected static ?string $modelLabel = "Trò chơi";
+    protected static ?string $pluralModelLabel = "Trò chơi";
     protected static string $resource = EventResource::class;
-    protected string $view = 'filament.pages.event-games';
+    protected string $view = "filament.pages.event-games";
 
-    public function boot()
-    {
-        FilamentAsset::register([
-            Css::make('app-css', Vite::asset('resources/css/app.css')),
-        ]);
-    }
+
+    protected static ?string $model = EventGame::class;
 
     public function mount(int|string $record): void
     {
@@ -58,77 +52,92 @@ class EventGames extends Page implements HasTable
     public function table(Table $table): Table
     {
         return $table
-            ->query(
-                EventGame::query()->where('event_id', $this->record->id)
-            )
+            ->query(EventGame::query()->where("event_id", $this->record->id))
             ->columns([
-                TextColumn::make('name')
-                    ->label('Tên'),
-                TextColumn::make('description')
-                    ->label('Miêu tả'),
-                TextColumn::make('game_type')
-                    ->label('Loại trò chơi')
-                    ->formatStateUsing(fn($state) => EventGameType::tryFrom($state)?->label()),
+                TextColumn::make("name")->label("Tên"),
+                TextColumn::make("description")->label("Miêu tả"),
+                TextColumn::make("game_type")
+                    ->label("Loại trò chơi")
+                    ->formatStateUsing(
+                        fn($state) => EventGameType::tryFrom($state)?->label()
+                    ),
             ])
             ->headerActions([
-                Action::make('create-game-event')
-                    ->label('Tạo trò chơi mới')
+                Action::make("create-game-event")
+                    ->label("Tạo trò chơi mới")
                     ->model(EventGame::class)
-                    ->schema([
-                        Flex::make([
-                            Section::make('Thông tin cơ bản')
-                                ->schema([
-                                    TextInput::make('name')
-                                        ->label('Tên trò chơi')
-                                        ->required()
-                                        ->maxLength(255),
-                                    Textarea::make('description')
-                                        ->label('Miêu tả')
+                    ->schema(
+                        [
+                            Tabs::make("GameTabs")->tabs([
+                                Tab::make("Thông tin cơ bản")->schema([
+                                    TextInput::make("name")
+                                        ->label("Tên trò chơi")
+                                        ->required(),
+                                    Textarea::make("description")
+                                        ->label("Miêu tả")
                                         ->rows(3),
-                                    Select::make('game_type')
-                                        ->label('Loại trò chơi')
+                                    Select::make("game_type")
+                                        ->label("Loại trò chơi")
                                         ->options(
                                             \App\Utils\Constants\EventGameType::getOptions()
                                         )
                                         ->required(),
                                 ]),
-                            Section::make('Cấu hình')
-                                ->schema([
-                                    Repeater::make('gifts')
-                                        ->label('Gói quà')
+                                Tab::make("Cấu hình")->schema([
+                                    Repeater::make("gifts")
+                                        ->relationship("gifts")
+                                        ->label("Gói quà")
                                         ->schema([
-                                            TextInput::make('name')->label('Tên gói quà')->required(),
-                                            TextInput::make('quantity')->numeric()->label('Số lượng'),
-                                            TextArea::make('description')->label('Miêu tả')->required(),
-                                            FileUpload::make('image')
-                                                ->disk('public')
-                                                ->directory('event_gifts')
-                                                ->label('Hình ảnh')
+                                            TextInput::make("name")
+                                                ->label("Tên gói quà")
+                                                ->required(),
+                                            TextInput::make("quantity")
+                                                ->numeric()
+                                                ->label("Số lượng")
+                                                ->required(),
+                                            Textarea::make("description")
+                                                ->label("Miêu tả"),
+                                            FileUpload::make("image")
+                                                ->disk("public")
+                                                ->directory("event_gifts")
+                                                ->label("Hình ảnh")
                                                 ->image()
                                                 ->maxSize(51200),
                                         ])
-                                        ->default([])
                                         ->collapsible(),
-                                    Repeater::make('config_game.custom_user_rates')
-                                        ->label('Tỉ lệ chỉ định cho người chơi')
+                                    Repeater::make(
+                                        "config_game.custom_user_rates"
+                                    )
+                                        ->label("Tỉ lệ chỉ định cho người chơi")
+                                        ->default([])
                                         ->schema([
-                                            Select::make('user_id')
-                                                ->label('Người chơi')
-                                                ->options(User::pluck('name', 'id'))
+                                            Select::make("user_id")
+                                                ->label("Người chơi")
+                                                ->options(
+                                                    function ($record) {
+                                                        $event = Event::find($record->event_id);
+                                                        return $event->users()->wherePivot('status', EventUserHistoryStatus::PARTICIPATED->value)->select('users.id', 'users.name')->get();
+                                                    }
+                                                )
                                                 ->searchable()
                                                 ->required(),
-                                            Repeater::make('rates')
-                                                ->label('Tỉ lệ quà')
+                                            Repeater::make("rates")
+                                                ->label("Tỉ lệ quà")
                                                 ->schema([
-                                                    Select::make('gift_id')
-                                                        ->label('Phần quà')
-                                                        ->options(fn() => EventGameGift::where('event_game_id', null)->pluck('name', 'id'))
+                                                    Select::make("gift_id")
+                                                        ->label("Phần quà")
+                                                        ->options(
+                                                            fn($record) => EventGameGift::where('event_game_id', $record->id)->pluck(
+                                                                "name",
+                                                                "id"
+                                                            )
+                                                        )
                                                         ->required(),
-                                                    TextInput::make('rate')
+                                                    TextInput::make("rate")
                                                         ->numeric()
                                                         ->minValue(0)
                                                         ->maxValue(100)
-                                                        ->suffix('%')
+                                                        ->suffix("%")
                                                         ->required(),
                                                 ])
                                                 ->columns(2)
@@ -136,103 +145,110 @@ class EventGames extends Page implements HasTable
                                         ])
                                         ->columns(1)
                                         ->default([]),
-                                ])
-                        ])->from('md')
-                    ])
+                                ]),
+                            ]),
+                        ]
+                    )
                     ->action(function (array $data) {
                         $game = EventGame::create([
                             ...$data,
-                            'event_id' => $this->record->id,
+                            "event_id" => $this->record->id,
                         ]);
 
                         $gifts = array_map(function ($gift) use ($game) {
-                            $gift['event_game_id'] = $game->id;
+                            $gift["event_game_id"] = $game->id;
                             return $gift;
-                        }, $data['gifts'] ?? []);
+                        }, $data["gifts"] ?? []);
                         EventGameGift::insert($gifts);
 
                         Notification::make()
                             ->success()
-                            ->title('Tạo thành công')
-                            ->body('Trò chơi mới đã được thêm vào sự kiện.')
+                            ->title("Tạo thành công")
+                            ->body("Trò chơi mới đã được thêm vào sự kiện.")
                             ->send();
 
                         $this->resetTable();
-                    })
+                    }),
             ])
             ->recordActions([
                 ActionGroup::make([
                     ViewAction::make()
-                        ->label('Xem')
-                        ->schema(fn($record) => [
-                            Flex::make([
-                                Section::make('Thông tin cơ bản')
-                                    ->schema([
-                                        TextInput::make('name')
-                                            ->label('Tên trò chơi')
+                        ->label("Xem")
+                        ->schema(
+                            fn($record) => [
+                                Tabs::make("GameTabs")->tabs([
+                                    Tab::make("Thông tin cơ bản")->schema([
+                                        TextInput::make("name")
+                                            ->label("Tên trò chơi")
                                             ->disabled(),
-                                        Textarea::make('description')
-                                            ->label('Miêu tả')
+                                        Textarea::make("description")
+                                            ->label("Miêu tả")
                                             ->rows(3)
                                             ->disabled(),
-                                        Select::make('game_type')
-                                            ->label('Loại trò chơi')
-                                            ->options(\App\Utils\Constants\EventGameType::getOptions())
+                                        Select::make("game_type")
+                                            ->label("Loại trò chơi")
+                                            ->options(
+                                                \App\Utils\Constants\EventGameType::getOptions()
+                                            )
                                             ->disabled(),
                                     ]),
-                                Section::make('Cấu hình')
-                                    ->schema([
-                                        Toggle::make('config_game.require_membership')
-                                            ->label('Yêu cầu gói thành viên')
-                                            ->disabled(),
-                                        Repeater::make('gifts')
-                                            ->relationship('gifts')
-                                            ->label('Gói quà')
+                                    Tab::make("Cấu hình")->schema([
+                                        Repeater::make("gifts")
+                                            ->relationship("gifts")
+                                            ->label("Gói quà")
                                             ->schema([
-                                                TextInput::make('name')
-                                                    ->label('Tên gói quà')
+                                                TextInput::make("name")
+                                                    ->label("Tên gói quà")
                                                     ->disabled(),
-                                                TextInput::make('quantity')
+                                                TextInput::make("quantity")
                                                     ->numeric()
-                                                    ->label('Số lượng')
+                                                    ->label("Số lượng")
                                                     ->disabled(),
-                                                Textarea::make('description')
-                                                    ->label('Miêu tả')
+                                                Textarea::make("description")
+                                                    ->label("Miêu tả")
                                                     ->disabled(),
-                                                TextInput::make('rate')
-                                                    ->numeric()
-                                                    ->label('Tỉ lệ xuất hiện trong kết quả')
-                                                    ->minValue(0)
-                                                    ->maxValue(99)
-                                                    ->disabled(),
-                                                FileUpload::make('image')
-                                                    ->disk('public')
-                                                    ->directory('event_gifts')
-                                                    ->label('Hình ảnh')
+                                                FileUpload::make("image")
+                                                    ->disk("public")
+                                                    ->directory("event_gifts")
+                                                    ->label("Hình ảnh")
                                                     ->image()
                                                     ->maxSize(51200),
                                             ])
                                             ->collapsible(),
-                                        Repeater::make('config_game.custom_user_rates')
-                                            ->label('Tỉ lệ chỉ định cho người chơi')
+                                        Repeater::make(
+                                            "config_game.custom_user_rates"
+                                        )
+                                            ->label(
+                                                "Tỉ lệ chỉ định cho người chơi"
+                                            )
                                             ->schema([
-                                                Select::make('user_id')
-                                                    ->label('Người chơi')
-                                                    ->options(User::pluck('name', 'id'))
+                                                Select::make("user_id")
+                                                    ->label("Người chơi")
+                                                    ->options(
+                                                        function ($record) {
+                                                            $event = Event::find($record->event_id);
+                                                            return $event->users()->wherePivot('status', EventUserHistoryStatus::PARTICIPATED->value)->select('users.id', 'users.name')->get()->pluck('name', 'id')->toArray();
+                                                        }
+                                                    )
                                                     ->searchable()
                                                     ->required(),
-                                                Repeater::make('rates')
-                                                    ->label('Tỉ lệ quà')
+                                                Repeater::make("rates")
+                                                    ->label("Tỉ lệ quà")
                                                     ->schema([
-                                                        Select::make('gift_id')
-                                                            ->label('Phần quà')
-                                                            ->options(fn() => EventGameGift::pluck('name', 'id'))
+                                                        Select::make("gift_id")
+                                                            ->label("Phần quà")
+                                                            ->options(
+                                                                fn($record) => EventGameGift::where('event_game_id', $record->id)->pluck(
+                                                                    "name",
+                                                                    "id"
+                                                                )
+                                                            )
                                                             ->required(),
-                                                        TextInput::make('rate')
+                                                        TextInput::make("rate")
                                                             ->numeric()
                                                             ->minValue(0)
                                                             ->maxValue(100)
-                                                            ->suffix('%')
+                                                            ->suffix("%")
                                                             ->required(),
                                                     ])
                                                     ->columns(2)
@@ -241,122 +257,170 @@ class EventGames extends Page implements HasTable
                                             ->columns(1)
                                             ->default([]),
                                     ]),
-                            ])->from('md'),
-                        ])
-                        ->fillForm(fn($record) => $record->only([
-                            'name',
-                            'description',
-                            'game_type',
-                            'config_game',
-                        ])),
+                                ]),
+                            ]
+                        )
+                        ->fillForm(
+                            function ($record) {
+                                $record->load('gifts');
+
+                                $data = $record->toArray();
+                                $data['config_game'] = $data['config_game'] ?? [];
+                                $giftData = $record->gifts->toArray();
+                                $data['gifts'] = $giftData;
+
+                                return Arr::only($data, [
+                                    "name",
+                                    "description",
+                                    "game_type",
+                                    "config_game",
+                                    "gifts",
+                                ]);
+                            }
+                        ),
                     DeleteAction::make()
-                        ->recordTitle('trò chơi')
-                        ->label('Xóa')
+                        ->recordTitle("trò chơi")
+                        ->label("Xóa")
                         ->successRedirectUrl(false)
                         ->action(function ($record) {
                             $record->delete();
                         })
-                        ->successNotificationTitle('Đã xóa trò chơi!')
+                        ->successNotificationTitle("Đã xóa trò chơi!")
                         ->after(fn() => $this->resetTable()),
-                    Action::make('edit')
-                        ->label('Sửa')
-                        ->icon('heroicon-o-pencil-square')
+                    Action::make("edit")
+                        ->label("Sửa")
+                        ->icon("heroicon-o-pencil-square")
                         ->schema(
                             fn($record) => [
-                                Flex::make([
-                                    Section::make('Thông tin cơ bản')
-                                        ->schema([
-                                            TextInput::make('name')
-                                                ->label('Tên trò chơi')
-                                                ->required()
-                                                ->maxLength(255),
-                                            Textarea::make('description')
-                                                ->label('Miêu tả')
-                                                ->rows(3),
-                                            Select::make('game_type')
-                                                ->label('Loại trò chơi')
-                                                ->options(\App\Utils\Constants\EventGameType::getOptions())
-                                                ->required(),
-                                        ]),
-                                    Section::make('Cấu hình')
-                                        ->schema([
-                                            Repeater::make('gifts')
-                                                ->relationship('gifts')
-                                                ->label('Gói quà')
-                                                ->schema([
-                                                    TextInput::make('name')
-                                                        ->label('Tên gói quà')
-                                                        ->required(),
-                                                    TextInput::make('quantity')
-                                                        ->numeric()
-                                                        ->label('Số lượng'),
-                                                    Textarea::make('description')
-                                                        ->label('Miêu tả'),
-                                                    FileUpload::make('image')
-                                                        ->disk('public')
-                                                        ->directory('event_gifts')
-                                                        ->label('Hình ảnh')
-                                                        ->image()
-                                                        ->maxSize(51200)
-                                                ])
-                                                ->collapsible(),
-                                            Repeater::make('config_game.custom_user_rates')
-                                                ->label('Tỉ lệ chỉ định cho người chơi')
-                                                ->schema([
-                                                    Select::make('user_id')
-                                                        ->label('Người chơi')
-                                                        ->options(User::where('organizer_id', $this->record->organizer_id)->pluck('name', 'id'))
-                                                        ->searchable()
-                                                        ->required(),
-                                                    Repeater::make('rates')
-                                                        ->label('Tỉ lệ quà')
-                                                        ->schema([
-                                                            Select::make('gift_id')
-                                                                ->label('Phần quà')
-                                                                ->options(
-                                                                    fn() => EventGameGift::where('event_game_id', $record->id)
-                                                                        ->pluck('name', 'id')
+                                Tabs::make("GameTabs")->tabs([
+                                    Tab::make("Thông tin cơ bản")->schema([
+                                        TextInput::make("name")
+                                            ->label("Tên trò chơi")
+                                            ->required(),
+                                        Textarea::make("description")
+                                            ->label("Miêu tả")
+                                            ->rows(3),
+                                        Select::make("game_type")
+                                            ->label("Loại trò chơi")
+                                            ->options(
+                                                \App\Utils\Constants\EventGameType::getOptions()
+                                            )
+                                            ->required(),
+                                    ]),
+                                    Tab::make("Cấu hình")->schema([
+                                        Repeater::make("gifts")
+                                            ->relationship("gifts")
+                                            ->label("Gói quà")
+                                            ->schema([
+                                                TextInput::make("name")
+                                                    ->label("Tên gói quà")
+                                                    ->required(),
+                                                TextInput::make("quantity")
+                                                    ->numeric()
+                                                    ->label("Số lượng")
+                                                    ->required(),
+                                                Textarea::make("description")
+                                                    ->label("Miêu tả"),
+                                                FileUpload::make("image")
+                                                    ->disk("public")
+                                                    ->directory("event_gifts")
+                                                    ->label("Hình ảnh")
+                                                    ->image()
+                                                    ->maxSize(51200),
+                                            ])
+                                            ->collapsible(),
+                                        Repeater::make(
+                                            "config_game.custom_user_rates"
+                                        )
+                                            ->label(
+                                                "Tỉ lệ chỉ định cho người chơi"
+                                            )
+                                            ->schema([
+                                                Select::make("user_id")
+                                                    ->label("Người chơi")
+                                                    ->options(
+                                                        function ($record) {
+                                                            $event = Event::find($record->event_id);
+                                                            return $event->users()->wherePivot('status', EventUserHistoryStatus::PARTICIPATED->value)->select('users.id', 'users.name')->get()->pluck('name', 'id')->toArray();
+                                                        }
+                                                    )
+                                                    ->searchable()
+                                                    ->required(),
+                                                Repeater::make("rates")
+                                                    ->label("Tỉ lệ quà")
+                                                    ->schema([
+                                                        Select::make("gift_id")
+                                                            ->label("Phần quà")
+                                                            ->options(
+                                                                fn($record) => EventGameGift::where('event_game_id', $record->id)->pluck(
+                                                                    "name",
+                                                                    "id"
                                                                 )
-                                                                ->required(),
-                                                            TextInput::make('rate')
-                                                                ->numeric()
-                                                                ->minValue(0)
-                                                                ->maxValue(100)
-                                                                ->suffix('%')
-                                                                ->required(),
-                                                        ])
-                                                        ->columns(2)
-                                                        ->collapsible(),
-                                                ])
-                                                ->columns(1)
-                                                ->default([]),
-                                        ]),
-                                ])->from('md')
+                                                            )
+                                                            ->required(),
+                                                        TextInput::make("rate")
+                                                            ->numeric()
+                                                            ->minValue(0)
+                                                            ->maxValue(100)
+                                                            ->suffix("%")
+                                                            ->required(),
+                                                    ])
+                                                    ->columns(2)
+                                                    ->collapsible(),
+                                            ])
+                                            ->columns(1)
+                                            ->default([]),
+                                    ]),
+                                ]),
                             ]
                         )
-                        ->fillForm(fn($record) => $record->only([
-                            'name',
-                            'description',
-                            'game_type',
-                            'config_game',
-                        ]))
-                        ->color('primary')
-                        ->action(function ($record, array $data) {
-                            $record->update($data);
-                            Notification::make()
-                                ->success()
-                                ->title('Cập nhật thành công')
-                                ->send();
+                        ->fillForm(
+                            function ($record) {
+                                $record->load('gifts');
+
+                                $data = $record->toArray();
+                                $data['config_game'] = $data['config_game'] ?? [];
+                                $giftData = $record->gifts->toArray();
+                                $data['gifts'] = $giftData;
+                                return Arr::only($data, [
+                                    "name",
+                                    "description",
+                                    "game_type",
+                                    "config_game",
+                                    "gifts",
+                                ]);
+                            }
+                        )
+                        ->color("primary")
+                        ->action(function ($record, $data) {
+                            $eventGameService = app(EventGameService::class);
+                            $result = $eventGameService->updateGameEvent($record, $data);
+                            if ($result['status']) {
+                                Notification::make()
+                                    ->success()
+                                    ->title("Cập nhật thành công")
+                                    ->send();
+                            } else {
+                                Notification::make()
+                                    ->danger()
+                                    ->title("Cập nhật thất bại")
+                                    ->send();
+                            }
+
                             $this->resetTable();
                         }),
-                    Action::make('link')
-                        ->label('Mở trang')
-                        ->icon('heroicon-o-link')
-                        ->color('primary')
-                        ->url(fn($record) => route('game.play', ['id' => $record->id]))
+                    Action::make("link")
+                        ->label("Mở trang")
+                        ->icon("heroicon-o-link")
+                        ->color("primary")
+                        ->url(
+                            fn($record) => route("game.play", [
+                                "id" => $record->id,
+                            ])
+                        )
                         ->openUrlInNewTab()
-                        ->extraAttributes(['class' => 'copy-url-action'])
-                ])
+                        ->extraAttributes(["class" => "copy-url-action"]),
+                ]),
             ]);
     }
 }

@@ -282,4 +282,27 @@ class EventGameService
 
         return ['status' => false, 'message' => 'Không chọn được phần quà.'];
     }
+
+    public function updateGameEvent(EventGame $record, $data)
+    {
+
+        try {
+            $record->update([
+                'name' => $data['name'],
+                'description' => $data['description'],
+                'game_type' => $data['game_type'],
+                'config_game' => $data['config_game'],
+            ]);
+
+            return [
+                'status' => true,
+            ];
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return [
+                'status' => false,
+            ];
+        }
+    }
 }
