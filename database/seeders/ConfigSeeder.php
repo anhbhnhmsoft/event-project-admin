@@ -51,8 +51,6 @@ class ConfigSeeder extends Seeder
         ];
 
 
-        Config::insert(
-            $configs
-        );
+        Config::insert($configs);
     }
 }
