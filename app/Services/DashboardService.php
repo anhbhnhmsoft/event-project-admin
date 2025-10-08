@@ -4,7 +4,9 @@ namespace App\Services;
 
 use App\Models\EventUserHistory;
 use App\Utils\Constants\EventUserHistoryStatus;
+use App\Utils\Constants\UnitDurationType;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class DashboardService
 {
@@ -27,44 +29,54 @@ class DashboardService
         ];
     }
 
-    public function getCheckinChartData(string $eventId, $startDate, $endDate, string $chartType = 'hour'): array
+    public function getCheckinChartData(string $eventId, $startDate, $endDate, $chartType): array
     {
-        if ($chartType === 'hour') {
+        $start = null;
+        $end = null;
+
+        $start = Carbon::parse($startDate);
+        $end = Carbon::parse($endDate);
+
+        if ($chartType == UnitDurationType::DAY->value) {
+            $selectRaw = "DATE(created_at) as period, COUNT(*) as total";
+            $groupBy = "DATE(created_at)";
+            $orderBy = "DATE(created_at)";
+            $labelFormat = fn($date) => Carbon::parse($date)->format('d/m');
+            $periodRange = null;
+        } else {
             $selectRaw = "HOUR(created_at) as period, COUNT(*) as total";
             $groupBy = "HOUR(created_at)";
             $orderBy = "HOUR(created_at)";
             $labelFormat = fn($i) => $i . 'h';
             $periodRange = range(0, 23);
-        } else {
-            $selectRaw = "DATE(created_at) as period, COUNT(*) as total";
-            $groupBy = "DATE(created_at)";
-            $orderBy = "DATE(created_at)";
-            $labelFormat = fn($date) => \Carbon\Carbon::parse($date)->format('d/m');
-            $periodRange = null;
         }
 
-        $checkinDataRaw = EventUserHistory::whereBetween('created_at', [$startDate, $endDate])
-            ->selectRaw($selectRaw)
-            ->where('event_id', $eventId)
-            ->where('status', EventUserHistoryStatus::PARTICIPATED)
-            ->groupByRaw($groupBy)
-            ->orderByRaw($orderBy)
-            ->pluck('total', 'period')
-            ->toArray();
+        $checkinQuery = EventUserHistory::where('event_id', $eventId)
+            ->where('status', EventUserHistoryStatus::PARTICIPATED);
 
-        $registrationDataRaw = EventUserHistory::whereBetween('created_at', [$startDate, $endDate])
-            ->selectRaw($selectRaw)
-            ->where('event_id', $eventId)
-            ->groupByRaw($groupBy)
-            ->orderByRaw($orderBy)
-            ->pluck('total', 'period')
-            ->toArray();
+        $registrationQuery = EventUserHistory::where('event_id', $eventId);
+
+        if ($startDate && $endDate) {
+            $checkinQuery->whereBetween('created_at', [$start, $end]);
+            $registrationQuery->whereBetween('created_at', [$start, $end]);
+            $checkinQuery->selectRaw($selectRaw)->groupByRaw($groupBy)->orderByRaw($orderBy);
+            $registrationQuery->selectRaw($selectRaw)->groupByRaw($groupBy)->orderByRaw($orderBy);
+        } else if ($chartType == UnitDurationType::HOUR->value) {
+            $checkinQuery->selectRaw('COUNT(*) as total, HOUR(created_at) as period')->groupByRaw('HOUR(created_at)');
+            $registrationQuery->selectRaw('COUNT(*) as total, HOUR(created_at) as period')->groupByRaw('HOUR(created_at)');
+        } else if ($chartType == UnitDurationType::DAY->value) {
+            $checkinQuery->selectRaw('COUNT(*) as total, DATE(created_at) as period')->groupByRaw('DATE(created_at)');
+            $registrationQuery->selectRaw('COUNT(*) as total, DATE(created_at) as period')->groupByRaw('DATE(created_at)');
+        }
+
+        $checkinDataRaw = $checkinQuery->pluck('total', 'period')->toArray();
+        $registrationDataRaw = $registrationQuery->pluck('total', 'period')->toArray();
 
         $labels = [];
         $checkinData = [];
         $registrationData = [];
 
-        if ($chartType === 'hour') {
+        if ($start && $end && $chartType == UnitDurationType::HOUR) {
             foreach ($periodRange as $i) {
                 $labels[] = $labelFormat($i);
                 $checkinData[] = $checkinDataRaw[$i] ?? 0;

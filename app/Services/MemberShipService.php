@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\SendNotifications;
 use App\Models\Membership;
 use App\Models\MembershipUser;
 use App\Models\User;
@@ -9,7 +10,10 @@ use App\Utils\Constants\MembershipUserStatus;
 use App\Utils\Constants\TransactionStatus;
 use App\Utils\Constants\TransactionType;
 use App\Utils\Constants\TransactionTypePayment;
+use App\Utils\Constants\UserNotificationType;
+use App\Utils\DTO\NotificationPayload;
 use App\Utils\Helper;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
@@ -182,6 +186,62 @@ class MemberShipService
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error')
+            ];
+        }
+    }
+
+    public function checkMembershipExpire()
+    {
+        try {
+            $today = Carbon::now()->toDateString();
+
+            $sevenDaysFromNow = Carbon::now()->addDays(7)->toDateString();
+            $sevenDayMemberships = MembershipUser::where('end_date', '<=', $sevenDaysFromNow)
+                ->where('end_date', '>', $today)
+                ->get();
+            if ($sevenDayMemberships->isNotEmpty()) {
+                $sevenDayUserIds = $sevenDayMemberships->pluck('user_id')->toArray();
+
+                $sevenDayPayload = new NotificationPayload(
+                    title: __('event.success.notification_title_mbs_near'),
+                    description: __('event.success.notification_desc_mbs_near'),
+                    data: ['days_left' => 7],
+                    notificationType: UserNotificationType::MEMBERSHIP_EXPIRE_REMINDER,
+                );
+
+                SendNotifications::dispatch($sevenDayPayload, $sevenDayUserIds)->onQueue('notifications');
+            }
+
+            $oneDayFromNow = Carbon::now()->addDay()->toDateString();
+
+            $oneDayMemberships = MembershipUser::where('end_date', '<=', $oneDayFromNow)
+                ->where('end_date', '>=', $today)
+                ->get();
+
+            $oneDayUserIds = $oneDayMemberships->pluck('user_id')
+                ->filter(fn($id) => !in_array($id, $sevenDayUserIds ?? []))
+                ->toArray();
+
+            if (!empty($oneDayUserIds)) {
+                $oneDayPayload = new NotificationPayload(
+                    title: __('event.success.notification_title_mbs_expired'),
+                    description: __('event.success.notification_title_expired'),
+                    data: ['days_left' => 1],
+                    notificationType: UserNotificationType::MEMBERSHIP_EXPIRE_REMINDER,
+                );
+
+                SendNotifications::dispatch($oneDayPayload, $oneDayUserIds)->onQueue('notifications');
+            }
+
+            $membershipExpired = MembershipUser::where('end_date', '<', $today);
+            $membershipExpired::update(['status' => MembershipUserStatus::EXPIRED->value]);
+            return [
+                'status' => true
+            ];
+        } catch (Exception $e) {
+            Log::error("Error in checkMembershipExpire: " . $e->getMessage());
+            return [
+                'status' => false
             ];
         }
     }

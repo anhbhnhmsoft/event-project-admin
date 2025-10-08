@@ -83,12 +83,6 @@ Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
     });
 });
 
-Route::prefix('/event-game')->group(function () {
-    Route::get('/gifts/{gameId}', [GameEventController::class, 'getGiftsEventGame']);
-    Route::get('/history-gifts/{gameId}', [GameEventController::class, 'getHistoryGifts']);
-    Route::post('/history-gifts/{gameId}', [GameEventController::class, 'insertHistoryGift']);
-    Route::get('/users/{gameId}', [GameEventController::class, 'getUsers']);
-});
 
 Route::prefix('common')->middleware('set-locale')->group(function () {
     Route::get('/organizers', [OrganizerController::class, 'getOrganizers']);

@@ -26,7 +26,7 @@ class EventUserGiftResource extends JsonResource
                 'id'          => (string)$this->gift->id,
                 'name'        => $this->gift->name,
                 'description' => $this->gift->description,
-                'image_url'   => $this->gift->image ? Helper::generateURLImagePath($this->gift->image) : null,
+                'image_url'   => $this->gift->image ,
             ],
             'created_at' => $this->created_at,
         ];

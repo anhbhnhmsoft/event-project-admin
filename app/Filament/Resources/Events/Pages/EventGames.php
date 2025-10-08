@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Events\Pages;
 use App\Filament\Resources\Events\EventResource;
 use App\Models\EventGame;
 use App\Models\EventGameGift;
+use App\Models\User;
 use App\Utils\Constants\ConfigGameEvent;
 use App\Utils\Constants\EventGameType;
 use Filament\Actions\Action;
@@ -68,9 +69,6 @@ class EventGames extends Page implements HasTable
                 TextColumn::make('game_type')
                     ->label('Loại trò chơi')
                     ->formatStateUsing(fn($state) => EventGameType::tryFrom($state)?->label()),
-                IconColumn::make('config_game.' . ConfigGameEvent::REQUIRE_MEMBERSHIP->value)
-                    ->label('Yêu cầu gói thành viên')
-                    ->boolean()
             ])
             ->headerActions([
                 Action::make('create-game-event')
@@ -96,24 +94,43 @@ class EventGames extends Page implements HasTable
                                 ]),
                             Section::make('Cấu hình')
                                 ->schema([
-                                    Toggle::make('config_game.require_membership')
-                                        ->label('Yêu cầu gói thành viên'),
                                     Repeater::make('gifts')
                                         ->label('Gói quà')
                                         ->schema([
                                             TextInput::make('name')->label('Tên gói quà')->required(),
                                             TextInput::make('quantity')->numeric()->label('Số lượng'),
-                                            TextInput::make('rate')
-                                                ->numeric()
-                                                ->label('Tỉ lệ xuất hiện trong kết quả')
-                                                ->minValue(0)
-                                                ->maxValue(99)
-                                                ->disabled(),
                                             TextArea::make('description')->label('Miêu tả')->required(),
                                             FileUpload::make('image')->label('Hình ảnh')->required(),
                                         ])
                                         ->default([])
                                         ->collapsible(),
+                                    Repeater::make('config_game.custom_user_rates')
+                                        ->label('Tỉ lệ chỉ định cho người chơi')
+                                        ->schema([
+                                            Select::make('user_id')
+                                                ->label('Người chơi')
+                                                ->options(User::pluck('name', 'id'))
+                                                ->searchable()
+                                                ->required(),
+                                            Repeater::make('rates')
+                                                ->label('Tỉ lệ quà')
+                                                ->schema([
+                                                    Select::make('gift_id')
+                                                        ->label('Phần quà')
+                                                        ->options(fn() => EventGameGift::where('event_game_id',null)->pluck('name', 'id'))
+                                                        ->required(),
+                                                    TextInput::make('rate')
+                                                        ->numeric()
+                                                        ->minValue(0)
+                                                        ->maxValue(100)
+                                                        ->suffix('%')
+                                                        ->required(),
+                                                ])
+                                                ->columns(2)
+                                                ->collapsible(),
+                                        ])
+                                        ->columns(1)
+                                        ->default([]),
                                 ])
                         ])->from('md')
                     ])
@@ -143,7 +160,7 @@ class EventGames extends Page implements HasTable
                 ActionGroup::make([
                     ViewAction::make()
                         ->label('Xem')
-                        ->form(fn($record) => [
+                        ->schema(fn($record) => [
                             Flex::make([
                                 Section::make('Thông tin cơ bản')
                                     ->schema([
@@ -189,7 +206,34 @@ class EventGames extends Page implements HasTable
                                                     ->image()
                                                     ->disabled(),
                                             ])
-                                            ->collapsible()
+                                            ->collapsible(),
+                                        Repeater::make('config_game.custom_user_rates')
+                                            ->label('Tỉ lệ chỉ định cho người chơi')
+                                            ->schema([
+                                                Select::make('user_id')
+                                                    ->label('Người chơi')
+                                                    ->options(User::pluck('name', 'id'))
+                                                    ->searchable()
+                                                    ->required(),
+                                                Repeater::make('rates')
+                                                    ->label('Tỉ lệ quà')
+                                                    ->schema([
+                                                        Select::make('gift_id')
+                                                            ->label('Phần quà')
+                                                            ->options(fn() => EventGameGift::pluck('name', 'id'))
+                                                            ->required(),
+                                                        TextInput::make('rate')
+                                                            ->numeric()
+                                                            ->minValue(0)
+                                                            ->maxValue(100)
+                                                            ->suffix('%')
+                                                            ->required(),
+                                                    ])
+                                                    ->columns(2)
+                                                    ->collapsible(),
+                                            ])
+                                            ->columns(1)
+                                            ->default([]),
                                     ]),
                             ])->from('md'),
                         ])
@@ -211,7 +255,7 @@ class EventGames extends Page implements HasTable
                     Action::make('edit')
                         ->label('Sửa')
                         ->icon('heroicon-o-pencil-square')
-                        ->form(
+                        ->schema(
                             fn($record) => [
                                 Flex::make([
                                     Section::make('Thông tin cơ bản')
@@ -230,8 +274,6 @@ class EventGames extends Page implements HasTable
                                         ]),
                                     Section::make('Cấu hình')
                                         ->schema([
-                                            Toggle::make('config_game.require_membership')
-                                                ->label('Yêu cầu gói thành viên'),
                                             Repeater::make('gifts')
                                                 ->relationship('gifts')
                                                 ->label('Gói quà')
@@ -244,14 +286,39 @@ class EventGames extends Page implements HasTable
                                                         ->label('Số lượng'),
                                                     Textarea::make('description')
                                                         ->label('Miêu tả'),
-                                                    TextInput::make('rate')
-                                                        ->numeric()
-                                                        ->minValue(0) // Sets a minimum allowed value
-                                                        ->maxValue(99)
-                                                        ->label('Tỉ lệ xuất hiện trong kết quả'),
                                                     FileUpload::make('image')->label('Hình ảnh')->required()
                                                 ])
                                                 ->collapsible(),
+                                            Repeater::make('config_game.custom_user_rates')
+                                                ->label('Tỉ lệ chỉ định cho người chơi')
+                                                ->schema([
+                                                    Select::make('user_id')
+                                                        ->label('Người chơi')
+                                                        ->options(User::where('organizer_id', $this->record->organizer_id)->pluck('name', 'id'))
+                                                        ->searchable()
+                                                        ->required(),
+                                                    Repeater::make('rates')
+                                                        ->label('Tỉ lệ quà')
+                                                        ->schema([
+                                                            Select::make('gift_id')
+                                                                ->label('Phần quà')
+                                                                ->options(
+                                                                    fn() => EventGameGift::where('event_game_id', $record->id)
+                                                                        ->pluck('name', 'id')
+                                                                )
+                                                                ->required(),
+                                                            TextInput::make('rate')
+                                                                ->numeric()
+                                                                ->minValue(0)
+                                                                ->maxValue(100)
+                                                                ->suffix('%')
+                                                                ->required(),
+                                                        ])
+                                                        ->columns(2)
+                                                        ->collapsible(),
+                                                ])
+                                                ->columns(1)
+                                                ->default([]),
                                         ]),
                                 ])->from('md')
                             ]
