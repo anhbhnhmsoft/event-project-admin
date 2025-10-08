@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Resources\GiftUserResource;
 use App\Services\EventGameService;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\EventGameDetailResource;
@@ -22,6 +23,25 @@ class GameEventController extends Controller
         $this->eventGameService = $eventGameService;
     }
 
+    public function listUserGift(Request $request)
+    {
+        $page = $request->integer('page', 1);
+        $limit = $request->integer('limit', 10);
+
+        $paginator = $this->eventGameService->eventUserGiftPagination(filters: [
+            'user_id' => $request->user()->id,
+        ], page: $page, limit: $limit);
+
+        return response()->json([
+            'data'   => GiftUserResource::collection($paginator->items())->resolve(),
+            'pagination' => [
+                'total' => $paginator->total(),
+                'per_page' => $paginator->perPage(),
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage()
+            ],
+        ]);
+    }
 
     public function show(Request $request, $id)
     {

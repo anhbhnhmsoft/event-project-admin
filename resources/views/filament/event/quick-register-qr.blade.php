@@ -4,6 +4,7 @@
 @endphp
 
 <div class="">
+    <p style="word-break: break-all;">Link tham dự: <x-filament::link href="{{$url}}" target="_blank">{{$url}}</x-filament::link></p>
     <img src="{{ $qrUrl }}" style="margin: 0 auto;" alt="QR Code" class="mx-auto">
 </div>
 
@@ -16,11 +17,11 @@
                     const link = document.createElement('a');
                     link.href = blobUrl;
                     link.download = '{{ $fileName }}';
-                    
+
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
-                    
+
                     URL.revokeObjectURL(blobUrl);
                 })
                 .catch(error => console.error('Lỗi khi tải xuống:', error));

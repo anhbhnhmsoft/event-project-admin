@@ -17,6 +17,7 @@ class EventComment extends Model
         'user_id',
         'content',
     ];
+
     public function scopeFilter(Builder $query, array $filters = [])
     {
         if (!empty($filters['user_id'])) {
