@@ -6,10 +6,13 @@ use App\Models\Event;
 use Livewire\Attributes\Computed;
 use App\Services\EventAreaService;
 use App\Services\EventSeatservice;
+use App\Services\EventUserHistoryService;
 use App\Utils\Constants\EventSeatStatus;
 use App\Utils\Constants\RoleUser;
+use App\Utils\Constants\EventUserHistoryStatus;
 use Livewire\Component;
 use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
 use Livewire\WithPagination;
 
 class SeatsEvent extends Component
@@ -19,6 +22,7 @@ class SeatsEvent extends Component
     public $event;
     protected  $areaService;
     protected  $seatService;
+    protected  $eventUserHistoryService;
 
     public $seatsPerPage = 50;
     public $usersPerPage = 10;
@@ -54,10 +58,11 @@ class SeatsEvent extends Component
             ->toArray();
         $this->loadAreas();
     }
-    public function boot(EventAreaService $areaService, EventSeatservice $seatService)
+    public function boot(EventAreaService $areaService, EventSeatservice $seatService, EventUserHistoryService $eventUserHistoryService)
     {
-        $this->areaService = $areaService;
-        $this->seatService = $seatService;
+        $this->areaService             = $areaService;
+        $this->seatService             = $seatService;
+        $this->eventUserHistoryService = $eventUserHistoryService;
     }
     public function loadAreas()
     {
@@ -202,6 +207,18 @@ class SeatsEvent extends Component
                 return;
             }
 
+            if (!$this->eventUserHistoryService->createEventHistory([
+                'event_id'      => $this->event->id,
+                'event_seat_id' => $this->selectedSeat['id'],
+                'status'        => EventUserHistoryStatus::BOOKED->value
+            ], $this->selectedSeat['user_id'], $this->event->organizer_id)['status']) {
+                Notification::make()
+                    ->title('Có lỗi xảy ra, vui lòng thử lại sau!')
+                    ->danger()
+                    ->send();
+                return;
+            }
+
             $this->selectedSeat = null;
             $this->selectedSeatUser = null;
             $this->loadAreas();
@@ -267,8 +284,9 @@ class SeatsEvent extends Component
         $this->hiddenDetailSeat = true;
 
         if ($this->selectedSeat) {
+            Log::debug($this->selectedSeat['user']);
             $this->seatInfo = $this->selectedSeat;
-            $this->seatUser = $this->selectedSeat['user'] ? $this->selectedSeat['user']->toArray() : [];
+            $this->seatUser = $this->selectedSeat['user'] ?? [];
             $this->hiddenDetailSeat = true;
         } else {
             Notification::make()

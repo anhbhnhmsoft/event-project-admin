@@ -100,7 +100,12 @@ class EventGames extends Page implements HasTable
                                             TextInput::make('name')->label('Tên gói quà')->required(),
                                             TextInput::make('quantity')->numeric()->label('Số lượng'),
                                             TextArea::make('description')->label('Miêu tả')->required(),
-                                            FileUpload::make('image')->label('Hình ảnh')->required(),
+                                            FileUpload::make('image')
+                                                ->disk('public')
+                                                ->directory('event_gifts')
+                                                ->label('Hình ảnh')
+                                                ->image()
+                                                ->maxSize(51200),
                                         ])
                                         ->default([])
                                         ->collapsible(),
@@ -117,7 +122,7 @@ class EventGames extends Page implements HasTable
                                                 ->schema([
                                                     Select::make('gift_id')
                                                         ->label('Phần quà')
-                                                        ->options(fn() => EventGameGift::where('event_game_id',null)->pluck('name', 'id'))
+                                                        ->options(fn() => EventGameGift::where('event_game_id', null)->pluck('name', 'id'))
                                                         ->required(),
                                                     TextInput::make('rate')
                                                         ->numeric()
@@ -144,7 +149,6 @@ class EventGames extends Page implements HasTable
                             $gift['event_game_id'] = $game->id;
                             return $gift;
                         }, $data['gifts'] ?? []);
-
                         EventGameGift::insert($gifts);
 
                         Notification::make()
@@ -202,9 +206,11 @@ class EventGames extends Page implements HasTable
                                                     ->maxValue(99)
                                                     ->disabled(),
                                                 FileUpload::make('image')
+                                                    ->disk('public')
+                                                    ->directory('event_gifts')
                                                     ->label('Hình ảnh')
                                                     ->image()
-                                                    ->disabled(),
+                                                    ->maxSize(51200),
                                             ])
                                             ->collapsible(),
                                         Repeater::make('config_game.custom_user_rates')
@@ -286,7 +292,12 @@ class EventGames extends Page implements HasTable
                                                         ->label('Số lượng'),
                                                     Textarea::make('description')
                                                         ->label('Miêu tả'),
-                                                    FileUpload::make('image')->label('Hình ảnh')->required()
+                                                    FileUpload::make('image')
+                                                        ->disk('public')
+                                                        ->directory('event_gifts')
+                                                        ->label('Hình ảnh')
+                                                        ->image()
+                                                        ->maxSize(51200)
                                                 ])
                                                 ->collapsible(),
                                             Repeater::make('config_game.custom_user_rates')
