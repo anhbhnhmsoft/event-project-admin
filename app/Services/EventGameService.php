@@ -5,9 +5,6 @@ namespace App\Services;
 use App\Models\EventGame;
 use App\Models\EventGameGift;
 use App\Models\EventUserGift;
-use App\Utils\Constants\ConfigGameEvent;
-use App\Utils\Constants\ConfigMembership;
-use App\Utils\Constants\EventUserHistoryStatus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Jobs\SendNotifications;
@@ -244,7 +241,7 @@ class EventGameService
                 try {
                     $payload = new NotificationPayload(
                         title: __('event.success.congratulartion_prize'),
-                        description: __('event.success.congratulartion_desc',[$gift->name, $game->name]),
+                        description: __('event.success.congratulartion_desc', [$gift->name, $game->name]),
                         data: [
                             'game_id' => $game->id,
                             'gift_id' => $gift->id,
@@ -271,5 +268,28 @@ class EventGameService
         }
 
         return ['status' => false, 'message' => 'Không chọn được phần quà.'];
+    }
+
+    public function updateGameEvent(EventGame $record, $data)
+    {
+
+        try {
+            $record->update([
+                'name' => $data['name'],
+                'description' => $data['description'],
+                'game_type' => $data['game_type'],
+                'config_game' => $data['config_game'],
+            ]);
+
+            return [
+                'status' => true,
+            ];
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return [
+                'status' => false,
+            ];
+        }
     }
 }

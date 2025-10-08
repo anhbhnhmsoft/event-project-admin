@@ -46,16 +46,4 @@ class EventGame extends Model
     {
         return $this->hasMany(EventGameGift::class, 'event_game_id');
     }
-
-    public function userGifts(): HasManyThrough
-    {
-        return $this->hasManyThrough(
-            EventUserGift::class,
-            EventGameGift::class,
-            'event_game_id',
-            'event_game_gift_id',
-            'id',
-            'id'
-        );
-    }
 }

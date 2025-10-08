@@ -36,7 +36,6 @@ class EventSeatService
 
         $query = EventSeat::where('event_area_id', $selectedArea['id'])
             ->orderByRaw('seat_code + 0 asc');
-        Log::debug($query->get());
         if ($seatFilter !== 'all') {
             $query->where('status', EventSeatStatus::from($seatFilter)->value);
         }

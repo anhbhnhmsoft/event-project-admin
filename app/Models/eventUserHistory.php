@@ -3,13 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Utils\Helper;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 
-class EventUserHistory extends Model
+class EventUserHistory extends Pivot
 {
     use HasFactory;
+    
+    protected $table = 'event_user_histories';
 
     protected $fillable = [
         'event_id',
