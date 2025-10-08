@@ -23,6 +23,15 @@ class AuthController extends Controller
         $this->authService = $authService;
     }
 
+    public function supportLink(Request $request)
+    {
+        $config = $this->authService->getSupportLink();
+        return response()->json([
+            'message' => __('common.common_success.get_success'),
+            'data' => $config,
+        ], 200);
+    }
+
     public function login(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [

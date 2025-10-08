@@ -19,14 +19,16 @@ class EventListCommentResource extends JsonResource
          * @var $this Event Comment
          */
         $user = $this->user;
-        
+
         return [
+            'id' => (string)$this->id,
             'user_comment' => [
                 'id' => $user->id,
                 'name' => $user->name,
-                'avatar_url '=> $user->avatar_path ? Helper::generateURLImagePath($user->avatar_path) : null
+                'avatar_url'=> $user->avatar_path ? Helper::generateURLImagePath($user->avatar_path) : null
             ],
-            'content' => $this->content
+            'content' => $this->content,
+            'created_at' => $this->created_at
         ];
     }
 }
