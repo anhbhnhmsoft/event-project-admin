@@ -6,6 +6,7 @@ use App\Models\Event;
 use App\Models\EventSeat;
 use App\Utils\Constants\EventSeatStatus;
 use Carbon\Carbon;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -15,14 +16,11 @@ class EventSeatService
     {
         DB::beginTransaction();
         try {
-            $now = Carbon::now();
             foreach ($seats as &$seat) {
-                $seat['created_at'] = $now;
-                $seat['updated_at'] = $now;
+                EventSeat::create($seat);
             }
-            $result =  EventSeat::insert($seats);
             DB::commit();
-            return $result;
+            return true;
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Insert EventSeats failed: " . $e->getMessage());
@@ -33,12 +31,12 @@ class EventSeatService
     public function getPaginatedSeats(?array $selectedArea, string|int $seatFilter, int $perPage = 10)
     {
         if (!$selectedArea) {
-            return EventSeat::whereRaw('0 = 1')->paginate($perPage, ['*'], 'seatsPage');
+            return new LengthAwarePaginator([], 0, $perPage);
         }
 
         $query = EventSeat::where('event_area_id', $selectedArea['id'])
-            ->orderBy('created_at');
-
+            ->orderByRaw('seat_code + 0 asc');
+        Log::debug($query->get());
         if ($seatFilter !== 'all') {
             $query->where('status', EventSeatStatus::from($seatFilter)->value);
         }

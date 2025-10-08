@@ -4,6 +4,13 @@ return [
     'success' => [
         'get_success' => 'Lấy dữ liệu thành công',
         'filter_success' => 'Lọc thành công',
+        'congratulartion_prize' => '🎉 Chúc mừng bạn nhận được phần quà!',
+        'congratulartion_desc' => 'Bạn đã giành được quà tặng :gift_name trong trò chơi :game.',
+        'notification_title_mbs_near'   => 'Thông báo thời hạn sớm',
+        'notification_desc_mbs_near'   => 'Gói thành viên của bạn sẽ hết hạn trong 7 ngày nữa. Hãy gia hạn để tiếp tục sử dụng dịch vụ!',
+        'notification_title_mbs_expired'   => 'Cảnh báo hết hạn!',
+        'notification_desc_mbs_expired'   => 'Gói thành viên của bạn sẽ hết hạn trong vòng 24 giờ tới. Vui lòng gia hạn ngay để tránh bị gián đoạn dịch vụ.',
+
     ],
     'error' => [
         'get_failed' => 'Lấy dữ liệu thất bại: :error',

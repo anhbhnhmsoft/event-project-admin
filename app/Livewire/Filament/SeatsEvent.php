@@ -64,7 +64,7 @@ class SeatsEvent extends Component
         $this->areas = $this->event
             ->areas()
             ->with(['seats' => function ($query) {
-                $query->orderBy('created_at')->limit(50);
+                $query->orderByRaw('seat_code + 0 asc')->limit(50);
             }])
             ->get()
             ->toArray();
@@ -265,11 +265,10 @@ class SeatsEvent extends Component
     {
         $this->selectedSeat = $this->seatService->getSeatById($seatId)->toArray();
         $this->hiddenDetailSeat = true;
-        $seat = $this->seatService->getSeatById($seatId);
 
-        if ($seat) {
-            $this->seatInfo = $seat->toArray();
-            $this->seatUser = $seat->user ? $seat->user->toArray() : [];
+        if ($this->selectedSeat) {
+            $this->seatInfo = $this->selectedSeat;
+            $this->seatUser = $this->selectedSeat['user'] ? $this->selectedSeat['user']->toArray() : [];
             $this->hiddenDetailSeat = true;
         } else {
             Notification::make()
