@@ -10,6 +10,7 @@ enum UserNotificationType: int
     case EVENT_UPDATED = 4; // Sự kiện được cập nhật
     case MEMBERSHIP_APPROVED = 5; // Duyệt thành viên
     case SYSTEM_ANNOUNCEMENT = 6; // Thông báo hệ thống
+    case MEMBERSHIP_EXPIRE_REMINDER = 7; // Nhắc nhở hết hạn
 
     public function label(): string
     {
@@ -20,6 +21,7 @@ enum UserNotificationType: int
             self::EVENT_UPDATED => 'Sự kiện được cập nhật',
             self::MEMBERSHIP_APPROVED => 'Duyệt thành viên',
             self::SYSTEM_ANNOUNCEMENT => 'Thông báo hệ thống',
+            self::MEMBERSHIP_EXPIRE_REMINDER => 'Thông báo hệ thống',
         };
     }
 

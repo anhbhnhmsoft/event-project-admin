@@ -53,7 +53,6 @@ class EventPollService
                 'data'   => $poll
             ];
         } catch (Exception $e) {
-            Log::debug("EventPoll creation failed: " . $e->getMessage());
             return [
                 'status'  => false,
                 'message' => __('common.common_error.server_error')

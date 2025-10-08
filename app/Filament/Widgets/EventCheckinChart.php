@@ -3,52 +3,90 @@
 namespace App\Filament\Widgets;
 
 use App\Services\DashboardService;
+use App\Utils\Constants\UnitDurationType;
 use Filament\Widgets\ChartWidget;
+use Livewire\Attributes\On;
+use Illuminate\Support\Facades\Log;
 
 class EventCheckinChart extends ChartWidget
 {
     public ?string $event_id = null;
+    public $start_date = null;
+    public $end_date = null;
+    public int $chart_type = 1;
 
-    protected static bool $isLazy = true;
+    protected static bool $isLazy = false;
 
     protected int|string|array $columnSpan = [
         'default' => 1,
         'md' => 2,
     ];
 
+    public function mount(): void
+    {
+        $this->event_id = session('event_id');
+        $this->start_date = session('start_date');
+        $this->end_date = session('end_date');
+        $this->chart_type = session('chart_type', UnitDurationType::HOUR->value) ?? UnitDurationType::HOUR->value;
+    }
+
+    #[On('eventFilterUpdated')]
+    public function updateFilters($filterData): void
+    {
+        $this->event_id = $filterData['event_id'] ?? null;
+        $this->start_date = $filterData['start_date'] ?? null;
+        $this->end_date = $filterData['end_date'] ?? null;
+        $this->chart_type = $filterData['chart_type'] ?? UnitDurationType::HOUR->value;
+        $this->updateChartData();
+    }
+
     protected function getData(): array
     {
-        $eventId = session('event_id');
-        $startDate = session('start_date');
-        $endDate = session('end_date');
-        $chartType = session('chart_type', 'hour');
-
-        if (!$eventId) {
+        if (!$this->event_id) {
             return [
-                'labels' => ['Vui lòng chọn sự kiện để thống kê dữ liệu']
+                'datasets' => [],
+                'labels' => ['Vui lòng chọn sự kiện để thống kê dữ liệu'],
             ];
         }
-        /** @var \App\Services\DashboardService $dashboardService */
-        $dashboardService = app(DashboardService::class);
-        $data = $dashboardService->getCheckinChartData($eventId, $startDate, $endDate, $chartType);
 
-        return [
-            'datasets' => [
-                [
-                    'label' => 'Số check-in',
-                    'data' => $data['checkinData'],
-                    'backgroundColor' => '#4ade80',
-                    'borderColor' => '#4ade80',
+        try {
+            /** @var \App\Services\DashboardService $dashboardService */
+            $dashboardService = app(DashboardService::class);
+            $data = $dashboardService->getCheckinChartData(
+                $this->event_id,
+                $this->start_date,
+                $this->end_date,
+                (int) $this->chart_type
+            );
+
+            return [
+                'datasets' => [
+                    [
+                        'label' => 'Số check-in',
+                        'data' => $data['checkinData'] ?? [],
+                        'backgroundColor' => '#4ade80',
+                        'borderColor' => '#4ade80',
+                    ],
+                    [
+                        'label' => 'Số đăng ký',
+                        'data' => $data['registrationData'] ?? [],
+                        'backgroundColor' => '#3b82f6',
+                        'borderColor' => '#3b82f6',
+                    ],
                 ],
-                [
-                    'label' => 'Số đăng ký',
-                    'data' => $data['registrationData'],
-                    'backgroundColor' => '#3b82f6',
-                    'borderColor' => '#3b82f6',
-                ],
-            ],
-            'labels' => $data['labels'],
-        ];
+                'labels' => $data['labels'] ?? [],
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error loading chart data:', [
+                'event_id' => $this->event_id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'datasets' => [],
+                'labels' => ['Lỗi: ' . $e->getMessage()],
+            ];
+        }
     }
 
     protected function getType(): string
@@ -58,8 +96,7 @@ class EventCheckinChart extends ChartWidget
 
     public function getHeading(): ?string
     {
-        $chartType = session('chart_type', 'hour');
-        $type = $chartType === 'hour' ? 'Theo Giờ' : 'Theo Ngày';
+        $type = $this->chart_type == UnitDurationType::HOUR->value ? 'Theo Giờ' : 'Theo Ngày';
         return 'Thống kê check-in & đăng ký ' . $type;
     }
 }

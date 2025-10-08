@@ -4,6 +4,12 @@ return [
     'success' => [
         'get_success' => 'Get data successfully',
         'filter_success' => 'Filter successfully',
+        'congratulartion_prize' => '🎉 Congratulations on your gift!',
+        'congratulartion_desc' => 'You have won the gift :gift_name in the game :game.',
+        'notification_title_mbs_near'   => 'Early Expiry Notice',
+        'notification_desc_mbs_near'   => 'Your membership will expire in 7 days. Please renew to continue using the service!',
+        'notification_title_mbs_expired'   => 'Expiration Warning!',
+        'notification_desc_mbs_expired'   => 'Your membership will expire in the next 24 hours. Please renew now to avoid service interruption.',
     ],
     'error' => [
         'get_failed' => 'Get data failed: :error',

@@ -42,26 +42,10 @@ class GameEventController extends Controller
         if ($event->status != EventStatus::ACTIVE->value) {
             return abort(403, 'Sự kiện không khả dụng');
         }
-        $usersResult = $this->eventGameService->getEligibleUsers($game, 20);
-
-        if (!$usersResult['status']) {
-            return abort(500, $usersResult['message'] ?? 'Không thể tải danh sách người chơi');
-        }
 
         return Inertia::render('GamePlay', [
             'game'  => (new EventGameDetailResource($game))->resolve(),
-
-            'users' => [
-                'data' => UserResource::collection($usersResult['data'])->resolve(),
-                'meta' => [
-                    'current_page' => $usersResult['data']->currentPage(),
-                    'last_page'    => $usersResult['data']->lastPage(),
-                    'per_page'     => $usersResult['data']->perPage(),
-                    'total'        => $usersResult['data']->total(),
-                    'from'         => $usersResult['data']->firstItem(),
-                    'to'           => $usersResult['data']->lastItem(),
-                ],
-            ],
+            'csrf_token' => csrf_token(),
         ])->rootView('layout.app');
     }
 
@@ -122,7 +106,6 @@ class GameEventController extends Controller
 
         $game = $result['game'];
         $user = $request->user();
-
         if (!$this->eventGameService->checkGameAccess($game, $user)) {
             return response()->json([
                 'status'  => false,
@@ -194,6 +177,36 @@ class GameEventController extends Controller
             'status'  => true,
             'message' => $result['message'],
             'data'    => new EventUserGiftResource($result['data']),
+        ]);
+    }
+
+    public function spin(Request $request, $gameId)
+    {
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status'  => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $result = $this->eventGameService->spinPrize($gameId, $request->user_id);
+
+        if (!$result['status']) {
+            return response()->json([
+                'status'  => false,
+                'message' => $result['message'] ?? 'Không thể quay thưởng.',
+            ], 500);
+        }
+
+        return response()->json([
+            'status' => true,
+            'data'   => [
+                'gift' => new EventGameGiftDetailResource($result['gift']),
+            ],
         ]);
     }
 }

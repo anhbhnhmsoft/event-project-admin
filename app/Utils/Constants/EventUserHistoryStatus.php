@@ -25,4 +25,14 @@ enum EventUserHistoryStatus: int
             ->mapWithKeys(fn($case) => [$case->value => $case->label()])
             ->toArray();
     }
+
+    public static function getLabel($case) : string
+    {
+        return match ($case) {
+            self::SEENED->value => 'Đã xem',
+            self::BOOKED->value => 'Đã đặt vé',
+            self::PARTICIPATED->value => 'Đã tham gia',
+            self::CANCELLED->value => 'Đã hủy',
+        };
+    }
 }

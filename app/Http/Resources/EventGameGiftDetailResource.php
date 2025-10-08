@@ -21,7 +21,7 @@ class EventGameGiftDetailResource extends JsonResource
             'quantity'    => $this->quantity,
             'rate'        => $this->rate,
             'description' => $this->description,
-            'image'       => Helper::generateURLImagePath($this->image  ?? ''),
+            'image'       => $this->image,
         ];
     }
 }
