@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 use App\Jobs\SendNotifications;
 use App\Utils\DTO\NotificationPayload;
 use App\Utils\Constants\UserNotificationType;
+use Carbon\Carbon;
 
 class EventGameService
 {
@@ -251,8 +252,8 @@ class EventGameService
                         ],
                         notificationType: UserNotificationType::SYSTEM_ANNOUNCEMENT,
                     );
-
-                    SendNotifications::dispatch($payload, [$userId])->onQueue('notifications');
+                    $delaySeconds = 5;
+                    SendNotifications::dispatch($payload, [$userId])->delay(Carbon::now()->addSeconds($delaySeconds))->onQueue('notifications');
                 } catch (\Throwable $e) {
                     Log::error('EventGameService::spinPrize - Gửi thông báo thất bại', [
                         'error' => $e->getMessage(),

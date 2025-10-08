@@ -184,7 +184,7 @@ export default function GamePlay() {
                                     {users.map((user) => (
                                         <button
                                             key={user.id}
-                                            onClick={() => !mustSpin && handleSelectedUser(user)}
+                                            onClick={() => !mustSpin && setSelectedUser(user)}
                                             disabled={mustSpin}
                                             className={`w-full text-left p-3 rounded-xl transition-all cursor-pointer ${selectedUser?.id === user.id
                                                 ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg"
