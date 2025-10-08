@@ -14,9 +14,9 @@ use Livewire\Component;
 
 class QuickRegister extends Component
 {
-    private $authService;
-    private $eventService;
-    private $organizerService;
+    private AuthService $authService;
+    private EventService $eventService;
+    private OrganizerService $organizerService;
 
     public $name = '';
     public $email = '';
@@ -110,15 +110,13 @@ class QuickRegister extends Component
                 if (!($organizerResult['status'] && $eventResult['status'])) {
                     throw new Exception('Not found event organizer!');
                 }
-
-
                 $this->event = ($eventResult['event'])->toArray();
                 $this->organizer = ($organizerResult['organizer'])->toArray();
                 if ($this->event['status'] == EventStatus::CLOSED->value) {
                     throw new Exception('Sự kiện đã kết thúc');
                 }
             } catch (Exception $e) {
-                abort(404, $e->getMessage());
+                abort(419, $e->getMessage());
             }
         }
     }
@@ -142,9 +140,6 @@ class QuickRegister extends Component
         if ($this->isSubmitting) {
             return;
         }
-
-        $this->validate();
-
         $data = [
             'name' => $this->name,
             'email' => $this->email,
@@ -152,6 +147,7 @@ class QuickRegister extends Component
             'lang' => $this->lang,
             'password' => $this->phone,
             'organizer_id' => $this->organizer['id'],
+            'event_id' => $this->event['id'],
         ];
 
         $result = $this->authService->quickRegister($data);

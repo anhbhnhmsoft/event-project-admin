@@ -20,7 +20,7 @@ class UserResource extends JsonResource
             'avatar_url' => $this->avatar_path ? Helper::generateURLImagePath($this->avatar_path) : null,
             'organizer_id' => $this->organizer_id,
             'lang' => $this->lang,
-            'membership'  => $this->activeMemberships->first(),
+            'membership' => optional($this->activeMemberships->first())->only(['id', 'name', 'config']),
         ];
     }
 }

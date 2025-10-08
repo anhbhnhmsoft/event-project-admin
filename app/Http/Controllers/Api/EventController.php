@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\EventAreaResource;
 use App\Http\Resources\EventListResource;
 use App\Http\Resources\EventDetailResource;
 use App\Http\Resources\EventListCommentResource;
 use App\Http\Resources\EventScheduleDetailResource;
 use App\Http\Resources\EventScheduleDocumentResource;
+use App\Http\Resources\EventSeatResource;
 use App\Http\Resources\EventUserHistoryResource;
 use App\Services\EventCommentService;
 use App\Services\EventScheduleService;
@@ -32,24 +34,25 @@ class EventController extends Controller
     protected EventScheduleService $eventScheduleService;
 
     public function __construct(
-        EventService $eventService,
+        EventService            $eventService,
         EventUserHistoryService $eventUserHistoryService,
-        EventCommentService $eventCommentService,
-        MemberShipService $membershipService,
-        EventScheduleService $eventScheduleService,
-    ) {
-        $this->eventService            = $eventService;
+        EventCommentService     $eventCommentService,
+        MemberShipService       $membershipService,
+        EventScheduleService    $eventScheduleService,
+    )
+    {
+        $this->eventService = $eventService;
         $this->eventUserHistoryService = $eventUserHistoryService;
-        $this->eventCommentService     = $eventCommentService;
-        $this->membershipService       = $membershipService;
-        $this->eventScheduleService    = $eventScheduleService;
+        $this->eventCommentService = $eventCommentService;
+        $this->membershipService = $membershipService;
+        $this->eventScheduleService = $eventScheduleService;
     }
 
     public function list(Request $request): JsonResponse
     {
         $filters = $request->array('filters', []);
-        $sortBy =  $request->string('sort_by', '')->toString();
-        $page  = $request->integer('page', 1);
+        $sortBy = $request->string('sort_by', '')->toString();
+        $page = $request->integer('page', 1);
         $limit = $request->integer('limit', 10);
 
         // điều kiện kiên quyết
@@ -85,9 +88,64 @@ class EventController extends Controller
         ], 200);
     }
 
+    public function showArea(Request $request, $id): JsonResponse
+    {
+        $event = $this->eventService->getEventDetail($id);
+        $user = $request->user();
+        if ($event['status'] === false) {
+            return response()->json([
+                'message' => $event['message'],
+            ], 404);
+        }
+        if ($event['event']->organizer_id != $user->organizer_id) {
+            return response()->json([
+                'message' => __('common.common_error.permission_error'),
+            ], 403);
+        }
+        // nếu check ko có membership
+        if (!$user->activeMembership->first() || !$user->activeMembership->first()->config[ConfigMembership::ALLOW_CHOOSE_SEAT->value]) {
+            return response()->json([
+                'message' => __('common.common_error.permission_error'),
+            ], 403);
+        }
+        $area = $this->eventService->getEventArea($id);
+        return response()->json([
+            'message' => __('common.common_success.get_success'),
+            'data' => EventAreaResource::collection($area),
+        ], 200);
+    }
+
+    public function showSeat(Request $request, $id, $areaId)
+    {
+        $event = $this->eventService->getEventDetail($id);
+        $user = $request->user();
+        if ($event['status'] === false) {
+            return response()->json([
+                'message' => $event['message'],
+            ], 404);
+        }
+        if ($event['event']->organizer_id != $user->organizer_id) {
+            return response()->json([
+                'message' => __('common.common_error.permission_error'),
+            ], 403);
+        }
+        $area = $this->eventService->getAreaById(areaId: $areaId, eventId: $id);
+        if ($area['status'] === false) {
+            return response()->json([
+                'message' => $area['message'],
+            ], 404);
+        }
+        $seats = $this->eventService->getSeatsByAreaId($area['data']->id);
+        return response()->json([
+            'message' => __('common.common_success.get_success'),
+            'data' => EventSeatResource::collection($seats),
+        ], 200);
+    }
+
+
     public function eventUserHistory(Request $request): JsonResponse
     {
-        $page  = $request->integer('page', 1);
+        $page = $request->integer('page', 1);
         $limit = $request->integer('limit', 10);
 
         $validator = Validator::make($request->all(), [
@@ -181,7 +239,7 @@ class EventController extends Controller
             $request->all(),
             [
                 'event_id' => ['required', 'exists:events,id'],
-                'content'  => ['required', 'string', 'max:1000'],
+                'content' => ['required', 'string', 'max:1000'],
             ],
             [
                 'event_id.required' => __('event.validation.event_id_exists'),
@@ -214,19 +272,17 @@ class EventController extends Controller
         }
 
 
-        if ($user->role == RoleUser::CUSTOMER->value) {
-            $checkPermission = $this->membershipService->getMembershipUser($user->id);
-            if (!$checkPermission['status'] || !$checkPermission['membershipUser'] || !$checkPermission['membershipUser']->config[ConfigMembership::ALLOW_COMMENT->value]) {
-                return response()->json([
-                    'message' => __('common.common_error.permission_error'),
-                ], 403);
-            }
+        $checkPermission = $this->membershipService->getMembershipUser($user->id);
+        if (!$checkPermission['status'] || !$checkPermission['membershipUser'] || !$checkPermission['membershipUser']->config[ConfigMembership::ALLOW_COMMENT->value]) {
+            return response()->json([
+                'message' => __('common.common_error.permission_error'),
+            ], 403);
         }
 
         $newComment = [
-            'user_id'  => $user->id,
+            'user_id' => $user->id,
             'event_id' => $validated['event_id'],
-            'content'  => $validated['content']
+            'content' => $validated['content']
         ];
 
         $result = $this->eventCommentService->eventCommentInsert($newComment);
@@ -239,18 +295,14 @@ class EventController extends Controller
 
         return response()->json([
             'message' => $result['message'],
-            'data'    => $result['data']
         ], 200);
     }
-
 
     public function listComment(Request $request): JsonResponse
     {
         $filters = $request->array('filters', []);
-        $page  = $request->integer('page', 1);
+        $page = $request->integer('page', 1);
         $limit = $request->integer('limit', 10);
-
-        $filters['user_id'] = $request->user()->id;
 
         $comments = $this->eventCommentService->eventCommentPaginator($filters, $page, $limit);
         return response()->json([
@@ -272,29 +324,25 @@ class EventController extends Controller
 
         if (!$schedule['status']) {
             return response()->json([
-                'status'  => false,
-                'message' => __('event.validation.validation_failed'),
+                'message' => $schedule['message'],
             ], 422);
         }
         $user = $request->user();
         $allowDocument = true;
-        if ($user->role == RoleUser::CUSTOMER->value) {
-            if (!$user->activeMembership->first() || !$user->activeMembership->first()->config[ConfigMembership::ALLOW_COMMENT->value]) {
-                $allowDocument = false;
-            }
+        if (!$user->activeMembership->first() || !$user->activeMembership->first()->config[ConfigMembership::ALLOW_DOCUMENTARY->value]) {
+            $allowDocument = false;
         }
+
 
         if ($schedule['schedule']->event->organizer_id != $user->organizer_id) {
             return response()->json([
-                'status'  => false,
                 'message' => __('common.common_error.permission_error'),
             ], 403);
         }
 
         return response()->json([
-            'status'        => true,
-            'message'       => __('common.common_success.success'),
-            'data'    => (new EventScheduleDetailResource($schedule['schedule']))
+            'message' => __('common.common_success.success'),
+            'data' => (new EventScheduleDetailResource($schedule['schedule']))
                 ->additional(['allowDocument' => $allowDocument]),
         ]);
     }
@@ -305,68 +353,81 @@ class EventController extends Controller
 
         if (!$document['status']) {
             return response()->json([
-                'status'  => false,
-                'message' => __('event.validation.validation_failed'),
+                'message' => $document['message'],
             ], 422);
         }
         $user = $request->user();
 
-        if ($user->role == RoleUser::CUSTOMER->value) {
-            if (!$user->activeMembership->first() || !$user->activeMembership->first()->config[ConfigMembership::ALLOW_COMMENT->value]) {
+        if ($document['document']->eventSchedule->event->organizer_id != $user->organizer_id) {
+            return response()->json([
+                'message' => __('common.common_error.permission_error'),
+            ], 403);
+        }
+        // nếu check ko có membership
+        if (!$user->activeMembership->first() || !$user->activeMembership->first()->config[ConfigMembership::ALLOW_DOCUMENTARY->value]) {
+            // thì kiêểm tra xem document này có user chưa
+            if (!$document['document']->users()->where('user_id', $user->id)->exists()) {
                 return response()->json([
                     'message' => __('common.common_error.permission_error'),
                 ], 403);
             }
         }
 
-        if ($document['document']->eventSchedule->event->organizer_id != $user->organizer_id) {
-            return response()->json([
-                'status'  => false,
-                'message' => __('common.common_error.permission_error'),
-            ], 403);
-        }
-
         $eventScheduleDocumentUser = $this->eventScheduleService->insertEventScheduleDocumentUser($user->id, $document['document']->id);
         if (!$eventScheduleDocumentUser['status']) {
             return response()->json([
-                'status'  => false,
                 'message' => __('common.common_error.server_error'),
             ], 500);
         }
         return response()->json([
-            'status'        => true,
-            'message'       => __('common.common_success.success'),
-            'data'          => new EventScheduleDocumentResource($document['document']),
+            'message' => __('common.common_success.success'),
+            'data' => new EventScheduleDocumentResource($document['document']),
         ]);
+    }
+
+    public function listDocument(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $page = $request->integer('page', 1);
+        $limit = $request->integer('limit', 10);
+        $documents = $this->eventScheduleService->eventDocumentPaginator(
+            filters: [
+                'user_id' => $user->id
+            ],
+            page: $page,
+            limit: $limit
+        );
+        return response()->json([
+            'message' => __('common.common_success.get_success'),
+            'data' => EventScheduleDocumentResource::collection($documents),
+            'pagination' => [
+                'total' => $documents->total(),
+                'per_page' => $documents->perPage(),
+                'current_page' => $documents->currentPage(),
+                'last_page' => $documents->lastPage()
+            ],
+        ], 200);
+
     }
 
     public function downloadDocumentFile(Request $request, $documentId, $fileId)
     {
         $document = $this->eventScheduleService->getDetailDocument($documentId);
         if (!$document['status']) {
-            return response()->json([
-                'status'  => false,
-                'message' => __('common.common_error.data_not_found'),
-            ], 404);
+            abort(404);
         }
 
         $files = $document['document']->files ?? [];
-        $file = collect($files)->firstWhere('id', (int) $fileId) ?? null;
+        $file = collect($files)->firstWhere('id', (int)$fileId) ?? null;
         $filePath = str_replace('\\', '/', ltrim($file->file_path, '/'));
 
         if (!$filePath || !Storage::disk('private')->exists($filePath)) {
-            return response()->json([
-                'status'  => false,
-                'message' => __('common.common_error.data_not_found'),
-            ], 404);
+            abort(404);
         }
 
         $user = $request->user();
         if ($document['document']->eventSchedule->event->organizer_id !== $user->organizer_id) {
-            return response()->json([
-                'status'  => false,
-                'message' => __('common.common_error.permission_error'),
-            ], 403);
+            abort(403);
         }
 
         return Storage::disk('private')->download($filePath);

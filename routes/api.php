@@ -38,6 +38,8 @@ Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
         Route::post('/edit-avatar', [AuthController::class, 'editAvatar']);
         Route::delete('/delete-avatar', [AuthController::class, 'deleteAvatar']);
         Route::post('/set-lang', [AuthController::class, 'setLang']);
+        Route::get('/gift', [GameEventController::class, 'listUserGift']);
+        Route::get('/link-support',[AuthController::class, 'supportLink']);
     });
 
     Route::prefix('/event')->group(function () {
@@ -47,6 +49,8 @@ Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
         Route::post('/comment', [EventController::class, 'createEventComment']);
         Route::get('/list-comment', [EventController::class, 'listComment']);
         Route::get('/{id}', [EventController::class, 'show']);
+        Route::get('/{id}/area', [EventController::class, 'showArea']);
+        Route::get('/{id}/area/{areaId}', [EventController::class, 'showSeat']);
     });
 
     Route::prefix('/membership')->group(function () {
@@ -69,6 +73,7 @@ Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
         Route::post('/read-all', [NotificationController::class, 'markAllAsRead']);
     });
     Route::prefix('/schedule')->group(function () {
+        Route::get('/list', [EventController::class, 'listDocument']);
         Route::get('/document/{id}', [EventController::class, 'getDetailScheduleDocument']);
         Route::get('/{id}', [EventController::class, 'getDetailSchedule']);
     });

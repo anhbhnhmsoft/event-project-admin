@@ -2,10 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\Event;
 use App\Models\EventSchedule;
 use App\Models\EventScheduleDocument;
 use App\Models\EventScheduleDocumentUser;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class EventScheduleService
 {
@@ -85,6 +86,17 @@ class EventScheduleService
                 'status' => false,
                 'message' => __('common.common_error.server_error'),
             ];
+        }
+    }
+
+    public function eventDocumentPaginator(array $filters = [], string $sortBy = '', int $page = 1, int $limit = 10): LengthAwarePaginator
+    {
+        try {
+            return EventScheduleDocument::filter($filters)->sortBy($sortBy)
+                ->paginate(perPage: $limit, page: $page);
+
+        } catch (\Exception $e) {
+            return new LengthAwarePaginator([], 0, $limit, $page);
         }
     }
 }

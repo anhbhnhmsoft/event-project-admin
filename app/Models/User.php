@@ -112,4 +112,12 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
     {
         return $this->hasMany(EventUserHistory::class);
     }
+
+    public function eventScheduleDocuments()
+    {
+        return $this->belongsToMany(EventScheduleDocument::class, 'event_schedule_document_user')
+            ->withTimestamps()
+            ->withPivot('id')
+            ->using(EventScheduleDocumentUser::class);
+    }
 }
