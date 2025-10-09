@@ -10,6 +10,7 @@ use App\Utils\Constants\EventSeatStatus;
 use App\Utils\Constants\EventUserHistoryStatus;
 use App\Utils\Helper;
 use Exception;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
 
 class EventUserHistoryService
@@ -80,7 +81,7 @@ class EventUserHistoryService
                 ];
             }
 
-            if ((int)$history->status === EventUserHistoryStatus::BOOKED->value) {
+            if (in_array($history->status, [EventUserHistoryStatus::BOOKED->value, EventUserHistoryStatus::PARTICIPATED->value, EventUserHistoryStatus::CANCELLED->value])) {
                 return [
                     'status' => false,
                     'message' => __('event.validation.already_booked'),
@@ -98,7 +99,7 @@ class EventUserHistoryService
                     ];
                 }
                 $seat = EventSeat::with('area')->find($data['event_seat_id']);
-                if (! $seat) {
+                if (!$seat) {
                     return [
                         'status' => false,
                         'message' => __('event.validation.event_seat_id_exists'),
@@ -123,14 +124,15 @@ class EventUserHistoryService
                         'message' => __('event.validation.seat_permission_denied'),
                     ];
                 }
-                $seat = EventSeat::whereHas('area', function ($q) use ($event) {
+                $seat = EventSeat::query()->whereHas('area', function (Builder $q) use ($event) {
                     $q->where('event_id', $event->id);
+                    $q->where('vip',false);
                 })
                     ->where('status', EventSeatStatus::AVAILABLE->value)
                     ->whereNull('user_id')
                     ->orderBy('id')
                     ->first();
-                if (! $seat) {
+                if (!$seat) {
                     return [
                         'status' => false,
                         'message' => __('event.validation.no_available_seat'),
@@ -145,13 +147,13 @@ class EventUserHistoryService
             if (empty($history->ticket_code)) {
                 do {
                     $ticketCode = 'TICKET-' . Helper::getTimestampAsId();
-                } while (EventUserHistory::where('ticket_code', $ticketCode)->exists());
+                } while (EventUserHistory::query()->where('ticket_code', $ticketCode)->exists());
                 $history->ticket_code = $ticketCode;
             }
             $history->save();
 
             if (! empty($data['event_seat_id'])) {
-                EventSeat::where('id', $data['event_seat_id'])->update([
+                EventSeat::query()->where('id', $data['event_seat_id'])->update([
                     'status' => EventSeatStatus::BOOKED->value,
                     'user_id' => $userId,
                 ]);

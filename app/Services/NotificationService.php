@@ -6,6 +6,7 @@ use App\Models\UserNotification;
 use App\Models\UserDevice;
 use App\Utils\Constants\UserNotificationStatus;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Log;
 
 class NotificationService
 {
@@ -67,10 +68,10 @@ class NotificationService
         try {
             UserDevice::query()->updateOrCreate(
                 [
-                    'user_id' => $userId,
                     'expo_push_token' => $data['expo_push_token'],
                 ],
                 [
+                    'user_id' => $userId,
                     'expo_push_token' => $data['expo_push_token'],
                     'device_id' => $data['device_id'] ?? null,
                     'device_type' => $data['device_type'] ?? 'ios',
@@ -84,6 +85,7 @@ class NotificationService
                 'message' => __('common.push_token_saved'),
             ];
         } catch (\Exception $e) {
+            Log::error('error save token',['ex' => $e->getMessage()]);
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),

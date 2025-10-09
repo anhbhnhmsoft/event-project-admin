@@ -225,7 +225,6 @@ class EventController extends Controller
                 'message' => $result['message'],
             ], 422);
         }
-
         return response()->json([
             'message' => $result['message'],
             'data' => EventUserHistoryResource::make($result['data']),
