@@ -170,7 +170,7 @@ class AuthController extends Controller
             'email' => ['required', 'email', Rule::unique('users','email')->where(function($query) use ($request) {
                 return $query->where('organizer_id', $request->input('organizer_id'));
             })],
-            'password' => ['required', 'string', 'min:8', 'regex:/[a-z]/', 'regex:/[A-Z]/'],
+            'password' => ['required', 'string', 'min:8'],
             'confirm_password' => ['required', 'same:password'],
             'organizer_id' => ['required', 'integer', 'exists:organizers,id'],
         ], [
@@ -181,7 +181,6 @@ class AuthController extends Controller
             'email.email' => __('auth.validation.email_email'),
             'password.required' => __('auth.validation.password_required'),
             'password.min' => __('auth.validation.password_min'),
-            'password.regex' => __('auth.validation.password_regex'),
             'confirm_password.required' => __('auth.validation.confirm_password_required'),
             'confirm_password.same' => __('auth.validation.confirm_password_same'),
             'organizer_id.required' => __('auth.validation.organizer_id_required'),
