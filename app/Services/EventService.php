@@ -122,9 +122,13 @@ class EventService
         try {
             $now = now();
 
-            Event::where('status', EventStatus::UPCOMING->value)
+            $eventsUpcoming = Event::where('status', EventStatus::UPCOMING->value)
                 ->whereRaw('CONCAT(DATE(day_represent), " ", TIME(start_time)) <= ?', [$now])
                 ->update(['status' => EventStatus::ACTIVE->value]);
+                
+            foreach ( $eventsUpcoming as $event) {
+                
+            }
 
             Event::where('status', EventStatus::ACTIVE->value)
                 ->whereRaw('CONCAT(DATE(day_represent), " ", TIME(end_time)) < ?', [$now])

@@ -214,21 +214,21 @@ class AuthController extends Controller
         $user = User::find($request->route('id'));
 
         if (! $user) {
-            return view('verify-email', [
+            return view('emails.auth.response-verify', [
                 'status' => 'error',
                 'message' => __('auth.error.email_not_found'),
             ]);
         }
 
         if (! hash_equals((string) $request->route('hash'), sha1($user->getEmailForVerification()))) {
-            return view('verify-email', [
+            return view('emails.auth.response-verify', [
                 'status' => 'error',
                 'message' => __('auth.error.invalid_code'),
             ]);
         }
 
         if ($user->hasVerifiedEmail()) {
-            return view('verify-email', [
+            return view('emails.auth.response-verify', [
                 'status' => 'warning',
                 'message' => __('auth.success.already_verified'),
             ]);
@@ -236,7 +236,7 @@ class AuthController extends Controller
 
         $user->markEmailAsVerified();
 
-        return view('verify-email', [
+        return view('emails.auth.response-verify', [
             'status' => 'success',
             'message' => __('auth.success.verify_success'),
         ]);
