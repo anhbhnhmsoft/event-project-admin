@@ -9,6 +9,7 @@ use App\Services\NotificationService;
 use App\Utils\Constants\QueueName;
 use App\Utils\Constants\UserNotificationStatus;
 use App\Utils\Constants\UserNotificationType;
+use App\Utils\DTO\NotificationPayload;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;

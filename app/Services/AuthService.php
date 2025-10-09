@@ -3,7 +3,13 @@
 namespace App\Services;
 
 use App\Exceptions\ServiceException;
+use App\Models\Config;
+use App\Models\Event;
+use App\Models\EventUserHistory;
 use App\Models\User;
+use App\Utils\Constants\ConfigName;
+use App\Utils\Constants\EventStatus;
+use App\Utils\Constants\EventUserHistoryStatus;
 use App\Utils\Constants\Language;
 use App\Utils\Constants\RoleUser;
 use App\Utils\Constants\StoragePath;
@@ -17,10 +23,17 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\App;
 use App\Models\UserResetCode;
 use App\Mail\ResetPasswordMail;
-use Illuminate\Support\Facades\Log;
 
 class AuthService
 {
+    public function getSupportLink()
+    {
+        return Config::query()->whereIn('config_key', [
+            ConfigName::LINK_FACEBOOK_SUPPORT->value,
+            ConfigName::LINK_ZALO_SUPPORT->value
+        ])->pluck('config_value', 'config_key');
+
+    }
     public function login(array $data): array
     {
         try {
@@ -296,25 +309,63 @@ class AuthService
     {
         DB::beginTransaction();
         try {
-            $user = User::query()->create([
-                'name' => trim($data['name']),
-                'email' => $data['email'],
-                'password' => Hash::make($data['password']),
-                'organizer_id' => (int) $data['organizer_id'],
-                'role' => RoleUser::CUSTOMER->value,
-                'lang' => $data['lang'] ?? Language::VI->value,
-                'phone' => $data['phone'],
-                'email_verified_at' => now(),
-                'phone_verified_at' => now()
-            ]);
+            $user = User::query()
+                ->where('email', $data['email'])
+                ->where('organizer_id',$data['organizer_id'])
+                ->first();
+            // Nếu ko có thì tạo user
+            if (!$user){
+                $user = User::query()->create([
+                    'name' => trim($data['name']),
+                    'email' => $data['email'],
+                    'password' => Hash::make($data['password']),
+                    'organizer_id' => (int) $data['organizer_id'],
+                    'role' => RoleUser::CUSTOMER->value,
+                    'lang' => $data['lang'] ?? Language::VI->value,
+                    'phone' => $data['phone'],
+                    'email_verified_at' => now(),
+                    'phone_verified_at' => now()
+                ]);
+            }else{
+                // cập nhật phone cho user
+                if (!$user->phone){
+                    $user->phone = $data['phone'];
+                    $user->save();
+                }
+            }
 
+            $event = Event::query()->find($data['event_id']);
+
+            // tìm ticket cho user
+            $history = EventUserHistory::query()
+                ->where('event_id',$event->id)
+                ->where('user_id', $user->id)
+                ->first();
+            // Nếu sự kiện đang diễn ra thì đó là checkin
+            if ($event->status == EventStatus::ACTIVE->value){
+                $status = EventUserHistoryStatus::PARTICIPATED->value;
+            }else{
+                $status = EventUserHistoryStatus::BOOKED->value;
+            }
+            if (!$history){
+                // Đăng ký ticket cho user
+                EventUserHistory::query()->create(
+                    [
+                        'event_id' => $event->id,
+                        'user_id' => $user->id,
+                        'status' => $status,
+                    ],
+                );
+            }elseif ($history->status === EventUserHistoryStatus::SEENED->value){
+                $history->status = $status;
+                $history->save();
+            }
             DB::commit();
             return [
                 'status' => true,
             ];
         } catch (\Throwable $e) {
             DB::rollBack();
-            Log::info($e->getMessage());
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),

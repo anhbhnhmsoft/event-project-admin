@@ -14,7 +14,8 @@ Route::middleware(['auth:sanctum', 'auth:web'])->get('/document/{file_path}', [F
     ->where('file_path', '.*')
     ->name('file_document');
 
-Route::middleware(['auth:sanctum'])->get('/file-private/{document_id}/{file_id}', [EventController::class, 'downloadDocumentFile']);
+Route::middleware(['auth:sanctum'])->get('/file-private/{document_id}/{file_id}', [EventController::class, 'downloadDocumentFile'])
+    ->name('private_file');
 
 Route::get('/event/quick-register', QuickRegister::class)->name('events.quick-register');
 Route::get("/")->name('home');

@@ -17,8 +17,10 @@ class EventScheduleDocumentResource extends JsonResource
         return [
             'id'            => (string) $this->id,
             'title'         => $this->title,
+            'event_schedule_id' => (string) $this->event_schedule_id,
+            'event_name' => $this->eventSchedule->event->name,
             'description'   => $this->description,
-            'files'       => EventScheduleDocumentFileResource::collection($this->whenLoaded('files')) ?? [],
+            'files'       => EventScheduleDocumentFileResource::collection($this->files) ?? [],
         ];
     }
 }
