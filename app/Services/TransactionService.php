@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\MembershipUser;
 use App\Models\Transactions;
-use App\Models\User;
 use App\Utils\Constants\MembershipUserStatus;
 use App\Utils\Constants\TransactionStatus;
 use App\Utils\Constants\TransactionType;
@@ -12,6 +11,7 @@ use App\Utils\Constants\TransactionTypePayment;
 use Exception;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TransactionService
 {
@@ -73,8 +73,8 @@ class TransactionService
                         ->where('id', '!=', $membershipUser->id)
                         ->where('user_id', $user->id)
                         ->update([
-                        'status' => MembershipUserStatus::INACTIVE->value
-                    ]);
+                            'status' => MembershipUserStatus::INACTIVE->value
+                        ]);
                     // update trạng thái giao dịch
                     $record->status = TransactionStatus::SUCCESS->value;
                     $record->save();
@@ -94,6 +94,7 @@ class TransactionService
                 'message' => __('common.common_success.update_success')
             ];
         } catch (Exception $e) {
+            Log::debug(" Confirm Membership Transaction get error: " . $e->getMessage());
             DB::rollBack();
             return [
                 'status' => false,
@@ -120,6 +121,7 @@ class TransactionService
                 ]
             ];
         } catch (Exception $e) {
+            Log::debug("Check Payment get error: " . $e->getMessage());
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error')
