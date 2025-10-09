@@ -39,8 +39,7 @@ class EventController extends Controller
         EventCommentService     $eventCommentService,
         MemberShipService       $membershipService,
         EventScheduleService    $eventScheduleService,
-    )
-    {
+    ) {
         $this->eventService = $eventService;
         $this->eventUserHistoryService = $eventUserHistoryService;
         $this->eventCommentService = $eventCommentService;
@@ -347,6 +346,11 @@ class EventController extends Controller
         ]);
     }
 
+    public function index()
+    {
+        return view('welcome');
+    }
+
     public function getDetailScheduleDocument(Request $request, string $id): JsonResponse
     {
         $document = $this->eventScheduleService->getDetailDocument($id);
@@ -407,7 +411,6 @@ class EventController extends Controller
                 'last_page' => $documents->lastPage()
             ],
         ], 200);
-
     }
 
     public function downloadDocumentFile(Request $request, $documentId, $fileId)
