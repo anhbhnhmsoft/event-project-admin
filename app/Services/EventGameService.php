@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Event;
 use App\Models\EventGame;
 use App\Models\EventGameGift;
 use App\Models\EventUserGift;
@@ -10,6 +9,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Jobs\SendNotifications;
+use App\Utils\Constants\RoleUser;
 use App\Utils\DTO\NotificationPayload;
 use App\Utils\Constants\UserNotificationType;
 use Carbon\Carbon;
@@ -204,6 +204,10 @@ class EventGameService
             return false;
         }
 
+        if($user->role == RoleUser::SUPER_ADMIN->value) {
+            return true;
+        }
+
         return $game->event->organizer_id === $user->organizer_id;
     }
 
@@ -244,8 +248,6 @@ class EventGameService
         foreach ($gifts as $gift) {
             $cumulative += $gift->rate;
             if ($random <= $cumulative) {
-                $gift->decrement('quantity');
-
                 $history = $this->createGiftHistory($userId, $gift->id);
                 if (!$history['status']) {
                     return ['status' => false, 'message' => $history['message']];

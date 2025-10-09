@@ -157,49 +157,6 @@ class GameEventController extends Controller
         ]);
     }
 
-
-    public function insertHistoryGift(Request $request, $gameId)
-    {
-        $validator = Validator::make($request->all(), [
-            'user_id'            => 'required|exists:users,id',
-            'event_game_gift_id' => 'required|exists:event_game_gifts,id',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status'  => false,
-                'message' => $validator->errors()->first(),
-            ], 422);
-        }
-
-        $gameResult = $this->eventGameService->getDetailGameEvent($gameId);
-
-        if (!$gameResult['status']) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'Không tìm thấy game.',
-            ], 404);
-        }
-
-        $result = $this->eventGameService->createGiftHistory(
-            $request->user_id,
-            $request->event_game_gift_id
-        );
-
-        if (!$result['status']) {
-            return response()->json([
-                'status'  => false,
-                'message' => $result['message'] ?? 'Không thể lưu lịch sử.',
-            ], 500);
-        }
-
-        return response()->json([
-            'status'  => true,
-            'message' => $result['message'],
-            'data'    => new EventUserGiftResource($result['data']),
-        ]);
-    }
-
     public function spin(Request $request, $gameId)
     {
         $validator = Validator::make($request->all(), [
