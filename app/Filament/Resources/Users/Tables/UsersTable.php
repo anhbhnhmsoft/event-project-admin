@@ -20,17 +20,18 @@ class UsersTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->defaultSort('created_at', 'desc')
             ->columns([
                 ImageColumn::make('avatar_path')
-                ->label('Ảnh đại diện')
-                ->circular()
-                ->disk('public')
-                ->state(function ($record) {
-                    if (! empty($record->avatar_path)) {
-                        return Helper::generateURLImagePath($record->avatar_path);
-                    }
-                    return Helper::generateUiAvatarUrl($record->name, $record->email);
-                }),
+                    ->label('Ảnh đại diện')
+                    ->circular()
+                    ->disk('public')
+                    ->state(function ($record) {
+                        if (! empty($record->avatar_path)) {
+                            return Helper::generateURLImagePath($record->avatar_path);
+                        }
+                        return Helper::generateUiAvatarUrl($record->name, $record->email);
+                    }),
                 TextColumn::make('name')
                     ->label('Tên người dùng')
                     ->searchable(),
@@ -53,8 +54,8 @@ class UsersTable
             ->recordActions([
                 EditAction::make()
                     ->label('Sửa')
-                    ->visible(fn() => Auth::user()->role === RoleUser::SUPER_ADMIN->value || 
-                                    Auth::user()->role === RoleUser::ADMIN->value),
+                    ->visible(fn() => Auth::user()->role === RoleUser::SUPER_ADMIN->value ||
+                        Auth::user()->role === RoleUser::ADMIN->value),
                 DeleteAction::make()
                     ->label('Xóa')
                     ->visible(fn() => Auth::user()->role === RoleUser::SUPER_ADMIN->value),
@@ -68,7 +69,3 @@ class UsersTable
             ]);
     }
 }
-
-
-
-
