@@ -18,7 +18,7 @@ Route::middleware(['auth:sanctum'])->get('/file-private/{document_id}/{file_id}'
     ->name('private_file');
 
 Route::get('/event/quick-register', QuickRegister::class)->name('events.quick-register');
-Route::get("/")->name('home');
+Route::get("/", [EventController::class, 'index'])->name('home');
 Route::get('/admin/play/{id}', [GameEventController::class, 'show'])->name('game.play');
 
 Route::middleware(['auth:web'])->prefix('/event-game')->group(function () {
