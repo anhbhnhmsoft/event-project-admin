@@ -72,6 +72,22 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        Schema::create('membership_user', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')
+                ->constrained('users')
+                ->cascadeOnDelete();
+            $table->foreignId('membership_id')
+                ->constrained('membership')
+                ->cascadeOnDelete();
+            $table->date('start_date')->nullable()
+                ->comment('Ngày bắt đầu gói membership');
+            $table->date('end_date')->nullable()
+                ->comment('Ngày kết thúc gói membership');
+            $table->tinyInteger('status')->comment('Trạng thái gói: enum định nghĩa MembershipUserStatus');
+            $table->timestamps();
+        });
+        
         // Tạo bảng transactions để lưu trữ các giao dịch của người dùng
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
@@ -90,7 +106,7 @@ return new class extends Migration
             $table->string('description')->nullable()->comment('Mô tả giao dịch');
             $table->tinyInteger('status')->comment('Trạng thái giao dịch trong enum TransactionStatus');
             $table->text('metadata')->nullable()->comment('Dữ liệu bổ sung liên quan đến giao dịch, có thể là thông tin bổ sung từ hệ thống thanh toán');
-            $table->unique(['type_trans','transaction_id']);
+            $table->unique(['type_trans', 'transaction_id']);
             $table->foreignId('user_id')->constrained();
             $table->timestamp('expired_at')->nullable();
             $table->json('config_pay')->nullable();

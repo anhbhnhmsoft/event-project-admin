@@ -24,7 +24,6 @@ Route::get('/admin/play/{id}', [GameEventController::class, 'show'])->name('game
 Route::middleware(['auth:web'])->prefix('/event-game')->group(function () {
     Route::get('/gifts/{gameId}', [GameEventController::class, 'getGiftsEventGame']);
     Route::get('/history-gifts/{gameId}', [GameEventController::class, 'getHistoryGifts']);
-    Route::post('/history-gifts/{gameId}', [GameEventController::class, 'insertHistoryGift']);
     Route::get('/users/{gameId}', [GameEventController::class, 'getUsers']);
     Route::post('/spin/{gameId}', [GameEventController::class, 'spin']);
 });
