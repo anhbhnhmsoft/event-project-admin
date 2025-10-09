@@ -26,10 +26,16 @@ class OrganizerController extends Controller
             'keyword' => $keyword,
             'status' => CommonStatus::ACTIVE->value,
         ], $limit);
+        $organizersMap = array_map(function ($item) {
+            return [
+                'id' => (string) $item['id'],
+                'name' => (string) $item['name'],
+            ];
+        },$organizers);
 
         return response()->json([
             'message' => __('organizer.success.get_success'),
-            'data' => $organizers,
+            'data' => $organizersMap,
         ], 200);
     }
 }
