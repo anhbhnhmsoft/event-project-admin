@@ -44,7 +44,7 @@ class EventResource extends Resource
     public static function canAccess(): bool
     {
         $user = Auth::user();
-        return $user->role === RoleUser::SUPER_ADMIN->value || $user->role === RoleUser::ADMIN->value;
+        return $user->role === RoleUser::SUPER_ADMIN->value || $user->role === RoleUser::ADMIN->value || $user->role === RoleUser::SPEAKER->value;
     }
 
     public static function getEloquentQuery(): Builder

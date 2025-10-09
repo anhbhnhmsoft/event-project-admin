@@ -26,7 +26,7 @@ class EventCheckinExport implements FromCollection, WithHeadings, WithMapping
     {
         Log::debug(EventUserHistory::with([
             'user:id,name,email,phone',
-            'seat:seat_code',
+            'seat:id,seat_code,event_area_id',
             'seat.area:id,name,vip',
         ])
             ->where('event_id', $this->eventId)
@@ -34,7 +34,7 @@ class EventCheckinExport implements FromCollection, WithHeadings, WithMapping
             ->get());
         return EventUserHistory::with([
             'user:id,name,email,phone',
-            'seat:seat_code',
+            'seat:id,seat_code,event_area_id',
             'seat.area:id,name,vip',
         ])
             ->where('event_id', $this->eventId)
