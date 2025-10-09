@@ -9,9 +9,39 @@ use App\Models\User;
 use App\Utils\Constants\EventSeatStatus;
 use App\Utils\Constants\EventUserHistoryStatus;
 use App\Utils\Helper;
+use Exception;
+use Illuminate\Support\Facades\Log;
 
 class EventUserHistoryService
 {
+    public function createEventHistoryUseForAdmin(array $data)
+    {
+        try {
+            do {
+                $ticketCode = 'TICKET-' . Helper::getTimestampAsId();
+            } while (EventUserHistory::where('ticket_code', $ticketCode)->exists());
+
+            $ticket =  EventUserHistory::create([
+                'event_seat_id' => $data['event_seat_id'],
+                'user_id'       => $data['user_id'],
+                'ticket_code'   => $ticketCode,
+                'status'        => EventUserHistoryStatus::BOOKED->value,
+                'event_id'      => $data['event_id'],
+            ]);
+
+            return [
+                'status' => true,
+                'data' => $ticket,
+            ];
+        } catch (Exception $e) {
+            Log::debug('Create Event History For User Failed : ' . $e->getMessage());
+            return [
+                'status'  => false,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
+
     public function createEventHistory(array $data, int $userId, int $organizerId): array
     {
         try {
@@ -86,8 +116,7 @@ class EventUserHistoryService
                         'message' => __('event.validation.seat_taken'),
                     ];
                 }
-            }
-            else {
+            } else {
                 if (!empty($data['event_seat_id'])) {
                     return [
                         'status' => false,
@@ -95,8 +124,8 @@ class EventUserHistoryService
                     ];
                 }
                 $seat = EventSeat::whereHas('area', function ($q) use ($event) {
-                        $q->where('event_id', $event->id);
-                    })
+                    $q->where('event_id', $event->id);
+                })
                     ->where('status', EventSeatStatus::AVAILABLE->value)
                     ->whereNull('user_id')
                     ->orderBy('id')
@@ -133,8 +162,8 @@ class EventUserHistoryService
                 'message' => __('common.common_success.add_success'),
                 'data' => $history,
             ];
-
         } catch (\Exception $e) {
+            Log::debug($e->getMessage());
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),
@@ -176,7 +205,6 @@ class EventUserHistoryService
                 'message' => __('common.common_success.get_success'),
                 'data' => $histories,
             ];
-
         } catch (\Exception $e) {
             return [
                 'status' => false,
