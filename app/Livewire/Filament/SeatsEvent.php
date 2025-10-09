@@ -5,7 +5,7 @@ namespace App\Livewire\Filament;
 use App\Models\Event;
 use Livewire\Attributes\Computed;
 use App\Services\EventAreaService;
-use App\Services\EventSeatservice;
+use App\Services\EventSeatService;
 use App\Services\EventUserHistoryService;
 use App\Utils\Constants\EventSeatStatus;
 use App\Utils\Constants\RoleUser;

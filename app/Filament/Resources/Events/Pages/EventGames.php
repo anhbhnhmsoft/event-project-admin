@@ -85,7 +85,6 @@ class EventGames extends Page implements HasTable
                                 ]),
                                 Tab::make("Cấu hình")->schema([
                                     Repeater::make("gifts")
-                                        ->relationship("gifts")
                                         ->label("Gói quà")
                                         ->schema([
                                             TextInput::make("name")
