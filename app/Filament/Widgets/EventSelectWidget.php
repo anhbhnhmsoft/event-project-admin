@@ -82,12 +82,17 @@ class EventSelectWidget extends Widget implements HasForms
         $user = Auth::user();
         /** @var \App\Services\EventService $EventService */
         $eventService = app(EventService::class);
-        $eventOptions = $eventService->getEventsListByOrganizerId($this->organizer_id);
 
         $commonFields = [
             Select::make('event_id')
                 ->label('Chọn sự kiện')
-                ->options($eventOptions)
+                ->options(function ($get) use ($eventService) {
+                    $organizerId = $get('organizer_id') ?? $this->organizer_id;
+                    if (!$organizerId) {
+                        return [];
+                    }
+                    return $eventService->getEventsListByOrganizerId($this->organizer_id);
+                })
                 ->searchable()
                 ->live()
                 ->placeholder('--- Vui lòng chọn một sự kiện ---')
