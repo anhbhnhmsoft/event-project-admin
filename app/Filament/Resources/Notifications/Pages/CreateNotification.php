@@ -57,8 +57,7 @@ class CreateNotification extends CreateRecord
 
         $successMessage = 'Thông báo đã được đưa vào hàng đợi để gửi thành công.';
         $errorMessage = 'Lỗi! Không thể đưa thông báo vào hàng đợi.';
-        $userIds = [];
-
+        $userIds = $data['user_ids'] ?? [];
         if ($mode == TypeSendNotification::ALL_USERS->value) {
             $userIds = User::query()
                 ->when($organizerId, fn($q) => $q->where('organizer_id', $organizerId))
