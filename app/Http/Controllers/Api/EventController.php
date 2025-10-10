@@ -22,7 +22,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use App\Utils\Constants\EventUserHistoryStatus;
-use App\Utils\Constants\RoleUser;
 use Illuminate\Support\Facades\Storage;
 
 class EventController extends Controller
@@ -39,8 +38,7 @@ class EventController extends Controller
         EventCommentService     $eventCommentService,
         MemberShipService       $membershipService,
         EventScheduleService    $eventScheduleService,
-    )
-    {
+    ) {
         $this->eventService = $eventService;
         $this->eventUserHistoryService = $eventUserHistoryService;
         $this->eventCommentService = $eventCommentService;
@@ -225,7 +223,6 @@ class EventController extends Controller
                 'message' => $result['message'],
             ], 422);
         }
-
         return response()->json([
             'message' => $result['message'],
             'data' => EventUserHistoryResource::make($result['data']),
@@ -347,6 +344,11 @@ class EventController extends Controller
         ]);
     }
 
+    public function index()
+    {
+        return view('welcome');
+    }
+
     public function getDetailScheduleDocument(Request $request, string $id): JsonResponse
     {
         $document = $this->eventScheduleService->getDetailDocument($id);
@@ -407,7 +409,6 @@ class EventController extends Controller
                 'last_page' => $documents->lastPage()
             ],
         ], 200);
-
     }
 
     public function downloadDocumentFile(Request $request, $documentId, $fileId)

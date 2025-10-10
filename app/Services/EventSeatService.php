@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\Event;
 use App\Models\EventSeat;
 use App\Utils\Constants\EventSeatStatus;
-use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;

@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Memberships\Tables;
 
-use App\Utils\Constants\ConfigMembership;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;

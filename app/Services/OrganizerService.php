@@ -2,9 +2,7 @@
 
 namespace App\Services;
 
-use App\Utils\Constants\CommonStatus;
 use App\Models\Organizer;
-use App\Exceptions\ServiceException;
 use Illuminate\Database\Eloquent\Collection;
 
 class OrganizerService

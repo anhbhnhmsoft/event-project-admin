@@ -72,7 +72,7 @@ class SendNotifications implements ShouldQueue
             });
             if (empty($batch)) {
                 DB::rollBack();
-                Log::error('SendNotifications: Không có batch để gửi');
+                Log::default('SendNotifications: Không có batch để gửi');
                 return;
             }
             DB::commit();
