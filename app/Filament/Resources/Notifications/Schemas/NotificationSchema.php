@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Notifications\Schemas;
 use App\Models\User;
 use App\Models\Organizer;
 use App\Utils\Constants\RoleUser;
+use App\Utils\Constants\TypeSendNotification;
 use App\Utils\Constants\UserNotificationType;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Radio;
@@ -30,7 +31,7 @@ class NotificationSchema
                 ->schema([
                     Select::make('organizer_id')
                         ->label('Nhà tổ chức')
-                        ->options(fn () => Organizer::query()->orderBy('name')->pluck('name', 'id'))
+                        ->options(fn() => Organizer::query()->orderBy('name')->pluck('name', 'id'))
                         ->searchable()
                         ->preload()
                         ->required()
@@ -43,7 +44,7 @@ class NotificationSchema
             $steps[] = Step::make('Người nhận & nội dung')
                 ->schema([
                     Hidden::make('organizer_id')
-                        ->default(fn () => $user->organizer_id ?? null)
+                        ->default(fn() => $user->organizer_id ?? null)
                         ->dehydrated(),
                 ]);
         }
@@ -67,15 +68,15 @@ class NotificationSchema
                     ->options(function (Get $get) use ($user) {
                         $organizerId = $get('organizer_id') ?: ($user->organizer_id ?? null);
                         return User::query()
-                            ->when($organizerId, fn (Builder $q) => $q->where('organizer_id', $organizerId))
+                            ->when($organizerId, fn(Builder $q) => $q->where('organizer_id', $organizerId))
                             ->orderBy('email')
                             ->pluck('email', 'id');
                     })
                     ->searchable()
                     ->preload()
                     ->multiple()
-                    ->visible(fn (Get $get) => $get('mode') === 'single')
-                    ->required(fn (Get $get) => $get('mode') === 'single')
+                    ->visible(fn(Get $get) => $get('mode') === 'single')
+                    ->required(fn(Get $get) => $get('mode') === 'single')
                     ->validationMessages([
                         'exists' => 'Người dùng không tồn tại trong nhà tổ chức này.',
                         'required' => 'Vui lòng chọn người nhận.',
@@ -116,14 +117,11 @@ class NotificationSchema
         return $schema
             ->components([
                 Hidden::make('organizer_id')
-                    ->default(fn () => $user->organizer_id ?? null)
+                    ->default(fn() => $user->organizer_id ?? null)
                     ->dehydrated(),
                 Radio::make('mode')
                     ->label('Chế độ gửi')
-                    ->options([
-                        'single' => 'Chọn người dùng',
-                        'broadcast' => 'Broadcast (toàn bộ người dùng)',
-                    ])
+                    ->options(TypeSendNotification::getOptions())
                     ->default('single')
                     ->inline()
                     ->live()
@@ -135,15 +133,15 @@ class NotificationSchema
                     ->options(function (Get $get) use ($user) {
                         $organizerId = $get('organizer_id') ?: ($user->organizer_id ?? null);
                         return User::query()
-                            ->when($organizerId, fn (Builder $q) => $q->where('organizer_id', $organizerId))
+                            ->when($organizerId, fn(Builder $q) => $q->where('organizer_id', $organizerId))
                             ->orderBy('email')
                             ->pluck('email', 'id');
                     })
                     ->searchable()
                     ->preload()
                     ->multiple()
-                    ->visible(fn (Get $get) => $get('mode') === 'single')
-                    ->required(fn (Get $get) => $get('mode') === 'single')
+                    ->visible(fn(Get $get) => $get('mode') === 'single')
+                    ->required(fn(Get $get) => $get('mode') === 'single')
                     ->validationMessages([
                         'exists' => 'Người dùng không tồn tại trong nhà tổ chức này.',
                         'required' => 'Vui lòng chọn người nhận.',

@@ -21,7 +21,7 @@ enum UserNotificationType: int
             self::EVENT_UPDATED => 'Sự kiện được cập nhật',
             self::MEMBERSHIP_APPROVED => 'Duyệt thành viên',
             self::SYSTEM_ANNOUNCEMENT => 'Thông báo hệ thống',
-            self::MEMBERSHIP_EXPIRE_REMINDER => 'Thông báo hệ thống',
+            self::MEMBERSHIP_EXPIRE_REMINDER => 'Thông báo hết hạn gói thành viên',
         };
     }
 

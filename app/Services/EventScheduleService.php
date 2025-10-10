@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Event;
 use App\Models\EventSchedule;
 use App\Models\EventScheduleDocument;
 use App\Models\EventScheduleDocumentUser;
