@@ -4,9 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Services\ProvinceService;
-use App\Utils\Constants\CommonStatus;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class ProvinceController extends Controller
 {

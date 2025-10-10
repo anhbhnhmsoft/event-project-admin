@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\EventUserHistory;
 use App\Utils\Constants\EventUserHistoryStatus;
 use App\Utils\Constants\UnitDurationType;
-use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class DashboardService
