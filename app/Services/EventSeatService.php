@@ -93,4 +93,51 @@ class EventSeatService
             return false;
         }
     }
+
+    public function assignSeatToUser(Event $event, int $seatId, int $userId): array
+    {
+        DB::beginTransaction();
+        try {
+            $seat = EventSeat::with('area')->findOrFail($seatId);
+
+            if ($seat->status === EventSeatStatus::BOOKED->value) {
+                return ['status' => false, 'message' => 'Ghế đã được đặt.'];
+            }
+
+            // Kiểm tra ghế thuộc sự kiện
+            if ($seat->area->event_id !== $event->id) {
+                return ['status' => false, 'message' => 'Ghế không thuộc sự kiện này.'];
+            }
+
+            $seat->update([
+                'user_id' => $userId,
+                'status'  => EventSeatStatus::BOOKED->value,
+            ]);
+
+            DB::commit();
+            return ['status' => true, 'data' => $seat];
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Assign seat failed: " . $e->getMessage());
+            return ['status' => false, 'message' => 'Không thể gán ghế.'];
+        }
+    }
+
+    public function unassignSeat(EventSeat $seat): array
+    {
+        DB::beginTransaction();
+        try {
+            $seat->update([
+                'user_id' => null,
+                'status'  => EventSeatStatus::AVAILABLE->value,
+            ]);
+
+            DB::commit();
+            return ['status' => true];
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Unassign seat failed: " . $e->getMessage());
+            return ['status' => false, 'message' => 'Không thể huỷ ghế.'];
+        }
+    }
 }
