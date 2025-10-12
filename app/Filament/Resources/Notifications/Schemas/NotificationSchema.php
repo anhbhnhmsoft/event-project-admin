@@ -26,7 +26,7 @@ class NotificationSchema
         $user = Auth::user();
         $steps = [];
 
-        if ($user->role === RoleUser::SUPER_ADMIN->value) {
+        if ($user->role == RoleUser::SUPER_ADMIN->value) {
             $steps[] = Step::make('Chọn nhà tổ chức')
                 ->schema([
                     Select::make('organizer_id')
@@ -53,11 +53,8 @@ class NotificationSchema
             ->schema([
                 Radio::make('mode')
                     ->label('Chế độ gửi')
-                    ->options([
-                        'single' => 'Chọn người dùng',
-                        'broadcast' => 'Broadcast (toàn bộ người dùng)',
-                    ])
-                    ->default('single')
+                    ->options(TypeSendNotification::getOptions())
+                    ->default(TypeSendNotification::SOME_USERS->value)
                     ->inline()
                     ->live()
                     ->validationMessages([
@@ -75,8 +72,8 @@ class NotificationSchema
                     ->searchable()
                     ->preload()
                     ->multiple()
-                    ->visible(fn(Get $get) => $get('mode') === 'single')
-                    ->required(fn(Get $get) => $get('mode') === 'single')
+                    ->visible(fn(Get $get) => $get('mode') == TypeSendNotification::SOME_USERS->value)
+                    ->required(fn(Get $get) => $get('mode') == TypeSendNotification::SOME_USERS->value)
                     ->validationMessages([
                         'exists' => 'Người dùng không tồn tại trong nhà tổ chức này.',
                         'required' => 'Vui lòng chọn người nhận.',
@@ -105,7 +102,7 @@ class NotificationSchema
                     ->extraAttributes(['style' => 'min-height: 300px;']),
             ]);
 
-        if ($user->role === RoleUser::SUPER_ADMIN->value) {
+        if ($user->role == RoleUser::SUPER_ADMIN->value) {
             return $schema
                 ->components([
                     Wizard::make($steps),
@@ -122,7 +119,7 @@ class NotificationSchema
                 Radio::make('mode')
                     ->label('Chế độ gửi')
                     ->options(TypeSendNotification::getOptions())
-                    ->default('single')
+                    ->default(TypeSendNotification::SOME_USERS->value)
                     ->inline()
                     ->live()
                     ->validationMessages([
@@ -140,8 +137,8 @@ class NotificationSchema
                     ->searchable()
                     ->preload()
                     ->multiple()
-                    ->visible(fn(Get $get) => $get('mode') === 'single')
-                    ->required(fn(Get $get) => $get('mode') === 'single')
+                    ->visible(fn(Get $get) => $get('mode') == TypeSendNotification::SOME_USERS->value)
+                    ->required(fn(Get $get) => $get('mode') == TypeSendNotification::SOME_USERS->value)
                     ->validationMessages([
                         'exists' => 'Người dùng không tồn tại trong nhà tổ chức này.',
                         'required' => 'Vui lòng chọn người nhận.',

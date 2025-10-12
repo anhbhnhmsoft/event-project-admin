@@ -16,6 +16,7 @@ use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class CreateNotification extends CreateRecord
 {
@@ -57,14 +58,18 @@ class CreateNotification extends CreateRecord
 
         $successMessage = 'Thông báo đã được đưa vào hàng đợi để gửi thành công.';
         $errorMessage = 'Lỗi! Không thể đưa thông báo vào hàng đợi.';
-        $userIds = $data['user_ids'] ?? [];
-        if ($mode == TypeSendNotification::ALL_USERS->value) {
-            $userIds = User::query()
-                ->when($organizerId, fn($q) => $q->where('organizer_id', $organizerId))
-                ->pluck('id')->toArray();
-            $successMessage = 'Thông báo Broadcast đã được đưa vào hàng đợi để gửi thành công.';
-        }
+
         try {
+            if ($mode == TypeSendNotification::ALL_USERS->value) {
+                $userIds = User::query()
+                    ->when($organizerId, fn($q) => $q->where('organizer_id', $organizerId))
+                    ->pluck('id')
+                    ->toArray();
+            } else {
+                $userIds = $data['user_ids'] ?? [];
+            }
+
+            // Chuẩn bị payload
             $payload = new NotificationPayload(
                 title: $title,
                 description: $description,
@@ -72,7 +77,11 @@ class CreateNotification extends CreateRecord
                 notificationType: $notificationType,
             );
 
-            SendNotifications::dispatch($payload, $userIds)->onQueue('notifications');
+            //Chia nhỏ user để tránh quá tải
+            $chunkSize = 500;
+            foreach (array_chunk($userIds, $chunkSize) as $chunk) {
+                SendNotifications::dispatch($payload, $chunk)->onQueue('notifications');
+            }
 
             Notification::make()
                 ->title('Thành công')
@@ -95,6 +104,7 @@ class CreateNotification extends CreateRecord
 
         return new UserNotification();
     }
+
     protected function getRedirectUrl(): string
     {
         return static::getResource()::getUrl('index');

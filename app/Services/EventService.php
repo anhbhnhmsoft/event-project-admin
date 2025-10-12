@@ -2,15 +2,21 @@
 
 namespace App\Services;
 
-use App\Exceptions\ServiceException;
+use App\Jobs\SendEventEmail;
+use App\Jobs\SendNotifications;
 use App\Models\Event;
 use App\Models\EventArea;
 use App\Models\EventSeat;
+use App\Models\EventUserHistory;
 use App\Models\Organizer;
+use App\Models\User;
 use App\Utils\Constants\EventSeatStatus;
 use App\Utils\Constants\EventStatus;
-use Illuminate\Database\Query\Builder;
+use App\Utils\Constants\UserNotificationType;
+use App\Utils\DTO\NotificationPayload;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class EventService
 {
@@ -19,7 +25,6 @@ class EventService
         try {
             return Event::filter($filters)->sortBy($sortBy)
                 ->paginate(perPage: $limit, page: $page);
-
         } catch (\Exception $e) {
             return new LengthAwarePaginator([], 0, $limit, $page);
         }
@@ -119,26 +124,76 @@ class EventService
 
     public function checkTimeEvent(): array
     {
+        DB::beginTransaction();
         try {
             $now = now();
 
-            $eventsUpcoming = Event::where('status', EventStatus::UPCOMING->value)
+            // ---  Lấy danh sách sự kiện sắp bắt đầu ---
+            $eventsUpcoming = Event::query()
+                ->where('status', EventStatus::UPCOMING->value)
                 ->whereRaw('CONCAT(DATE(day_represent), " ", TIME(start_time)) <= ?', [$now])
-                ->update(['status' => EventStatus::ACTIVE->value]);
-                
-            foreach ( $eventsUpcoming as $event) {
-                
+                ->get();
+
+            foreach ($eventsUpcoming as $event) {
+                $event->status = EventStatus::ACTIVE->value;
+                $event->save();
+
+                // ---  Lấy danh sách user đã đặt vé hoặc xem vé ---
+                $userIds = EventUserHistory::query()
+                    ->where('event_id', $event->id)
+                    ->pluck('user_id')
+                    ->toArray();
+
+                if (empty($userIds)) {
+                    continue;
+                }
+
+                // ---  Tạo nội dung notification ---
+                $payload = new NotificationPayload(
+                    title: __('event.success.notification_title_event_start', ['name' => $event->title]),
+                    description: __('event.success.notification_desc_event_start'),
+                    data: [],
+                    notificationType: UserNotificationType::EVENT_REMINDER
+                );
+
+                // ---  Gửi push notification ---
+                SendNotifications::dispatch($payload, $userIds)->onQueue('notifications');
+
+                // ---  Lấy email của user ---
+                $emails = User::query()
+                    ->whereIn('id', $userIds)
+                    ->pluck('email')
+                    ->toArray();
+
+                // ---  Gửi email ---
+                if (!empty($emails)) {
+                    SendEventEmail::dispatch(
+                        $emails,
+                        __('event.mail.subject_event_start', ['name' => $event->title]),
+                        [
+                            'event_id'  => $event->id,
+                            'latitude'  => $event->latitude,
+                            'longitude' => $event->longitude,
+                            'map_link'  => "https://www.google.com/maps?q={$event->latitude},{$event->longitude}",
+                        ]
+                    )->onQueue('emails');
+                }
             }
 
-            Event::where('status', EventStatus::ACTIVE->value)
+            // Đóng sự kiện đã kết thúc ---
+            Event::query()
+                ->where('status', EventStatus::ACTIVE->value)
                 ->whereRaw('CONCAT(DATE(day_represent), " ", TIME(end_time)) < ?', [$now])
                 ->update(['status' => EventStatus::CLOSED->value]);
 
+            DB::commit();
             return [
                 'status' => true,
                 'message' => __('common.common_success.update_success')
             ];
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error("Error in checkTimeEvent: " . $e->getMessage());
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),
