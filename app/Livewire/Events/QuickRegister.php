@@ -140,6 +140,8 @@ class QuickRegister extends Component
         if ($this->isSubmitting) {
             return;
         }
+
+        $this->validate($this->rules(),$this->messages());
         $data = [
             'name' => $this->name,
             'email' => $this->email,
@@ -154,6 +156,11 @@ class QuickRegister extends Component
 
         $this->resultStatus = $result['status'];
 
+        if ($result['status']) {
+            $this->getSuccessMessage();
+        } else {
+            $this->getErrorMessage();
+        }
         $this->resetForm();
         $this->isSubmitting = false;
     }
