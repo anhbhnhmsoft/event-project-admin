@@ -23,6 +23,11 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\App;
 use App\Models\UserResetCode;
 use App\Mail\ResetPasswordMail;
+use App\Models\EventSeat;
+use App\Utils\Constants\EventSeatStatus;
+use App\Utils\Helper;
+use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Log;
 
 class AuthService
 {
@@ -32,7 +37,6 @@ class AuthService
             ConfigName::LINK_FACEBOOK_SUPPORT->value,
             ConfigName::LINK_ZALO_SUPPORT->value
         ])->pluck('config_value', 'config_key');
-
     }
     public function login(array $data): array
     {
@@ -49,7 +53,7 @@ class AuthService
             }
             $user->lang = $data['locate'] ?? Language::VI->value;
             $user->save();
-            $token = $user->createToken('api',expiresAt: now()->addDays(30))->plainTextToken;
+            $token = $user->createToken('api', expiresAt: now()->addDays(30))->plainTextToken;
             return [
                 'status' => true,
                 'token' => $token,
@@ -90,7 +94,7 @@ class AuthService
             return [
                 'status' => true,
             ];
-        }  catch (\Throwable $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
             return [
                 'status' => false,
@@ -104,7 +108,7 @@ class AuthService
         $user = Auth::user();
         try {
             $user->name = $data['name'];
-            $user->address= $data['address'] ?? null;
+            $user->address = $data['address'] ?? null;
             $user->phone = $data['phone'] ?? null;
             $user->introduce = $data['introduce'] ?? null;
             if (!empty($data['password'])) {
@@ -115,7 +119,7 @@ class AuthService
                 'status' => true,
                 'data' => $user
             ];
-        }catch (\Throwable $e) {
+        } catch (\Throwable $e) {
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),
@@ -134,7 +138,7 @@ class AuthService
                 type: StoragePath::AVATAR_USER_PATH,
                 id: $user->id
             ), 'public');
-            if (!$avatarPathNew){
+            if (!$avatarPathNew) {
                 throw new ServiceException(__('common.common_error.server_error'));
             }
             if ($user->avatar_path) {
@@ -248,7 +252,6 @@ class AuthService
                 'status' => true,
                 'message' => __('auth.success.password_changed'),
             ];
-
         } catch (ServiceException $e) {
             return [
                 'status' => false,
@@ -304,68 +307,104 @@ class AuthService
             ];
         }
     }
-
     public function quickRegister(array $data): array
     {
         DB::beginTransaction();
+
         try {
+            // Tạo hoặc cập nhật user
             $user = User::query()
                 ->where('email', $data['email'])
-                ->where('organizer_id',$data['organizer_id'])
+                ->where('organizer_id', $data['organizer_id'])
                 ->first();
-            // Nếu ko có thì tạo user
-            if (!$user){
+
+            if (! $user) {
                 $user = User::query()->create([
-                    'name' => trim($data['name']),
-                    'email' => $data['email'],
-                    'password' => Hash::make($data['password']),
-                    'organizer_id' => (int) $data['organizer_id'],
-                    'role' => RoleUser::CUSTOMER->value,
-                    'lang' => $data['lang'] ?? Language::VI->value,
-                    'phone' => $data['phone'],
+                    'name'           => trim($data['name']),
+                    'email'          => $data['email'],
+                    'password'       => Hash::make($data['password']),
+                    'organizer_id'   => (int) $data['organizer_id'],
+                    'role'           => RoleUser::CUSTOMER->value,
+                    'lang'           => $data['lang'] ?? Language::VI->value,
+                    'phone'          => $data['phone'],
                     'email_verified_at' => now(),
-                    'phone_verified_at' => now()
+                    'phone_verified_at' => now(),
                 ]);
-            }else{
-                // cập nhật phone cho user
-                if (!$user->phone){
-                    $user->phone = $data['phone'];
-                    $user->save();
-                }
+            } elseif (! $user->phone) {
+                $user->update(['phone' => $data['phone']]);
             }
 
-            $event = Event::query()->find($data['event_id']);
+            // Lấy event & ghế trống
+            $event = Event::query()->findOrFail($data['event_id']);
 
-            // tìm ticket cho user
+            $seat = EventSeat::query()
+                ->whereHas('area', function (Builder $q) use ($event) {
+                    $q->where('event_id', $event->id)
+                        ->where('vip', false);
+                })
+                ->where('status', EventSeatStatus::AVAILABLE->value)
+                ->whereNull('user_id')
+                ->orderBy('id')
+                ->first();
+
+            if (! $seat) {
+                DB::rollBack();
+                return [
+                    'status'  => false,
+                    'message' => __('event.validation.no_available_seat'),
+                ];
+            }
+
+            // Xác định trạng thái vé
+            $status = $event->status == EventStatus::ACTIVE->value
+                ? EventUserHistoryStatus::PARTICIPATED->value
+                : EventUserHistoryStatus::BOOKED->value;
+
+            //  Lấy vé cũ (nếu có)
             $history = EventUserHistory::query()
-                ->where('event_id',$event->id)
+                ->where('event_id', $event->id)
                 ->where('user_id', $user->id)
                 ->first();
-            // Nếu sự kiện đang diễn ra thì đó là checkin
-            if ($event->status == EventStatus::ACTIVE->value){
-                $status = EventUserHistoryStatus::PARTICIPATED->value;
-            }else{
-                $status = EventUserHistoryStatus::BOOKED->value;
+
+            // Tạo ticket code mới
+            do {
+                $ticketCode = 'TICKET-' . Helper::getTimestampAsId();
+            } while (EventUserHistory::where('ticket_code', $ticketCode)->exists());
+
+            if (! $history) {
+                //Tạo vé mới
+                EventUserHistory::query()->create([
+                    'event_id'      => $event->id,
+                    'user_id'       => $user->id,
+                    'status'        => $status,
+                    'event_seat_id' => $seat->id,
+                    'ticket_code'   => $ticketCode,
+                ]);
+            } else {
+                //  Cập nhật vé cũ (nếu có)
+                $history->update([
+                    'status'        => $status,
+                    'event_seat_id' => $seat->id,
+                    'ticket_code'   => $ticketCode,
+                ]);
             }
-            if (!$history){
-                // Đăng ký ticket cho user
-                EventUserHistory::query()->create(
-                    [
-                        'event_id' => $event->id,
-                        'user_id' => $user->id,
-                        'status' => $status,
-                    ],
-                );
-            }elseif ($history->status === EventUserHistoryStatus::SEENED->value){
-                $history->status = $status;
-                $history->save();
-            }
+
+            // Cập nhật ghế cho user
+            $seat->update([
+                'user_id' => $user->id,
+                'status'  => EventSeatStatus::BOOKED->value,
+            ]);
+
             DB::commit();
+
             return [
                 'status' => true,
+                'message' => __('event.validation.success'),
             ];
         } catch (\Throwable $e) {
             DB::rollBack();
+            Log::error("Quick register failed: " . $e->getMessage());
+
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),

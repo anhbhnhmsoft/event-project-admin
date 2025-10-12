@@ -15,32 +15,31 @@ use Illuminate\Support\Facades\Log;
 
 class EventUserHistoryService
 {
-    public function createEventHistoryUseForAdmin(array $data)
+    public function createTicket(Event $event, int $userId, int $seatId): array
     {
         try {
             do {
                 $ticketCode = 'TICKET-' . Helper::getTimestampAsId();
             } while (EventUserHistory::where('ticket_code', $ticketCode)->exists());
 
-            $ticket =  EventUserHistory::create([
-                'event_seat_id' => $data['event_seat_id'],
-                'user_id'       => $data['user_id'],
+            $ticket = EventUserHistory::create([
+                'event_id'      => $event->id,
+                'event_seat_id' => $seatId,
+                'user_id'       => $userId,
                 'ticket_code'   => $ticketCode,
                 'status'        => EventUserHistoryStatus::BOOKED->value,
-                'event_id'      => $data['event_id'],
             ]);
 
-            return [
-                'status' => true,
-                'data' => $ticket,
-            ];
-        } catch (Exception $e) {
-            Log::debug('Create Event History For User Failed : ' . $e->getMessage());
-            return [
-                'status'  => false,
-                'message' => $e->getMessage(),
-            ];
+            return ['status' => true, 'data' => $ticket];
+        } catch (\Exception $e) {
+            Log::error("Create ticket failed: " . $e->getMessage());
+            return ['status' => false, 'message' => 'Không thể tạo vé.'];
         }
+    }
+
+    public function deleteTicketBySeat(int $seatId): void
+    {
+        EventUserHistory::where('event_seat_id', $seatId)->delete();
     }
 
     public function createEventHistory(array $data, int $userId, int $organizerId): array

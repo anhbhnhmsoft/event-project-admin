@@ -12,6 +12,7 @@ use App\Utils\Constants\RoleUser;
 use App\Utils\Constants\EventUserHistoryStatus;
 use Livewire\Component;
 use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Livewire\WithPagination;
 
@@ -159,83 +160,74 @@ class SeatsEvent extends Component
 
     public function removeSeatUser()
     {
-        if (! $this->seatInfo) {
-            return;
+        if (! $this->seatInfo) return;
+
+        DB::beginTransaction();
+        try {
+            $seat = $this->seatService->getSeatById($this->seatInfo['id']);
+            $this->eventUserHistoryService->deleteTicketBySeat($seat->id);
+
+            $unassignResult = $this->seatService->unassignSeat($seat);
+
+            if (! $unassignResult['status']) {
+                DB::rollBack();
+                Notification::make()->title($unassignResult['message'])->danger()->send();
+                return;
+            }
+
+            DB::commit();
+            Notification::make()->title('Huỷ vé và trả ghế thành công!')->success()->send();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Remove seat + ticket failed: " . $e->getMessage());
+            Notification::make()->title('Có lỗi xảy ra khi huỷ vé hoặc ghế.')->danger()->send();
         }
-        $this->seatInfo['user_id'] = null;
-        $this->seatInfo['status'] = EventSeatStatus::AVAILABLE->value;
-        $result = $this->seatService->updateSeat($this->seatInfo);
+
         $this->seatUser = null;
         $this->loadAreas();
-        if ($result) {
-            return  Notification::make()
-                ->title('Cập nhật thành công!')
-                ->success()
-                ->send();
-        } else {
-            return  Notification::make()
-                ->title('Cập nhật không thành công!')
-                ->danger()
-                ->send();
-        }
     }
 
     public function assignSeatToUser()
     {
-        if ($this->selectedSeat && $this->selectedSeatUser) {
-            $alreadyAssigned = in_array(
-                $this->selectedSeatUser,
-                $this->seatService->getAssignedUserIds($this->event)
+        if (! $this->selectedSeat || ! $this->selectedSeatUser) return;
+
+        DB::beginTransaction();
+        try {
+            $seatResult = $this->seatService->assignSeatToUser(
+                $this->event,
+                $this->selectedSeat['id'],
+                $this->selectedSeatUser
             );
 
-            if ($alreadyAssigned) {
-                Notification::make()
-                    ->title('Người dùng này đã có ghế trong sự kiện!')
-                    ->danger()
-                    ->send();
+            if (! $seatResult['status']) {
+                DB::rollBack();
+                Notification::make()->title($seatResult['message'])->danger()->send();
                 return;
             }
 
-            $this->selectedSeat['status'] = EventSeatStatus::BOOKED->value;
-            $this->selectedSeat['user_id'] = $this->selectedSeatUser;
+            $ticketResult = $this->eventUserHistoryService->createTicket(
+                $this->event,
+                $this->selectedSeatUser,
+                $this->selectedSeat['id']
+            );
 
-            if (! $this->seatService->updateSeat($this->selectedSeat)) {
-                Notification::make()
-                    ->title('Có lỗi xảy ra, vui lòng thử lại sau!')
-                    ->danger()
-                    ->send();
-                return;
-            }
-            $data = [
-                'event_id'      => $this->event->id,
-                'user_id'       => $this->selectedSeat['user_id'],
-                'event_seat_id' => $this->selectedSeat['id'],
-            ];
-
-            if (!$this->eventUserHistoryService->createEventHistoryUseForAdmin($data)['status']) {
-                Notification::make()
-                    ->title('Có lỗi xảy ra, vui lòng thử lại sau!')
-                    ->danger()
-                    ->send();
+            if (! $ticketResult['status']) {
+                DB::rollBack();
+                Notification::make()->title($ticketResult['message'])->danger()->send();
                 return;
             }
 
-            $this->selectedSeat = null;
-            $this->selectedSeatUser = null;
-            $this->loadAreas();
-
-            if ($this->selectedArea) {
-                $this->selectedArea = collect($this->areas)->firstWhere('id', $this->selectedArea['id']);
-            }
-
-            Notification::make()
-                ->title('Ghế đã được gán cho người dùng!')
-                ->success()
-                ->send();
-
-            $this->hiddenDetailSeat = false;
-            $this->selectedSeatUser = null;
+            DB::commit();
+            Notification::make()->title('Ghế và vé đã được tạo thành công!')->success()->send();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Assign seat + ticket failed: " . $e->getMessage());
+            Notification::make()->title('Có lỗi xảy ra khi tạo ghế hoặc vé.')->danger()->send();
         }
+
+        $this->reset(['selectedSeat', 'selectedSeatUser']);
+        $this->loadAreas();
+        $this->hiddenDetailSeat = false;
     }
 
     public function closeDetailSeat()
