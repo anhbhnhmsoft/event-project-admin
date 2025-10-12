@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title')</title>
     @vite(['resources/css/app.css'])
+    <link rel="icon" type="image/svg+xml" href="/images/logo-michec-icon.png">
     @livewireStyles
 </head>
 
