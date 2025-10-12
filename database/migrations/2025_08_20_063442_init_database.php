@@ -87,7 +87,7 @@ return new class extends Migration
             $table->tinyInteger('status')->comment('Trạng thái gói: enum định nghĩa MembershipUserStatus');
             $table->timestamps();
         });
-        
+
         // Tạo bảng transactions để lưu trữ các giao dịch của người dùng
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
@@ -270,7 +270,7 @@ return new class extends Migration
             $table->foreignId('event_game_id')->constrained('event_games')->cascadeOnDelete();
             $table->string('name')->comment('Tên món quà');
             $table->text('description')->nullable()->comment('Mô tả món quà');
-            $table->text('image')->comment('Hình ảnh món quà');
+            $table->text('image')->nullable()->comment('Hình ảnh món quà');
             $table->integer('quantity')->comment('Số lượng món quà');
             $table->softDeletes();
             $table->timestamps();
