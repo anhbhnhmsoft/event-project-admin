@@ -56,7 +56,7 @@ class NotificationTable
                     ->modalHeading('Danh sách người nhận')
                     ->modalWidth('4xl')
                     ->modalSubmitAction(false)
-                    ->modalContent(fn ($record) => view('filament.modals.notifications.recipients-livewire', [
+                    ->modalContent(fn ($record) => view('filament.modals.notifications.recipients', [
                         'record' => $record,
                     ]))
                     ->color('primary'),
