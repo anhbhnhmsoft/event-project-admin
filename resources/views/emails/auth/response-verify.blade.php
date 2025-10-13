@@ -49,7 +49,7 @@
                     <div class="absolute inset-0 {{ $color['bg'] }} {{ $color['dark_bg'] }} rounded-full blur-xl opacity-50 animate-pulse"></div>
                     <div class="relative rounded-full {{ $color['bg'] }} {{ $color['dark_bg'] }} p-4 sm:p-5 border-2 {{ $color['border'] }} dark:border-opacity-50">
                         @if ($status === 'success')
-                            <svg class="w-10 h-10 sm:w-12 sm:h-12 {{ $color['icon'] }} {{ $color['dark_text'] }} animate-bounce"
+                            <svg class="w-10 h-10 sm:w-12 sm:h-12 {{ $color['icon'] }} {{ $color['dark_text'] }}"
                                  xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18 .393 8.393 1.807 6.979z"/>
                             </svg>
