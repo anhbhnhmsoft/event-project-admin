@@ -331,8 +331,12 @@ class AuthService
                     'email_verified_at' => now(),
                     'phone_verified_at' => now(),
                 ]);
+                $action = 'created';
             } elseif (! $user->phone) {
-                $user->update(['phone' => $data['phone'], 'password' => Hash::make($data['phone'])]);
+                $user->update(['phone' => $data['phone']]);
+                $action = 'updated';
+            } else {
+                $action = 'rebooked';
             }
 
             // Lấy event & ghế trống
@@ -406,8 +410,9 @@ class AuthService
             DB::commit();
 
             return [
-                'status' => true,
+                'status'  => true,
                 'message' => __('event.validation.success'),
+                'action'  => $action
             ];
         } catch (\Throwable $e) {
             DB::rollBack();
