@@ -9,8 +9,8 @@ use App\Utils\Constants\TypeSendNotification;
 use App\Utils\Constants\UserNotificationType;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Radio;
-use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Components\Wizard\Step;
@@ -92,7 +92,7 @@ class NotificationSchema
                     ->validationMessages([
                         'required' => 'Vui lòng nhập tiêu đề.',
                     ]),
-                RichEditor::make('description')
+                Textarea::make('description')
                     ->label('Mô tả')
                     ->required()
                     ->columnSpanFull()
@@ -157,7 +157,7 @@ class NotificationSchema
                     ->validationMessages([
                         'required' => 'Vui lòng nhập tiêu đề.',
                     ]),
-                RichEditor::make('description')
+                Textarea::make('description')
                     ->label('Mô tả')
                     ->required()
                     ->columnSpanFull()
