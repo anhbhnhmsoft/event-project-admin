@@ -30,6 +30,8 @@ class QuickRegister extends Component
 
     public $resultStatus = false;
 
+    public $actionType = '';
+
     #[Url]
     public $token = '';
 
@@ -46,9 +48,6 @@ class QuickRegister extends Component
                 'required',
                 'email:rfc,dns',
                 'max:255',
-                Rule::unique('users', 'email')->where(function ($query) {
-                    return $query->where('organizer_id', $this->organizer['id']);
-                })
             ],
             'phone' => [
                 'required',
@@ -164,9 +163,22 @@ class QuickRegister extends Component
 
     public function getSuccessMessage()
     {
+        if ($this->actionType === 'created') {
+            return $this->lang === 'vi'
+                ? 'Tài khoản và vé sự kiện đã được tạo thành công! Vui lòng sử dụng thông tin đăng nhập bên dưới.'
+                : 'Your account and event ticket have been successfully created! Please use the login details below.';
+        }
+
+        if ($this->actionType === 'updated') {
+            return $this->lang === 'vi'
+                ? 'Thông tin và vé của bạn đã được cập nhật! Mật khẩu đăng nhập của bạn đã được đặt lại là SỐ ĐIỆN THOẠI.'
+                : 'Your information and ticket have been updated! Your login password has been reset to your PHONE NUMBER.';
+        }
+
+        // rebooked/mặc định
         return $this->lang === 'vi'
-            ? 'Đăng ký thành công!'
-            : 'Registration successful! ';
+            ? 'Bạn đã đăng ký sự kiện thành công! Chi tiết vé của bạn đã được cập nhật.'
+            : 'You have successfully registered for the event! Your ticket details have been updated.';
     }
 
     public function getErrorMessage(string $message)
