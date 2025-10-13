@@ -153,6 +153,7 @@ class QuickRegister extends Component
         $this->resultStatus = $result['status'];
 
         if ($result['status']) {
+            $this->actionType = $result['action'] ?? 'rebooked';
             $this->getSuccessMessage();
         } else {
             $this->getErrorMessage($result['message']);
