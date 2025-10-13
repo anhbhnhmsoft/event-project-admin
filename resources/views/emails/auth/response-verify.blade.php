@@ -60,14 +60,6 @@
             {{-- Title & Message --}}
             <h2 class="text-xl font-semibold text-gray-800 mb-2">{{ $color['title'] }}</h2>
             <p class="text-gray-600 text-sm mb-6">{{ $message ?? __('Không có thông tin xác thực.') }}</p>
-
-            {{-- Back to login --}}
-            <div class="mt-4">
-                <a href="{{ route('login') }}"
-                    class="inline-block {{ $color['button'] }} text-white font-medium px-6 py-2 rounded-lg transition">
-                    {{ __('Quay lại đăng nhập') }}
-                </a>
-            </div>
         </div>
     </div>
 @endsection
