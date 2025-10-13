@@ -73,7 +73,6 @@ class QuickRegister extends Component
                 'name.regex' => 'Họ và tên chỉ được chứa chữ cái và khoảng trắng.',
                 'email.required' => 'Email là bắt buộc.',
                 'email.email' => 'Email không hợp lệ.',
-                'email.unique' => 'Email này đã được sử dụng.',
                 'phone.required' => 'Số điện thoại là bắt buộc.',
                 'phone.min' => 'Số điện thoại phải có ít nhất 10 số.',
                 'phone.max' => 'Số điện thoại không được quá 15 số.',
@@ -89,7 +88,6 @@ class QuickRegister extends Component
             'name.regex' => 'Name may only contain letters and spaces.',
             'email.required' => 'Email is required.',
             'email.email' => 'Please enter a valid email address.',
-            'email.unique' => 'This email is already taken.',
             'phone.required' => 'Phone number is required.',
             'phone.min' => 'Phone number must be at least 10 digits.',
             'phone.max' => 'Phone number may not be greater than 15 digits.',
@@ -147,7 +145,6 @@ class QuickRegister extends Component
             'email' => $this->email,
             'phone' => $this->phone,
             'lang' => $this->lang,
-            'password' => $this->phone,
             'organizer_id' => $this->organizer['id'],
             'event_id' => $this->event['id'],
         ];
@@ -159,7 +156,7 @@ class QuickRegister extends Component
         if ($result['status']) {
             $this->getSuccessMessage();
         } else {
-            $this->getErrorMessage();
+            $this->getErrorMessage($result['message']);
         }
         $this->resetForm();
         $this->isSubmitting = false;
@@ -172,11 +169,11 @@ class QuickRegister extends Component
             : 'Registration successful! ';
     }
 
-    public function getErrorMessage()
+    public function getErrorMessage(string $message)
     {
-        return $this->lang === 'vi'
+        return empty($message) ? ($this->lang === 'vi'
             ? 'Đã xảy ra lỗi trong quá trình đăng ký. Vui lòng thử lại.'
-            : 'An error occurred during registration. Please try again.';
+            : 'An error occurred during registration. Please try again.') : $message;
     }
 
     private function resetForm()

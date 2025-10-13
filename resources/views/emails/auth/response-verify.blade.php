@@ -40,7 +40,7 @@
 
             {{-- Logo --}}
             <div class="flex justify-center mb-8">
-                <img src="{{ asset('images/logo-michec.png') }}" alt="MICHEC" class="h-10 sm:h-12 object-contain">
+                <img src="{{ asset('images/logo-michec.png') }}" alt="MICHEC" class="h-16 sm:h-12 object-contain">
             </div>
 
             {{-- Icon with animation --}}

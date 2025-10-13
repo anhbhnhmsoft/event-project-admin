@@ -307,6 +307,7 @@ class AuthService
             ];
         }
     }
+
     public function quickRegister(array $data): array
     {
         DB::beginTransaction();
@@ -322,7 +323,7 @@ class AuthService
                 $user = User::query()->create([
                     'name'           => trim($data['name']),
                     'email'          => $data['email'],
-                    'password'       => Hash::make($data['password']),
+                    'password'       => Hash::make($data['phone']),
                     'organizer_id'   => (int) $data['organizer_id'],
                     'role'           => RoleUser::CUSTOMER->value,
                     'lang'           => $data['lang'] ?? Language::VI->value,
@@ -331,7 +332,7 @@ class AuthService
                     'phone_verified_at' => now(),
                 ]);
             } elseif (! $user->phone) {
-                $user->update(['phone' => $data['phone']]);
+                $user->update(['phone' => $data['phone'], 'password' => Hash::make($data['phone'])]);
             }
 
             // Lấy event & ghế trống
@@ -345,6 +346,7 @@ class AuthService
                 ->where('status', EventSeatStatus::AVAILABLE->value)
                 ->whereNull('user_id')
                 ->orderBy('id')
+                ->lockForUpdate()
                 ->first();
 
             if (! $seat) {
@@ -366,12 +368,11 @@ class AuthService
                 ->where('user_id', $user->id)
                 ->first();
 
-            // Tạo ticket code mới
-            do {
-                $ticketCode = 'TICKET-' . Helper::getTimestampAsId();
-            } while (EventUserHistory::where('ticket_code', $ticketCode)->exists());
-
             if (! $history) {
+                // Tạo ticket code mới
+                do {
+                    $ticketCode = 'TICKET-' . Helper::getTimestampAsId();
+                } while (EventUserHistory::where('ticket_code', $ticketCode)->exists());
                 //Tạo vé mới
                 EventUserHistory::query()->create([
                     'event_id'      => $event->id,
@@ -385,8 +386,15 @@ class AuthService
                 $history->update([
                     'status'        => $status,
                     'event_seat_id' => $seat->id,
-                    'ticket_code'   => $ticketCode,
                 ]);
+
+                // Giải phóng ghế cũ (nếu có)
+                if ($history && $history->event_seat_id && $history->event_seat_id != $seat->id) {
+                    EventSeat::where('id', $history->event_seat_id)->update([
+                        'user_id' => null,
+                        'status'  => EventSeatStatus::AVAILABLE->value,
+                    ]);
+                }
             }
 
             // Cập nhật ghế cho user
