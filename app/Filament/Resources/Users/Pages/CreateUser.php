@@ -41,9 +41,18 @@ class CreateUser extends CreateRecord
 
     protected function handleRecordCreation(array $data): Model
     {
-        if(!empty($data['new_password'])) {
+        if (!empty($data['new_password'])) {
             $data['password'] = $data['new_password'];
         }
+
+        if (!empty($data['verify_email'])) {
+            $data['email_verified_at'] = now();
+        } else {
+            $data['email_verified_at'] = null;
+        }
+
+        unset($data['verify_email'], $data['new_password'], $data['new_password_confirmation']);
+
         return static::getModel()::create($data);
     }
 }

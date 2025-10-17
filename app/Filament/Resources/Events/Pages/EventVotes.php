@@ -42,9 +42,9 @@ class EventVotes extends Page implements HasTable
 
     protected static string $resource = EventResource::class;
 
-    protected static ?string $title = 'Quản lý khảo sát / bình chọn sự kiện';
-    protected static ?string $modelLabel = 'Khảo sát';
-    protected static ?string $pluralModelLabel = 'Khảo sát / Bình chọn';
+// protected static ?string $title = __('event.pages.votes_title');
+    // protected static ?string $modelLabel = 'Khảo sát';
+    // protected static ?string $pluralModelLabel = 'Khảo sát / Bình chọn';
 
     protected string $view = 'filament.pages.event-votes';
 

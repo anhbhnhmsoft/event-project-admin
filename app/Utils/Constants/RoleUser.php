@@ -37,4 +37,15 @@ enum RoleUser: int
             self::SPEAKER->value
         ]);
     }
+
+    public static function getLabel(string $value): string
+    {
+        return match ($value) {
+            self::SUPER_ADMIN->value => 'Super Admin',
+            self::ADMIN->value       => 'Admin',
+            self::SPEAKER->value     => 'Diễn giả',
+            self::CUSTOMER->value    => 'Khán giả',
+            default                  => 'Không xác định',
+        };
+    }
 }
