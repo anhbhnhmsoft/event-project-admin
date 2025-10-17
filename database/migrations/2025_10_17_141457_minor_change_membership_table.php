@@ -16,6 +16,12 @@ return new class extends Migration
                 ->default(1)
                 ->comment('Loại gói membership, Lưu trong enum MembershipType')
                 ->after('id');
+
+            $table->foreignId('organizer_id')
+                ->constrained('organizers')
+                ->onDelete('cascade')
+                ->comment('Khóa ngoại tới bảng organizer')
+                ->after('type');
         });
     }
 
@@ -25,6 +31,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('membership', function (Blueprint $table) {
+            $table->dropForeign(['organizer_id']);
+            $table->dropColumn('organizer_id');
+
             $table->dropColumn('type');
         });
     }
