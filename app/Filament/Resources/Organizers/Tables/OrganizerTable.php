@@ -20,6 +20,7 @@ class OrganizerTable
             ImageColumn::make('image')
                 ->label('Ảnh')
                 ->disk('public')
+                ->width(100)
                 ->state(function ($record) {
                     return !empty($record->image)
                         ? Helper::generateURLImagePath($record->image)
