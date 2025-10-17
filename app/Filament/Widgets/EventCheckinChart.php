@@ -45,7 +45,7 @@ class EventCheckinChart extends ChartWidget
         if (!$this->event_id) {
             return [
                 'datasets' => [],
-                'labels' => ['Vui lòng chọn sự kiện để thống kê dữ liệu'],
+                'labels' => [__('common.resource.dashboard.chart.placeholder_no_event')],
             ];
         }
 
@@ -62,13 +62,13 @@ class EventCheckinChart extends ChartWidget
             return [
                 'datasets' => [
                     [
-                        'label' => 'Số check-in',
+                        'label' => __('common.resource.dashboard.chart.label_checkin'),
                         'data' => $data['checkinData'] ?? [],
                         'backgroundColor' => '#4ade80',
                         'borderColor' => '#4ade80',
                     ],
                     [
-                        'label' => 'Số đăng ký',
+                        'label' => __('common.resource.dashboard.chart.label_registration'),
                         'data' => $data['registrationData'] ?? [],
                         'backgroundColor' => '#3b82f6',
                         'borderColor' => '#3b82f6',
@@ -96,7 +96,11 @@ class EventCheckinChart extends ChartWidget
 
     public function getHeading(): ?string
     {
-        $type = $this->chart_type == UnitDurationType::HOUR->value ? 'Theo Giờ' : 'Theo Ngày';
-        return 'Thống kê check-in & đăng ký ' . $type;
+        $typeKey = $this->chart_type == UnitDurationType::HOUR->value
+            ? 'common.resource.dashboard.chart.type_hour'
+            : 'common.resource.dashboard.chart.type_day';
+
+        $type = __($typeKey);
+        return __('common.resource.dashboard.chart.heading') . ' ' . $type;
     }
 }

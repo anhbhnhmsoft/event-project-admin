@@ -26,7 +26,7 @@ class EditEvent extends EditRecord
 {
     protected static string $resource = EventResource::class;
 
-    protected static ?string $title = 'Sửa sự kiện';
+    // protected static ?string $title = __('event.pages.edit_title');
 
     public array $filesMarkedForDeletion = [];
 
@@ -434,12 +434,12 @@ class EditEvent extends EditRecord
     {
         return [
             Action::make('seats-manager')
-                ->label('Quản lý chỗ ngồi')
+                ->label(__('event.general.save_changes'))
                 ->icon('heroicon-o-building-office')
                 ->url(fn() => static::getResource()::getUrl('seats-manage', ['record' => $this->record]))
                 ->color('success'),
             DeleteAction::make()
-                ->label('Xóa'),
+                ->label(__('event.general.delete')),
         ];
     }
 
@@ -472,12 +472,12 @@ class EditEvent extends EditRecord
 
 
             \Filament\Notifications\Notification::make()
-                ->title('Đã xóa file')
+                ->title(__('event.general.delete_file_success'))
                 ->success()
                 ->send();
         } catch (\Throwable $e) {
             \Filament\Notifications\Notification::make()
-                ->title('Lỗi xóa file')
+                ->title(__('event.general.delete_file_error'))
                 ->body($e->getMessage())
                 ->danger()
                 ->send();

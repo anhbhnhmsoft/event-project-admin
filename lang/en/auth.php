@@ -51,4 +51,12 @@ return [
         'email_error' => 'Email does not exist in the system',
         'email_unique' => 'Email already exists',
     ],
+    'login' => [
+        'heading'           => 'Login',
+        'remember_me'       => 'Remember login',
+        'email'             => 'Email',
+        'password'          => 'Password',
+        'organizer'         => 'Organizer',
+        'select_organizer'  => 'Select Organizer'
+    ]
 ];

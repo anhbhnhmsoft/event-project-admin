@@ -1,1 +1,1 @@
-var i=()=>({isSticky:!1,enableSticky(){this.isSticky=this.$el.getBoundingClientRect().top>0},disableSticky(){this.isSticky=!1}});export{i as default};
+var o=()=>({isSticky:!1,init(){this.evaluatePageScrollPosition()},evaluatePageScrollPosition(){let i=this.$el.getBoundingClientRect(),t=i.top>window.innerHeight,e=i.top<window.innerHeight&&i.bottom>window.innerHeight;this.isSticky=t||e}});export{o as default};
