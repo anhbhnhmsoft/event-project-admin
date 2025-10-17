@@ -2,6 +2,7 @@
 
 namespace App\Utils;
 
+use App\Utils\Constants\RoleUser;
 use Carbon\Carbon;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Crypt;
@@ -103,5 +104,23 @@ final class Helper
         $dataString = urldecode(http_build_query($data));
 
         return hash_hmac('sha256', $dataString, $key);
+    }
+
+    public static function checkSuperAdmin(): bool
+    {
+        if (auth()->check()) {
+            $user = auth()->user();
+            return $user->role === RoleUser::SUPER_ADMIN->value;
+        }
+        return false;
+    }
+
+    public static function checkAdmin(): bool
+    {
+        if (auth()->check()) {
+            $user = auth()->user();
+            return in_array($user->role, [RoleUser::SUPER_ADMIN->value, RoleUser::ADMIN->value]);
+        }
+        return false;
     }
 }

@@ -13,6 +13,7 @@ use App\Filament\Resources\Events\Schemas\EventForm;
 use App\Filament\Resources\Events\Tables\EventsTable;
 use App\Models\Event;
 use App\Utils\Constants\RoleUser;
+use App\Utils\Helper;
 use BackedEnum;
 use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
@@ -43,8 +44,7 @@ class EventResource extends Resource
 
     public static function canAccess(): bool
     {
-        $user = Auth::user();
-        return $user->role === RoleUser::SUPER_ADMIN->value || $user->role === RoleUser::ADMIN->value || $user->role === RoleUser::SPEAKER->value;
+        return Helper::checkAdmin();
     }
 
     public static function getEloquentQuery(): Builder
@@ -52,10 +52,10 @@ class EventResource extends Resource
         $query = parent::getEloquentQuery();
         $user = Auth::user();
 
-        if ($user->role === RoleUser::SUPER_ADMIN->value) {
+        // Nếu là super admin thì không lọc
+        if (Helper::checkSuperAdmin()) {
             return $query;
         }
-
         return $query->where('organizer_id', $user->organizer_id);
     }
 
@@ -74,8 +74,8 @@ class EventResource extends Resource
             'edit' => EditEvent::route('/{record}/edit'),
             'seats-manage' => SeatsEvent::route('/{record}/seats'),
             'comments-manage' => EventComments::route('/{record}/comments'),
-            'games-manage'     => EventGames::route('/{record}/games'),
-            'votes-manage'     => EventVotes::route('/{record}/votes'),
+            'games-manage' => EventGames::route('/{record}/games'),
+            'votes-manage' => EventVotes::route('/{record}/votes'),
         ];
     }
 

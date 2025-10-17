@@ -183,6 +183,9 @@ return new class extends Migration
             $table->foreign('ward_code')->references('code')->on('wards')->cascadeOnDelete();
             $table->decimal('latitude', 10, 6)->comment('Vĩ độ');
             $table->decimal('longitude', 10, 6)->comment('Kinh độ');
+            $table->boolean('free_to_join')
+                ->default(true)
+                ->comment('Sự kiện miễn phí tham gia hay không');
             $table->softDeletes();
             $table->timestamps();
         });
@@ -294,6 +297,9 @@ return new class extends Migration
             $table->bigInteger('capacity')->comment('Số lượng ghế trong khu vực');
             $table->foreignId('event_id')->constrained()->cascadeOnDelete();
             $table->boolean('vip')->default(false);
+            $table->string('price')
+                ->nullable()
+                ->comment('Giá vé khu vực');
             $table->softDeletes();
             $table->timestamps();
         });
@@ -386,7 +392,6 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->softDeletes();
             $table->timestamps();
-            $table->index('user_id');
         });
 
         // Tạo bảng event_polls để lưu trữ các cuộc khảo sát/bình chọn
