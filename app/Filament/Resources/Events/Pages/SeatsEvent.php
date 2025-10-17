@@ -14,9 +14,11 @@ class SeatsEvent extends Page
 
     protected string $view = 'filament.pages.seats-event';
 
-    protected static ?string $title = 'Quản lý Khu vực & Ghế ngồi';
+    // Đã dịch: 'Quản lý Khu vực & Ghế ngồi'
+    // protected static ?string $title = __('event.pages.seats_title');
 
-    protected static ?string $navigationLabel = 'Sơ đồ chỗ ngồi';
+    // Đã dịch: 'Sơ đồ chỗ ngồi'
+    // protected static ?string $navigationLabel = __('event.pages.seats_nav_label');
 
     public function mount(int|string $record): void
     {

@@ -10,8 +10,16 @@ use Illuminate\Support\Facades\Auth;
 class Config extends Page
 {
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-cog-6-tooth';
-    protected static ?string $navigationLabel = 'Cấu hình';
-    protected static ?string $title = 'Cấu hình';
+
+    public static function navigationLabel(): string
+    {
+        return __('common.resource.setting.name');
+    }
+
+    public static function title(): string
+    {
+        return __('common.resource.setting.name');
+    }
     protected static ?int $navigationSort = 9999;
     protected string $view = 'filament.pages.config';
 

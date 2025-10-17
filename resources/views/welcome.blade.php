@@ -4,13 +4,32 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>KAMNEX - Hệ thống thiết bị phòng họp trực tuyến</title>
+
+    <title>MICHEC: Hệ thống Tổ chức Sự kiện Toàn diện | Đăng ký, Check-in, Tương tác</title>
+    <meta name="description"
+        content="MICHEC là nền tảng quản lý sự kiện số hóa từ A-Z, giúp tối ưu hóa quy trình lập kế hoạch, đăng ký, check-in QR/Face Recognition và tương tác khách mời. Yêu cầu demo ngay!">
+    <meta name="keywords"
+        content="hệ thống tổ chức sự kiện, quản lý sự kiện, phần mềm check-in sự kiện, đăng ký sự kiện, event management system, MICHEC">
+    <meta name="author" content="Michec Team">
+
+    <meta property="og:title" content="MICHEC: Hệ thống Tổ chức Sự kiện Toàn diện | Tối ưu hóa A-Z">
+    <meta property="og:description"
+        content="Số hóa mọi quy trình sự kiện: đăng ký tự động, check-in nhanh chóng, tương tác trực tiếp và phân tích chuyên sâu. Tăng trải nghiệm khách mời, giảm chi phí vận hành.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://michec.vn/">
+    <meta property="og:image" content="/logo-michec.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@michec">
+    <meta name="twitter:title" content="MICHEC: Hệ thống Tổ chức Sự kiện Toàn diện | Đăng ký, Check-in, Tương tác">
+    <meta name="twitter:description"
+        content="Tối ưu hóa lập kế hoạch, đăng ký, check-in QR/Face Recognition, tương tác và báo cáo sự kiện với nền tảng MICHEC.">
+    <meta name="twitter:image" content="/logo-michec.png">
+
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link rel="icon"
-        href="https://kamnex.com/wp-content/uploads/2024/05/cropped-f8cb1fdf-4b62-4037-ac5b-8d7474a36c41-32x32.png"
-        sizes="32x32">
+    <link rel="icon" href="/images/logo-michec-icon.png" sizes="32x32">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700" rel="stylesheet" />
     <style>
+        /* GIỮ NGUYÊN CSS CỦA BẠN */
         * {
             margin: 0;
             padding: 0;
@@ -240,58 +259,69 @@
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">KAM<span>NEX</span></div>
-            <div class="tagline">Hệ thống thiết bị phòng họp trực tuyến</div>
+            <div class="logo">MI<span>CHEC</span></div>
+            <div class="tagline">Hệ thống Tổ chức & Quản lý Sự kiện Toàn diện</div>
         </div>
 
         <div class="content">
             <div class="left-section">
-                <h1>Giải pháp phòng họp thông minh cho doanh nghiệp của bạn</h1>
-                <p>KAMNEX cung cấp các thiết bị và giải pháp hiện đại trong lĩnh vực hội nghị trực tuyến, phòng họp
-                    thông minh, và quản lý giáo dục.</p>
+                <h1>Tối ưu hóa mọi sự kiện, từ A đến Z, với MICHEC</h1>
+                <p>MICHEC là nền tảng quản lý sự kiện chuyên nghiệp, giúp doanh nghiệp và tổ chức số hóa toàn bộ quy
+                    trình: từ lập kế hoạch, đăng ký, check-in, đến tương tác và đo lường hiệu quả sau sự kiện. Tăng
+                    cường trải nghiệm khách mời và tiết kiệm tối đa chi phí tổ chức.</p>
 
                 <div class="features">
                     <div class="feature">
                         <div class="feature-icon">✓</div>
-                        <div class="feature-text">Hội nghị trực tuyến chuyên nghiệp (Video conferencing)</div>
+                        <div class="feature-text">
+                            **Quản lý Đăng ký & Bán vé:** Tạo Landing Page và cổng đăng ký, bán vé tự động.
+                        </div>
                     </div>
                     <div class="feature">
                         <div class="feature-icon">✓</div>
-                        <div class="feature-text">Thiết bị âm thanh hội thảo chất lượng cao</div>
+                        <div class="feature-text">
+                            **Check-in Nhanh chóng:** Hệ thống QR Code, Face Recognition hoặc NFC cho tốc độ check-in
+                            tức thì.
+                        </div>
                     </div>
                     <div class="feature">
                         <div class="feature-icon">✓</div>
-                        <div class="feature-text">Hệ thống âm thanh thông báo (PA system)</div>
+                        <div class="feature-text">
+                            **Tương tác Trực tiếp:** Tính năng Q&A, Poll/Vote và Mini Game để kết nối khán giả.
+                        </div>
                     </div>
                     <div class="feature">
                         <div class="feature-icon">✓</div>
-                        <div class="feature-text">Lớp học thông minh với phần mềm quản lý</div>
+                        <div class="feature-text">
+                            **Phân tích & Báo cáo Chuyên sâu:** Đo lường hành vi, hiệu quả ROI và dữ liệu khách mời theo
+                            thời gian thực.
+                        </div>
                     </div>
                 </div>
 
                 <div class="cta-buttons">
-                    <a href="#contact" class="btn btn-primary">Liên hệ ngay</a>
-                    <a href="#about" class="btn btn-secondary">Tìm hiểu thêm</a>
+                    <a href="#demo" class="btn btn-primary">Yêu cầu Demo ngay</a>
+                    <a href="#pricing" class="btn btn-secondary">Xem Bảng giá</a>
                 </div>
             </div>
 
             <div class="right-section">
                 <div class="card-showcase">
-                    <h3>Được tin tưởng bởi</h3>
-                    <p>Hàng trăm doanh nghiệp lớn - vừa - nhỏ trong và ngoài nước</p>
+                    <h3>Giải pháp tối ưu cho mọi loại hình sự kiện</h3>
+                    <p>Hệ thống MICHEC đã được kiểm chứng và tin dùng để tổ chức các sự kiện quy mô lớn và nhỏ.</p>
 
                     <div class="stats">
                         <div class="stat">
                             <div class="stat-number">500+</div>
-                            <div class="stat-label">Dự án triển khai</div>
+                            <div class="stat-label">Sự kiện đã tổ chức</div>
                         </div>
                         <div class="stat">
-                            <div class="stat-number">1000+</div>
-                            <div class="stat-label">Khách hàng hài lòng</div>
+                            <div class="stat-number">200K+</div>
+                            <div class="stat-label">Khách mời đã phục vụ</div>
                         </div>
                     </div>
 
-                    <div class="badge">Chứng nhận ISO 9001 & ISO/IEC 27001</div>
+                    <div class="badge">Nền tảng sự kiện số 1 Việt Nam</div>
                 </div>
             </div>
         </div>

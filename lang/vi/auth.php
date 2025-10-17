@@ -59,4 +59,12 @@ return [
         'introduce_invalid' => 'Giới thiệu bản thân không hợp lệ',
         'avatar_invalid' => "Ảnh đại diện không hợp lệ"
     ],
+    'login' => [
+        'heading'           => 'Đăng nhập',
+        'remember_me'       => 'Ghi nhớ đăng nhập',
+        'email'             => 'Địa chỉ email',
+        'password'          => 'Mật khẩu',
+        'organizer'         => 'Tổ chức',
+        'select_organizer'  => 'Chọn tổ chức'
+    ]
 ];

@@ -35,9 +35,9 @@ class EventGames extends Page implements HasTable
     use InteractsWithRecord;
     use InteractsWithTable;
 
-    protected static ?string $title = "Trò chơi";
-    protected static ?string $modelLabel = "Trò chơi";
-    protected static ?string $pluralModelLabel = "Trò chơi";
+// protected static ?string $title = __('event.pages.games_title');
+//     protected static ?string $modelLabel = __('event.pages.games_title');
+//     protected static ?string $pluralModelLabel = __('event.pages.games_title');
     protected static string $resource = EventResource::class;
     protected string $view = "filament.pages.event-games";
 
