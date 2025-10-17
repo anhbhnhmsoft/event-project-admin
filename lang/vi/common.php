@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'save' => 'Lưu',
     'common_success' => [
         'get_success' => 'Lấy dữ liệu thành công',
         'add_success' => 'Thêm dữ liệu thành công',

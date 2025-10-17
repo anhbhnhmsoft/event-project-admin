@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Filament\Resources\Organizers\Pages;
+namespace App\Filament\Resources\OrganizersAdmin\Pages;
 
-use App\Filament\Resources\Organizers\OrganizerResource;
+use App\Filament\Resources\OrganizersAdmin\OrganizerAdminResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 
-class ListOrganizers extends ListRecords
+class ListOrganizersAdmin extends ListRecords
 {
-    protected static string $resource = OrganizerResource::class;
+    protected static string $resource = OrganizerAdminResource::class;
 
     protected static ?string $title = 'Danh sách nhà tổ chức';
 

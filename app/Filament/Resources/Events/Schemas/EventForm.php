@@ -11,6 +11,7 @@ use App\Utils\Constants\EventStatus;
 use App\Utils\Constants\StoragePath;
 use App\Utils\Constants\EventUserRole;
 use App\Models\User;
+use Carbon\Carbon;
 use Closure;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
@@ -22,22 +23,21 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Forms\Components\RichEditor;
 use App\Filament\Forms\Components\LocationPicker;
 use Filament\Forms\Components\DatePicker;
-use Filament\Schemas\Components\Wizard;
-use Filament\Schemas\Components\Wizard\Step;
 use Illuminate\Support\Facades\Auth;
 use App\Utils\Constants\RoleUser;
 use Illuminate\Validation\Rule;
 use Filament\Forms\Components\Repeater;
 use App\Utils\Helper;
 use Filament\Forms\Components\ViewField;
-
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 class EventForm
 {
     public static function configure(Schema $schema): Schema
     {
         return $schema->schema([
-            Wizard::make([
-                Step::make('info')
+            Tabs::make('schema')->tabs([
+                Tab::make('info')
                     ->label('Thông tin sự kiện')
                     ->columns(2)
                     ->schema([
@@ -78,18 +78,22 @@ class EventForm
                             ->label('Thuộc nhà tổ chức')
                             ->required()
                             ->live(debounce: 500)
-                            ->default(fn() => (($user = Auth::user()) && $user->role !== RoleUser::SUPER_ADMIN->value) ? $user->organizer_id : null)
+                            ->default(function () {
+                                $user = Auth::user();
+                                if (Helper::checkSuperAdmin()) {
+                                    return null;
+                                }
+                                return $user->organizer_id;
+                            })
                             ->options(function (Get $get) {
                                 $user = Auth::user();
-
-                                if ($user && in_array($user->role, [RoleUser::SUPER_ADMIN->value], true)) {
+                                if (Helper::checkSuperAdmin()) {
                                     return Organizer::query()
                                         ->where('status', CommonStatus::ACTIVE->value)
                                         ->orWhere('id', $get('organizer_id'))
                                         ->pluck('name', 'id')
                                         ->all();
                                 }
-
                                 if ($user && $user->organizer_id) {
                                     return Organizer::query()
                                         ->where('id', $user->organizer_id)
@@ -99,7 +103,7 @@ class EventForm
 
                                 return [];
                             })
-                            ->disabled(fn() => ($user = Auth::user()) && $user->role !== RoleUser::SUPER_ADMIN->value)
+                            ->disabled(fn() => !Helper::checkSuperAdmin())
                             ->dehydrated(true)
                             ->loadingMessage('Chờ 1 chút...')
                             ->noSearchResultsMessage('Không tìm thấy nhà tổ chức.')
@@ -130,7 +134,7 @@ class EventForm
                             ->live()
                             ->rules([
                                 fn(Get $get) => (
-                                    $get('day_represent') && \Carbon\Carbon::parse($get('day_represent'))->isToday()
+                                    $get('day_represent') && Carbon::parse($get('day_represent'))->isToday()
                                 )
                                     ? ['date_format:H:i', 'after_or_equal:' . now()->format('H:i')]
                                     : ['date_format:H:i'],
@@ -161,7 +165,7 @@ class EventForm
                                     }
                                 },
                                 fn(Get $get) => (
-                                    $get('day_represent') && \Carbon\Carbon::parse($get('day_represent'))->isToday()
+                                    $get('day_represent') && Carbon::parse($get('day_represent'))->isToday()
                                 )
                                     ? ['date_format:H:i', 'after_or_equal:' . now()->format('H:i')]
                                     : ['date_format:H:i'],
@@ -196,7 +200,7 @@ class EventForm
                                 'required' => 'Vui lòng tích chọn',
                             ]),
                     ]),
-                Step::make('participants')
+                Tab::make('participants')
                     ->label('Người tham gia')
                     ->columns(1)
                     ->schema([
@@ -262,26 +266,24 @@ class EventForm
                                     ->options(function (Get $get) {
                                         $user = Auth::user();
                                         $organizerId = $get('../../organizer_id');
-                                        if ($user && in_array($user->role, [RoleUser::SUPER_ADMIN->value], true)) {
+                                        if (Helper::checkSuperAdmin()) {
                                             if ($organizerId === null || $organizerId === '' || $organizerId === 0) {
                                                 return [
                                                     '' => 'Vui lòng chọn nhà tổ chức trước'
                                                 ];
                                             }
                                             return User::query()
+                                                ->select('id', 'name', 'role')
                                                 ->where('organizer_id', $organizerId)
                                                 ->where('role', '!=', RoleUser::SUPER_ADMIN->value)
                                                 ->pluck('name', 'id')
                                                 ->all();
                                         }
-                                        if ($user && $user->organizer_id) {
-                                            return User::query()
-                                                ->where('organizer_id', $user->organizer_id)
-                                                ->where('role', '!=', RoleUser::SUPER_ADMIN->value)
-                                                ->pluck('name', 'id')
-                                                ->all();
-                                        }
-                                        return [];
+                                        return User::query()
+                                            ->where('organizer_id', $user->organizer_id)
+                                            ->where('role', '!=', RoleUser::SUPER_ADMIN->value)
+                                            ->pluck('name', 'id')
+                                            ->all();
                                     })
                                     ->required()
                                     ->validationMessages([
@@ -298,7 +300,7 @@ class EventForm
                             ])
                             ->default([[]]),
                     ]),
-                Step::make('schedules')
+                Tab::make('schedules')
                     ->label('Lịch trình')
                     ->dehydrated(true)
                     ->columns(1)
@@ -509,7 +511,7 @@ class EventForm
                             ])
                             ->default([[]]),
                     ]),
-                Step::make('location')
+                Tab::make('location')
                     ->label('Vị trí')
                     ->columns(2)
                     ->schema([

@@ -7,6 +7,7 @@ use App\Models\Config;
 use App\Models\Event;
 use App\Models\EventUserHistory;
 use App\Models\User;
+use App\Utils\Constants\CommonStatus;
 use App\Utils\Constants\ConfigName;
 use App\Utils\Constants\EventStatus;
 use App\Utils\Constants\EventUserHistoryStatus;
@@ -43,7 +44,7 @@ class AuthService
         try {
             $user = User::query()
                 ->where('email', $data['email'])
-                ->where('organizer_id', $data['organizer_id'])
+                ->whereHasActiveOrganizer((int) $data['organizer_id'])
                 ->first();
             if (!$user || ! Hash::check($data['password'], $user->password)) {
                 throw new ServiceException(__('auth.error.invalid_credentials'));

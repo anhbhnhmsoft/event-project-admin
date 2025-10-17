@@ -5,12 +5,16 @@ namespace App\Console\Commands;
 use App\Models\Config;
 use App\Models\District;
 use App\Models\Province;
+use App\Models\User;
 use App\Models\Ward;
 use App\Utils\Constants\ConfigName;
 use App\Utils\Constants\ConfigType;
+use App\Utils\Constants\Language;
+use App\Utils\Constants\RoleUser;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 
 class InitApplication extends Command
@@ -46,6 +50,11 @@ class InitApplication extends Command
         }
 
         $this->info('--- Seeding ---');
+        $rAccount = $this->initAccount();
+        if ($rAccount === false) {
+            $this->error('Lỗi khi chạy Seeding initAccount');
+            return Command::FAILURE;
+        }
         $rProvince = $this->initProvinces();
         if ($rProvince === false) {
             $this->error('Lỗi khi chạy Seeding initProvinces');
@@ -58,6 +67,37 @@ class InitApplication extends Command
         }
         $this->info('Seeding database thành công');
         return Command::SUCCESS;
+    }
+
+    private function initAccount(): bool
+    {
+        DB::beginTransaction();
+        try {
+            $organizerId = DB::table('organizers')->insertGetId([
+                'name' => 'Kamnex Organizer',
+                'description' => 'Nhà tổ chức sự kiện Kamnex',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+
+            // Tạo user admin với organizer_id
+            User::factory()->create([
+                'name' => 'Admin User',
+                'email' => 'admin@admin.com',
+                'password' => Hash::make('Test12345678@'),
+                'role' => RoleUser::SUPER_ADMIN->value,
+                'phone' => '0123456789',
+                'address' => 'Hà Nội, Việt Nam',
+                'organizer_id' => $organizerId,
+                'lang' => Language::VI->value,
+                'email_verified_at' => now()
+            ]);
+            DB::commit();
+            return true;
+        }catch (\Exception $exception){
+            DB::rollBack();
+            return false;
+        }
     }
 
     private function initProvinces(): bool

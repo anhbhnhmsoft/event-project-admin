@@ -22,6 +22,7 @@ class UsersTable
     {
         $currentUser = Auth::user();
         $isSuperAdmin = $currentUser->role === RoleUser::SUPER_ADMIN->value;
+        $isAdmin = $currentUser->role === RoleUser::ADMIN->value || $isSuperAdmin;
         return $table
             ->defaultSort('created_at', 'desc')
             ->columns([
@@ -30,26 +31,39 @@ class UsersTable
                     ->circular()
                     ->disk('public')
                     ->state(function ($record) {
-                        if (! empty($record->avatar_path)) {
+                        if (!empty($record->avatar_path)) {
                             return Helper::generateURLImagePath($record->avatar_path);
                         }
                         return Helper::generateUiAvatarUrl($record->name, $record->email);
                     }),
                 TextColumn::make('name')
                     ->label('Tên người dùng')
+                    ->limit(30)
+                    ->tooltip(function ($column): ?string {
+                        $state = $column->getState();
+                        if (strlen($state) <= $column->getCharacterLimit()) {
+                            return null;
+                        }
+                        return $state;
+                    })
                     ->searchable(),
                 TextColumn::make('email')
                     ->label('Email')
+                    ->limit(30)
+                    ->tooltip(function ($column): ?string {
+                        $state = $column->getState();
+                        if (strlen($state) <= $column->getCharacterLimit()) {
+                            return null;
+                        }
+                        return $state;
+                    })
                     ->searchable(),
                 TextColumn::make('phone')
                     ->label('Số điện thoại')
                     ->searchable(),
-                TextColumn::make('address')
-                    ->label('Địa chỉ')
-                    ->searchable(),
                 TextColumn::make('organizer.name')
                     ->label('Nhà tổ chức')
-                    ->searchable(),
+                    ->visible($isSuperAdmin),
             ])
             ->filters([
                 SelectFilter::make('role')
@@ -63,38 +77,22 @@ class UsersTable
                     ->placeholder('Tất cả nhà tổ chức')
                     ->searchable()
                     ->visible($isSuperAdmin),
-
-                SelectFilter::make('email_verified')
-                    ->label('Trạng thái email')
-                    ->options([
-                        'verified' => 'Đã xác thực',
-                        'unverified' => 'Chưa xác thực',
-                    ])
-                    ->query(function (Builder $query, array $data) {
-                        if (!isset($data['value'])) {
-                            return $query;
-                        }
-
-                        return $data['value'] === 'verified'
-                            ? $query->whereNotNull('email_verified_at')
-                            : $query->whereNull('email_verified_at');
-                    })
-                    ->placeholder('Tất cả'),
             ])
             ->recordActions([
                 EditAction::make()
                     ->label('Sửa')
-                    ->visible(fn() => Auth::user()->role === RoleUser::SUPER_ADMIN->value ||
-                        Auth::user()->role === RoleUser::ADMIN->value),
+                    ->disabled(!$isAdmin)
+                    ->visible($isAdmin),
                 DeleteAction::make()
                     ->label('Xóa')
-                    ->visible(fn() => Auth::user()->role === RoleUser::SUPER_ADMIN->value),
+                    ->disabled(!$isAdmin)
+                    ->visible($isAdmin),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->label('Xóa')
-                        ->visible(fn() => Auth::user()->role === RoleUser::SUPER_ADMIN->value),
+                        ->visible($isAdmin),
                 ]),
             ]);
     }
