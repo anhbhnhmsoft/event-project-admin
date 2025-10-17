@@ -19,9 +19,19 @@ class OrganizerResource extends Resource
 {
     protected static ?string $model = Organizer::class;
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingOffice;
-    protected static ?string $navigationLabel = 'Nhà tổ chức';
-    protected static ?string $modelLabel = 'Nhà tổ chức';
-    protected static ?string $pluralModelLabel = 'Nhà tổ chức';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.organizers');
+    }
+    public static function getModelLabel(): string
+    {
+        return __('admin.organizer');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.organizer');
+    }
 
     public static function form(Schema $schema): Schema
     {
