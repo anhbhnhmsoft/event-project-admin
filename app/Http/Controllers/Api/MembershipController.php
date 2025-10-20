@@ -7,6 +7,7 @@ use App\Http\Resources\MembershipListResource;
 use App\Http\Resources\MembershipUserResource;
 use App\Services\CassoService;
 use App\Services\MemberShipService;
+use App\Utils\Constants\MembershipType;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -98,7 +99,7 @@ class MembershipController extends Controller
             return response()->json(['message' => $membership['message']], 422);
         }
 
-        $result = $this->membershipService->membershipRegister($membership['membership']);
+        $result = $this->membershipService->membershipRegister($membership['membership'], MembershipType::FOR_CUSTOMER->value);
         if (!$result['status']) {
             return response()->json([
                 'message' => $result['message']

@@ -4,9 +4,9 @@ namespace App\Utils\Constants;
 
 enum TransactionStatus: int
 {
-    case WAITING = 1;
-    case SUCCESS = 2;
-    case FAILED = 3;
+    case WAITING   = 1;
+    case SUCCESS   = 2;
+    case FAILED    = 3;
 
     public static function getLabel(int $value): string
     {

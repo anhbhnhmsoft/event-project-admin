@@ -3,12 +3,15 @@
 namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
+use App\Filament\Traits\CheckPlanBeforeAccess;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Actions\Action;
 use Illuminate\Database\Eloquent\Model;
 
 class CreateUser extends CreateRecord
 {
+    use CheckPlanBeforeAccess;
+
     protected static string $resource = UserResource::class;
 
     protected static ?string $title = 'Tạo người dùng mới';
@@ -20,7 +23,11 @@ class CreateUser extends CreateRecord
             '' => 'Tạo người dùng mới',
         ];
     }
-
+    public function mount(): void
+    {
+        parent::mount();
+        $this->ensurePlanAccessible();
+    }
     protected function getCreateFormAction(): Action
     {
         return parent::getCreateFormAction()
@@ -41,9 +48,18 @@ class CreateUser extends CreateRecord
 
     protected function handleRecordCreation(array $data): Model
     {
-        if(!empty($data['new_password'])) {
+        if (!empty($data['new_password'])) {
             $data['password'] = $data['new_password'];
         }
+
+        if (!empty($data['verify_email'])) {
+            $data['email_verified_at'] = now();
+        } else {
+            $data['email_verified_at'] = null;
+        }
+
+        unset($data['verify_email'], $data['new_password'], $data['new_password_confirmation']);
+
         return static::getModel()::create($data);
     }
 }

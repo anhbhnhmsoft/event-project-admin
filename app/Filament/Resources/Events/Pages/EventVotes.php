@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Events\Pages;
 
 use App\Filament\Resources\Events\EventResource;
+use App\Filament\Traits\CheckPlanBeforeAccess;
 use App\Models\EventPoll;
 use App\Models\EventPollQuestion;
 use App\Models\EventPollQuestionOption;
@@ -39,12 +40,13 @@ class EventVotes extends Page implements HasTable
 {
     use InteractsWithRecord;
     use Tables\Concerns\InteractsWithTable;
+    use CheckPlanBeforeAccess;
 
     protected static string $resource = EventResource::class;
 
-    protected static ?string $title = 'Quản lý khảo sát / bình chọn sự kiện';
-    protected static ?string $modelLabel = 'Khảo sát';
-    protected static ?string $pluralModelLabel = 'Khảo sát / Bình chọn';
+// protected static ?string $title = __('event.pages.votes_title');
+    // protected static ?string $modelLabel = 'Khảo sát';
+    // protected static ?string $pluralModelLabel = 'Khảo sát / Bình chọn';
 
     protected string $view = 'filament.pages.event-votes';
 
@@ -58,6 +60,8 @@ class EventVotes extends Page implements HasTable
     public function mount(int|string $record): void
     {
         $this->record = $this->resolveRecord($record);
+        $this->ensurePlanAccessible();
+
     }
 
     public function table(Table $table): Table

@@ -46,8 +46,8 @@ class Dashboard extends PagesDashboard
                     $eventId = session('event_id');
                     if (!$eventId) {
                         Notification::make()
-                            ->title('Thất bại')
-                            ->body('Vui lòng chọn sự kiện trước khi xuất Excel.')
+                            ->title(__('common.error.get_failed'))
+                            ->body(__('common.resource.dashboard.choose_event'))
                             ->danger()
                             ->send();
                         return;

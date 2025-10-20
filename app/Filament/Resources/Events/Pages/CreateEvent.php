@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Events\Pages;
 
 use App\Filament\Resources\Events\EventResource;
+use App\Filament\Traits\CheckPlanBeforeAccess;
 use App\Models\Event;
 use App\Models\EventSchedule;
 use App\Models\EventScheduleDocument;
@@ -22,15 +23,22 @@ use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class CreateEvent extends CreateRecord
 {
+    use CheckPlanBeforeAccess;
     protected static string $resource = EventResource::class;
-    
-    protected static ?string $title = 'Tạo sự kiện mới';
+
+    // protected static ?string $title = __('event.pages.create_title');
 
     protected static bool $canCreateAnother = false;
 
     protected function getRedirectUrl(): string
     {
         return static::getResource()::getUrl('index');
+    }
+
+    public function mount(): void
+    {
+        parent::mount();
+        $this->ensurePlanAccessible();
     }
 
     public function boot()
@@ -43,11 +51,11 @@ class CreateEvent extends CreateRecord
     public function getBreadcrumbs(): array
     {
         return [
-            url()->previous() => 'Sự kiện',
-            '' => 'Tạo sự kiện',
+            // Đã dịch: 'Sự kiện', 'Tạo sự kiện'
+            url()->previous() => __('event.general.event_title'),
+            '' => __('event.general.create_event'),
         ];
     }
-
     protected function handleRecordCreation(array $data): Model
     {
         DB::beginTransaction();
@@ -132,10 +140,10 @@ class CreateEvent extends CreateRecord
 
                                     if (!empty($documentData['files'])) {
                                         $files = is_array($documentData['files']) ? $documentData['files'] : [$documentData['files']];
-                                        
+
                                         foreach ($files as $file) {
                                             $tempFile = $this->extractTemporaryFile($file);
-                                            
+
                                             if ($tempFile) {
                                                 $filePath = $tempFile->store(
                                                     StoragePath::makePathById(StoragePath::EVENT_PATH, $event->id) . '/' . $eventSchedule->id . '/' . $eventScheduleDocument->id,
@@ -156,8 +164,7 @@ class CreateEvent extends CreateRecord
             DB::commit();
 
             return $event;
-
-        }catch (\Exception $exception){
+        } catch (\Exception $exception) {
             DB::rollBack();
             if (!empty($imageRepresentPath) && is_string($imageRepresentPath)) {
                 Storage::disk('public')->delete($imageRepresentPath);
@@ -165,7 +172,7 @@ class CreateEvent extends CreateRecord
             throw $exception;
         }
     }
-    
+
     /**
      * Thêm file tạm vào database
      */
@@ -174,10 +181,10 @@ class CreateEvent extends CreateRecord
         if ($file instanceof TemporaryUploadedFile) {
             return $file;
         }
-        
+
         return null;
     }
-    
+
     private function createFileRecord(int $documentId, TemporaryUploadedFile $tempFile, string $filePath): EventScheduleDocumentFile
     {
         return EventScheduleDocumentFile::create([
@@ -190,4 +197,4 @@ class CreateEvent extends CreateRecord
             'file_type' => $tempFile->getMimeType(),
         ]);
     }
-}   
+}

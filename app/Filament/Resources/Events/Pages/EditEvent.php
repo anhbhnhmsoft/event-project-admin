@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Events\Pages;
 
 use App\Filament\Resources\Events\EventResource;
+use App\Filament\Traits\CheckPlanBeforeAccess;
 use App\Models\Event;
 use App\Models\EventSchedule;
 use App\Models\EventScheduleDocument;
@@ -25,9 +26,14 @@ use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 class EditEvent extends EditRecord
 {
     protected static string $resource = EventResource::class;
+    use CheckPlanBeforeAccess;
 
-    protected static ?string $title = 'Sửa sự kiện';
-
+    // protected static ?string $title = __('event.pages.edit_title');
+    public function mount(string|int $record): void
+    {
+        parent::mount($record);
+        $this->ensurePlanAccessible();
+    }
     public array $filesMarkedForDeletion = [];
 
     protected function mutateFormDataBeforeFill(array $data): array
@@ -434,12 +440,12 @@ class EditEvent extends EditRecord
     {
         return [
             Action::make('seats-manager')
-                ->label('Quản lý chỗ ngồi')
+                ->label(__('event.general.save_changes'))
                 ->icon('heroicon-o-building-office')
                 ->url(fn() => static::getResource()::getUrl('seats-manage', ['record' => $this->record]))
                 ->color('success'),
             DeleteAction::make()
-                ->label('Xóa'),
+                ->label(__('event.general.delete')),
         ];
     }
 
@@ -472,12 +478,12 @@ class EditEvent extends EditRecord
 
 
             \Filament\Notifications\Notification::make()
-                ->title('Đã xóa file')
+                ->title(__('event.general.delete_file_success'))
                 ->success()
                 ->send();
         } catch (\Throwable $e) {
             \Filament\Notifications\Notification::make()
-                ->title('Lỗi xóa file')
+                ->title(__('event.general.delete_file_error'))
                 ->body($e->getMessage())
                 ->danger()
                 ->send();

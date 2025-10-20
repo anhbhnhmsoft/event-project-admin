@@ -28,7 +28,7 @@ class EventSelectWidget extends Widget implements HasForms
 
     public static function getHeading(): string
     {
-        return 'Bộ lọc sự kiện';
+        return __('common.resource.dashboard.select.heading');
     }
 
     public ?string $event_id = null;
@@ -85,7 +85,7 @@ class EventSelectWidget extends Widget implements HasForms
 
         $commonFields = [
             Select::make('event_id')
-                ->label('Chọn sự kiện')
+                ->label(__('common.resource.dashboard.select.choose_event_label'))
                 ->options(function ($get) use ($eventService) {
                     $organizerId = $get('organizer_id') ?? $this->organizer_id;
                     if (!$organizerId) {
@@ -95,7 +95,7 @@ class EventSelectWidget extends Widget implements HasForms
                 })
                 ->searchable()
                 ->live()
-                ->placeholder('--- Vui lòng chọn một sự kiện ---')
+                ->placeholder(__('common.resource.dashboard.select.event_placeholder'))
                 ->afterStateUpdated(function ($state) {
                     $this->event_id = $state;
                     session(['event_id' => $state]);
@@ -103,7 +103,7 @@ class EventSelectWidget extends Widget implements HasForms
                 }),
 
             DatePicker::make('start_date')
-                ->label('Từ ngày')
+                ->label(__('common.resource.dashboard.select.start_date_label'))
                 ->live()
                 ->afterStateUpdated(function ($state) {
                     $this->start_date = $state;
@@ -113,7 +113,7 @@ class EventSelectWidget extends Widget implements HasForms
                 ->columnSpan(1),
 
             DatePicker::make('end_date')
-                ->label('Tới ngày')
+                ->label(__('common.resource.dashboard.select.end_date_label'))
                 ->live()
                 ->afterStateUpdated(function ($state) {
                     $this->end_date = $state;
@@ -123,10 +123,10 @@ class EventSelectWidget extends Widget implements HasForms
                 ->columnSpan(1),
 
             Select::make('chart_type')
-                ->label('Loại thống kê')
+                ->label(__('common.resource.dashboard.select.chart_type_label'))
                 ->options([
-                    UnitDurationType::HOUR->value => 'Theo Giờ (Cộng dồn)',
-                    UnitDurationType::DAY->value => 'Theo Ngày',
+                    UnitDurationType::HOUR->value => __('common.resource.dashboard.select.chart_type_hour'),
+                    UnitDurationType::DAY->value => __('common.resource.dashboard.select.chart_type_day')    ,
                 ])
                 ->default(UnitDurationType::HOUR->value)
                 ->live()
@@ -143,11 +143,11 @@ class EventSelectWidget extends Widget implements HasForms
             array_unshift(
                 $commonFields,
                 Select::make('organizer_id')
-                    ->label('Chọn tổ chức')
+                    ->label(__('common.resource.dashboard.select.organizer_label'))
                     ->options($eventService->getAllOrganizersList())
                     ->searchable()
                     ->live()
-                    ->placeholder('--- Vui lòng chọn một tổ chức ---')
+                    ->placeholder( (string) __('common.resource.dashboard.select.organizer_placeholder'))
                     ->afterStateUpdated(function ($state, callable $set) {
                         $this->organizer_id = $state;
                         session(['organizer_id' => $state]);

@@ -71,23 +71,20 @@ class TransactionsTable
                     ->visible(fn($record) => in_array($record->status, [TransactionStatus::WAITING->value, TransactionStatus::FAILED->value]))
                     ->action(function ($record) {
                         $transactionService = app(TransactionService::class);
-                        switch ($record->type) {
-                            case TransactionType::MEMBERSHIP->value:
-                                $result = $transactionService->confirmMembershipTransaction(TransactionStatus::SUCCESS, $record->transaction_id);
+                        $result = $transactionService->confirmTransaction(TransactionStatus::SUCCESS, $record->transaction_id);
 
-                                if ($result['status']) {
-                                    Notification::make()
-                                        ->title('Thành công')
-                                        ->body('Xác nhận giao dịch thành công')
-                                        ->success()
-                                        ->send();
-                                } else {
-                                    Notification::make()
-                                        ->title('Thất bại')
-                                        ->body('Xác nhận giao dịch thất bại')
-                                        ->danger()
-                                        ->send();
-                                }
+                        if ($result['status']) {
+                            Notification::make()
+                                ->title('Thành công')
+                                ->body('Xác nhận giao dịch thành công')
+                                ->success()
+                                ->send();
+                        } else {
+                            Notification::make()
+                                ->title('Thất bại')
+                                ->body('Xác nhận giao dịch thất bại')
+                                ->danger()
+                                ->send();
                         }
                     })
                     ->requiresConfirmation()
@@ -101,22 +98,19 @@ class TransactionsTable
                     ->visible(fn($record) => $record->status == TransactionStatus::WAITING->value)
                     ->action(function ($record) {
                         $transactionService = app(TransactionService::class);
-                        switch ($record->type) {
-                            case TransactionType::MEMBERSHIP->value:
-                                $result = $transactionService->confirmMembershipTransaction(TransactionStatus::FAILED, $record->transaction_id);
-                                if ($result['status']) {
-                                    Notification::make()
-                                        ->title('Thành công')
-                                        ->body('Hủy giao dịch thành công')
-                                        ->success()
-                                        ->send();
-                                } else {
-                                    Notification::make()
-                                        ->title('Thất bại')
-                                        ->body('Hủy giao dịch thất bại')
-                                        ->danger()
-                                        ->send();
-                                }
+                        $result = $transactionService->confirmTransaction(TransactionStatus::FAILED, $record->transaction_id);
+                        if ($result['status']) {
+                            Notification::make()
+                                ->title('Thành công')
+                                ->body('Hủy giao dịch thành công')
+                                ->success()
+                                ->send();
+                        } else {
+                            Notification::make()
+                                ->title('Thất bại')
+                                ->body('Hủy giao dịch thất bại')
+                                ->danger()
+                                ->send();
                         }
                     })
                     ->requiresConfirmation()

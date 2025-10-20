@@ -23,6 +23,7 @@ class Membership extends Model
 
     protected $fillable = [
         'id',
+        'type',
         'name',
         'description',
         'price',
@@ -33,6 +34,7 @@ class Membership extends Model
         'badge_color_text',
         'config',
         'status',
+        'organizer_id'
     ];
 
     /**
@@ -60,6 +62,13 @@ class Membership extends Model
             $query->where('duration', $filters['duration']);
         }
 
+        if(!empty($filters['type'])){
+            $query->where('type', $filters['type']);
+        }
+
+        if(!empty($filters['organizer_id'])){
+            $query->where('organizer_id', $filters['organizer_id']);
+        }
 
         if (!empty($filters['keyword'])) {
             $keyword = trim($filters['keyword']);
@@ -70,7 +79,7 @@ class Membership extends Model
     public function scopeSortBy(Builder $query, string $sortBy = '')
     {
         switch ($sortBy) {
-            case 'order':
+            case 'sort':
                 $query->orderBy('sort', 'asc');
                 break;
             case 'created_at':

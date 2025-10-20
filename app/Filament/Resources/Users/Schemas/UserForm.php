@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
-use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Hidden;
@@ -15,6 +14,7 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Schemas\Components\Fieldset;
 use App\Services\OrganizerService;
 use App\Models\User;
+use Filament\Forms\Components\Toggle;
 use Illuminate\Support\Facades\Auth;
 
 class UserForm
@@ -30,6 +30,7 @@ class UserForm
                     ->label('Email')
                     ->email()
                     ->required()
+                    ->readOnly(fn(string $context) => $context === 'edit')
                     ->unique(
                         table: User::class,
                         column: 'email',
@@ -83,8 +84,6 @@ class UserForm
                             ->password()
                             ->visible(fn($get, $record) => $record === null || $get('showChangePassword') === true)
                             ->required(fn($record) => $record === null)
-                            ->dehydrateStateUsing(fn($state) => !empty($state) ? bcrypt($state) : null)
-                            ->dehydrated(fn($state) => filled($state))
                             ->maxLength(255),
                         TextInput::make('new_password_confirmation')
                             ->label('Xác nhận mật khẩu mới')
@@ -127,10 +126,13 @@ class UserForm
                     ->visibility('public')
                     ->nullable()
                     ->columnSpanFull(),
-                DateTimePicker::make('email_verified_at')
-                    ->label('Ngày xác thực email'),
-                DateTimePicker::make('phone_verified_at')
-                    ->label('Ngày xác thực số điện thoại'),
+                Toggle::make('verify_email')
+                    ->label('Cho phép đăng nhập')
+                    ->default(false)
+                    ->dehydrateStateUsing(fn($state) => $state ? now() : null)
+                    ->afterStateHydrated(function ($set, $record) {
+                        $set('verify_email', filled($record?->email_verified_at));
+                    }),
                 Select::make('lang')
                     ->label('Ngôn ngữ')
                     ->options(Language::getOptions())

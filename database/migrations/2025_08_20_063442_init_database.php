@@ -68,14 +68,43 @@ return new class extends Migration
             $table->string('badge_color_text')->nullable()->comment("Màu chữ huy hiệu hiển thị trên trang chủ");
             $table->json('config')->comment('Cấu hình của gói membership, lưu trữ các tùy chọn như quyền truy cập, tính năng, v.v.');
             $table->boolean('status')->default(true)->comment('Trạng thái của gói membership, true nếu hoạt động, false nếu không hoạt động');
+            $table->tinyInteger('type')
+                ->default(1)
+                ->comment('Loại gói membership, Lưu trong enum MembershipType')
+                ->after('id');
+
+            $table->foreignId('organizer_id')
+                ->constrained('organizers')
+                ->onDelete('cascade')
+                ->comment('Khóa ngoại tới bảng organizer')
+                ->after('type');
             $table->softDeletes();
             $table->timestamps();
         });
+
+
 
         Schema::create('membership_user', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')
                 ->constrained('users')
+                ->cascadeOnDelete();
+            $table->foreignId('membership_id')
+                ->constrained('membership')
+                ->cascadeOnDelete();
+            $table->date('start_date')->nullable()
+                ->comment('Ngày bắt đầu gói membership');
+            $table->date('end_date')->nullable()
+                ->comment('Ngày kết thúc gói membership');
+            $table->tinyInteger('status')->comment('Trạng thái gói: enum định nghĩa MembershipUserStatus');
+            $table->timestamps();
+        });
+
+        Schema::create('membership_organzier', function (Blueprint $table) {
+
+            $table->id();
+            $table->foreignId('organizer_id')
+                ->constrained('organizers')
                 ->cascadeOnDelete();
             $table->foreignId('membership_id')
                 ->constrained('membership')
@@ -334,10 +363,15 @@ return new class extends Migration
         // Tạo bảng configs để lưu trữ các cấu hình hệ thống
         Schema::create('configs', function (Blueprint $table) {
             $table->id();
-            $table->string('config_key')->unique();
+            $table->string('config_key');
             $table->smallInteger('config_type')->nullable()->comment('Loại cấu hình, Lưu trong enum ConfigType');
             $table->text('config_value');
             $table->text('description')->nullable();
+            $table->foreignId('organizer_id')
+                ->constrained('organizers')
+                ->onDelete('cascade')
+                ->comment('Khóa ngoại tới bảng organizer')
+                ->after('type');
             $table->timestamps();
         });
 
@@ -499,6 +533,7 @@ return new class extends Migration
         Schema::dropIfExists('sessions');
         Schema::dropIfExists('personal_access_tokens');
         Schema::dropIfExists('membership_user');
+        Schema::dropIfExists('membership_organizer');
         Schema::dropIfExists('event_game_gifts');
         Schema::dropIfExists('event_user_gift');
         Schema::dropIfExists('user_reset_codes');
