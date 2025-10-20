@@ -21,7 +21,7 @@ class CassoService
     {
         $user = Auth::user();
         $organizerId = match ($typeTrans) {
-            TransactionType::PLAN_SERVICE->value,
+            TransactionType::PLAN_SERVICE->value => 1,
             TransactionType::MEMBERSHIP->value => $user->organizer_id,
             default => null,
         };
@@ -37,15 +37,14 @@ class CassoService
                 'message' => 'Không xác định được tổ chức để tạo giao dịch thanh toán.',
             ];
         }
-
         $config = app(ConfigService::class);
         $signature = Helper::generateSignature(
             data: $payload,
-            key: $config->getConfigValue(ConfigName::CHECKSUM_KEY->value, $organinzerId)
+            key: $config->getConfigValue(ConfigName::CHECKSUM_KEY->value, $organizerId)
         );
         $response = Http::withHeaders([
-            'X-Client-Id' => $config->getConfigValue(ConfigName::CLIENT_ID_APP->value, $organinzerId),
-            'X-Api-Key'   => $config->getConfigValue(ConfigName::API_KEY->value, $organinzerId),
+            'X-Client-Id' => $config->getConfigValue(ConfigName::CLIENT_ID_APP->value, $organizerId),
+            'X-Api-Key'   => $config->getConfigValue(ConfigName::API_KEY->value, $organizerId),
             'Content-Type' => 'application/json',
         ])->timeout(15)
             ->post(CommonConstant::PAYOS_URL . 'payment-requests', array_merge($payload, [

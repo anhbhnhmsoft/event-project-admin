@@ -12,6 +12,7 @@ class Config extends Model
         'config_type',
         'config_value',
         'description',
+        'organizer_id'
     ];
 
     protected static function booted()
