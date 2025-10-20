@@ -150,7 +150,12 @@ class MemberShipService
                     'message' => __('common.common_error.api_error'),
                 ];
             }
-
+            $user = Auth::user();
+            $organizerId = match ($typeRegister) {
+                TransactionType::PLAN_SERVICE->value => 1,
+                TransactionType::MEMBERSHIP->value => $user->organizer_id,
+                default => null,
+            };
             // Khởi tạo transaction
             // hiện tại chỉ có casso
             $transaction = $this->transactionService->create([
@@ -171,7 +176,7 @@ class MemberShipService
                     'bin' => $response['data']['bin'],
                     'number' => $response['data']['accountNumber']
                 ],
-                'organizer_id' => ''
+                'organizer_id' => $organizerId
             ]);
 
             DB::commit();
