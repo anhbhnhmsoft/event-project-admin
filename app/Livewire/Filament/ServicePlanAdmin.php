@@ -69,7 +69,6 @@ class ServicePlanAdmin extends Component
         $result = $this->organizerService->getOrganizerDetail($user->organizer_id);
         if ($result['status']) {
             $this->organizer = $result['organizer'];
-
             $plan = $this->organizer->plansActive->first();
 
             if ($plan) {

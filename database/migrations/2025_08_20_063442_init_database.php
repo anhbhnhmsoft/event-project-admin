@@ -100,7 +100,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('membership_organzier', function (Blueprint $table) {
+        Schema::create('membership_organizer', function (Blueprint $table) {
 
             $table->id();
             $table->foreignId('organizer_id')
@@ -377,7 +377,7 @@ return new class extends Migration
                 ->constrained('organizers')
                 ->onDelete('cascade')
                 ->comment('Khóa ngoại tới bảng organizer')
-                ->after('type');
+                ->after('config_type');
             $table->timestamps();
         });
 

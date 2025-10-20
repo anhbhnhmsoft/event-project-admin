@@ -170,7 +170,8 @@ class MemberShipService
                     'name' => $response['data']['accountName'],
                     'bin' => $response['data']['bin'],
                     'number' => $response['data']['accountNumber']
-                ]
+                ],
+                'organizer_id' => ''
             ]);
 
             DB::commit();
