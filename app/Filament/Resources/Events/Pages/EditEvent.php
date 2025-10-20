@@ -134,6 +134,7 @@ class EditEvent extends EditRecord
                 'district_code' => $data['district_code'],
                 'ward_code' => $data['ward_code'],
                 'status' => $data['status'],
+                'free_to_join' => $data['free_to_join'],
             ];
 
             if (isset($data['image_represent_path']) && $data['image_represent_path'] instanceof TemporaryUploadedFile) {
@@ -434,7 +435,7 @@ class EditEvent extends EditRecord
     {
         return [
             Action::make('seats-manager')
-                ->label(__('event.general.save_changes'))
+                ->label(__('event.pages.seats_title'))
                 ->icon('heroicon-o-building-office')
                 ->url(fn() => static::getResource()::getUrl('seats-manage', ['record' => $this->record]))
                 ->color('success'),

@@ -1,6 +1,4 @@
-<div
-    class="min-h-screen bg-gradient-to-br from-slate-100 to-indigo-200
-    from-gray-100 via-indigo-100 to-purple-200 p-6">
+<div class="min-h-screen bg-gray-100 p-6 rounded-2xl shadow">
 
     <div class="mb-8">
         <div class="flex items-center justify-between">
@@ -27,14 +25,14 @@
             </div>
         </div>
 
-        <div class="bg-gradient-to-r from-indigo-600 to-amber-500 text-white text-center py-6">
+        <div class="bg-indigo-600 text-white text-center py-6">
 
             <div class="flex items-center justify-center space-x-2">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m0 0V1a1 1 0 011-1h2a1 1 0 011 1v18a1 1 0 01-1 1H4a1 1 0 01-1-1V1a1 1 0 011-1h2a1 1 0 011 1v3" />
                 </svg>
-                <span class="text-xl font-bold">SÂN KHẤU / STAGE</span>
+                <span class="text-xl font-bold">Khu vực/ Ghế ngồi</span>
             </div>
         </div>
 
@@ -53,14 +51,13 @@
                 <div class="flex justify-center flex-wrap gap-8">
                     @foreach ($areas as $area)
                         <div class="group relative">
-                            <!-- Area Card -->
                             <div
                                 class="bg-gradient-to-br from-white to-gray-50 rounded-xl border-2 border-gray-200 hover:border-indigo-300 transition-all duration-300 overflow-hidden shadow-sm hover:shadow-xl transform hover:-translate-y-1">
 
                                 <div
-                                    class="bg-gradient-to-r 
-    {{ $area['vip'] ? 'from-yellow-500 to-red-500' : 'from-indigo-500 to-purple-600' }} 
-    text-white p-4">
+                                    class="
+                                        {{ $area['vip'] ? 'bg-[#ffb704]' : 'bg-[#3d3aff]' }} 
+                                    text-white p-4">
                                     <div class="flex justify-between items-center">
                                         <div>
                                             <h3 class="font-bold text-lg flex items-center gap-2">
@@ -73,6 +70,11 @@
                                                 @endif
                                             </h3>
                                             <p class="text-indigo-100">{{ $area['capacity'] }} ghế</p>
+                                            @if (!$event->free_to_join)
+                                                <p class="text-white/90 mt-1">
+                                                    Giá vé: {{ isset($area['price']) && $area['price'] !== null && $area['price'] !== '' ? number_format((float) $area['price']) . ' đ' : '—' }}
+                                                </p>
+                                            @endif
                                         </div>
                                         <div class="flex space-x-2">
                                             <button wire:click="selectArea('{{ $area['id'] }}')"
@@ -132,7 +134,7 @@
                 <div class="p-6">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-2xl font-bold text-gray-900">Tạo Khu Vực Mới</h2>
-                        <button @click="showAreaModal = false" class="text-gray-400 hover:text-gray-600">✕</button>
+                        <button wire:click="$set('showAreaModal', false)" class="text-gray-400 hover:text-gray-600">✕</button>
                     </div>
 
                     <form wire:submit="createArea" class="space-y-6">
@@ -149,24 +151,45 @@
                                     <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
-
-                            <div class="flex-shrink-0">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    Loại khu vực
-                                </label>
-
-                                <label class="inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" wire:model.live="areaVip">
-
-                                </label>
-
-                                <span
-                                    class="ml-2 text-sm {{ $areaVip ? 'text-yellow-600 font-semibold' : 'text-gray-600' }}">
-                                    {{ $areaVip ? 'VIP' : 'Thường' }}
-                                </span>
-                            </div>
-
                         </div>
+
+                            <div class="space-y-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Loại khu vực
+                            </label>
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-sm font-medium text-gray-700">Thường</span>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" wire:model.live="areaVip" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                        <span class="ml-3 text-sm font-medium text-gray-700">VIP</span>
+                                    </label>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-sm font-semibold {{ $areaVip ? 'text-yellow-600' : 'text-gray-600' }}">
+                                        {{ $areaVip ? 'Khu vực VIP' : 'Khu vực Thường' }}
+                                    </span>
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        {{ $areaVip ? 'Ghế VIP với giá cao hơn' : 'Ghế thường với giá cơ bản' }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (!$event->free_to_join)
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Giá vé khu vực
+                                </label>
+                                <x-filament::input.wrapper>
+                                    <x-filament::input type="number" step="0.01" min="0" wire:model="areaPrice" placeholder="Nhập giá vé" />
+                                </x-filament::input.wrapper>
+                                @error('areaPrice')
+                                    <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        @endif
 
                         <!-- Thông tin bổ sung nếu là VIP -->
                         @if ($areaVip)
@@ -185,18 +208,16 @@
                         @endif
 
                         <div class="flex justify-end items-center space-x-3 pt-6 border-t border-gray-200">
-                            <x-filament::button type="button" @click="showAreaModal = false" color="gray"
-                                size="sm">
-                                <svg wire:loading.remove wire:target="createArea" class="w-4 h-4 mr-1" fill="none"
-                                    stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M6 18L18 6M6 6l12 12"></path>
+                            <x-filament::button type="button" wire:click="$set('showAreaModal', false)" color="gray"
+                                size="md">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                                 </svg>
                                 Hủy bỏ
                             </x-filament::button>
 
-                            <x-filament::button type="submit" wire:loading.attr="disabled" wire:target="createArea"
-                                color="primary" size="sm">
+                            <x-filament::button type="submit" wire:loading.attr="disabled" wire:target="createArea" class="bg-indigo-600"
+                                size="md">
                                 <svg wire:loading.remove wire:target="createArea" class="w-4 h-4 mr-1" fill="none"
                                     stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -268,35 +289,48 @@
                         </div>
 
                         <!-- Toggle VIP và thông tin -->
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border">
-                                <div class="flex-1">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                                        Loại khu vực
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Loại khu vực
+                            </label>
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-sm font-medium text-gray-700">Thường</span>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" wire:model.live="selectedArea.vip" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                        <span class="ml-3 text-sm font-medium text-gray-700">VIP</span>
                                     </label>
                                 </div>
-                                <div class="flex items-center space-x-3">
-                                    <label class="inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" wire:model.live="selectedArea.vip" >
-
-                                    </label>
-
-                                    <span
-                                        class="text-sm font-medium {{ $selectedArea['vip'] ?? false ? 'text-yellow-600' : 'text-gray-400' }}">
-                                        VIP
+                                <div class="text-right">
+                                    <span class="text-sm font-semibold {{ $selectedArea['vip'] ?? false ? 'text-yellow-600' : 'text-gray-600' }}">
+                                        {{ ($selectedArea['vip'] ?? false) ? 'Khu vực VIP' : 'Khu vực Thường' }}
                                     </span>
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        {{ ($selectedArea['vip'] ?? false) ? 'Ghế VIP với giá cao hơn' : 'Ghế thường với giá cơ bản' }}
+                                    </p>
                                 </div>
                             </div>
                         </div>
+                        @if (!$event->free_to_join)
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Giá vé khu vực
+                                </label>
+                                <x-filament::input.wrapper>
+                                    <x-filament::input type="number" step="0.01" min="0" wire:model.live="selectedArea.price" placeholder="Nhập giá vé" />
+                                </x-filament::input.wrapper>
+                            </div>
+                        @endif
 
                     </div>
 
                     <div class="flex justify-between mb-4">
                         <button wire:click="updateArea"
-                            class="px-4 py-2 bg-indigo-600 text-white rounded-lg">Lưu</button>
+                            class="px-4 py-2 bg-indigo-600 text-white rounded-lg">Lưu thay đổi</button>
                         <div class="flex gap-2">
                             <button wire:click="closeModalEdit()"
-                                class="px-4 py-2 bg-red-500 text-white rounded-lg">Đóng</button>
+                                class="fi-btn fi-size-md fi-ac-btn-action">Đóng</button>
                         </div>
                     </div>
 

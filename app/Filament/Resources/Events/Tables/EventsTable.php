@@ -80,7 +80,7 @@ class EventsTable
                     EditAction::make()
                         ->label('Sửa'),
                     Action::make('seats-manager')
-                        ->label('Quản lý chỗ ngồi')
+                        ->label(__('event.pages.seats_title'))
                         ->icon('heroicon-o-building-office')
                         ->url(fn($record) => EventResource::getUrl('seats-manage', ['record' => $record]))
                         ->openUrlInNewTab()
