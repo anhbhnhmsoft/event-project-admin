@@ -18,6 +18,7 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Forms\Components\RichEditor;
@@ -31,6 +32,7 @@ use App\Utils\Helper;
 use Filament\Forms\Components\ViewField;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
+
 class EventForm
 {
     public static function configure(Schema $schema): Schema
@@ -191,6 +193,11 @@ class EventForm
                                 'required' => 'Vui lòng nhập Mô tả chi tiết',
                             ])
                             ->extraAttributes(['style' => 'min-height: 300px;']),
+                        Toggle::make('free_to_join')
+                            ->label('Tham gia sự kiện miễn phí')
+                            ->helperText('Nếu bật, các khu vực sẽ không yêu cầu nhập giá vé.')
+                            ->default(true)
+                            ->inline(false),
                         Select::make('status')
                             ->label('Trạng thái')
                             ->required()
@@ -387,7 +394,7 @@ class EventForm
                                     ->label('Danh sách file')
                                     ->view('filament.forms.components.event-existing-files')
                                     ->dehydrated(false)
-                                    ->viewData(function(Get $get)  {
+                                    ->viewData(function (Get $get) {
                                         return [
                                             'documentData' => $get('documents'),
                                         ];

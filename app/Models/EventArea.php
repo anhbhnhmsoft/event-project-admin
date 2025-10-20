@@ -18,6 +18,7 @@ class EventArea extends Model
         'name',
         'capacity',
         'vip',
+        'price',
     ];
 
     protected $casts = [

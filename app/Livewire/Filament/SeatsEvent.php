@@ -37,6 +37,7 @@ class SeatsEvent extends Component
 
     public $areaCapacity = '';
     public $areaVip = false;
+    public $areaPrice = null;
 
     public string $newSeatName = '';
     public $selectedSeat = null;
@@ -85,13 +86,19 @@ class SeatsEvent extends Component
     {
         $this->validate([
             'areaCapacity' => 'required|integer|min:1',
+            'areaPrice' => function ($attr, $value, $fail) {
+                if (!$this->event->free_to_join && ($value === null || $value === '')) {
+                    $fail('Vui lòng nhập giá khu vực.');
+                }
+            },
         ]);
         $countAreas = count($this->areas);
         $area = $this->areaService->eventAreaCreateOne([
-            'name' => $this->event->name . ($countAreas + 1),
+            'name' => $this->event->name . " " . ($countAreas + 1),
             'capacity' => (int) $this->areaCapacity,
             'event_id' => $this->event->id,
-            'vip' => $this->areaVip
+            'vip' => $this->areaVip,
+            'price' => $this->event->free_to_join ? null : (string) $this->areaPrice,
         ]);
         if ($area) {
 
@@ -103,7 +110,7 @@ class SeatsEvent extends Component
                     ->danger()
                     ->send();
             }
-            $this->reset(['areaVip', 'areaCapacity']);
+            $this->reset(['areaVip', 'areaCapacity', 'areaPrice']);
             $this->showAreaModal = false;
             $this->loadAreas();
             Notification::make()

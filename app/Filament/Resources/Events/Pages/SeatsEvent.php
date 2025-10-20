@@ -13,15 +13,25 @@ class SeatsEvent extends Page
     protected static string $resource = EventResource::class;
 
     protected string $view = 'filament.pages.seats-event';
-
-    // Đã dịch: 'Quản lý Khu vực & Ghế ngồi'
-    // protected static ?string $title = __('event.pages.seats_title');
-
-    // Đã dịch: 'Sơ đồ chỗ ngồi'
-    // protected static ?string $navigationLabel = __('event.pages.seats_nav_label');
+    
+    protected static ?string $title = 'Quản lý Khu vực & Ghế ngồi';
+    
+    public function getBreadcrumbs(): array
+    {
+        return [
+            route('filament.admin.resources.events.index') => __('event.general.event_title'),
+            '' => __('event.pages.seats_title'),
+        ];
+    }
+    
+    public function getHeading(): string
+    {
+        return ' ';
+    }
 
     public function mount(int|string $record): void
     {
         $this->record = $this->resolveRecord($record);
     }
+
 }

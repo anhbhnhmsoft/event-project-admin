@@ -40,7 +40,7 @@ class CreateEvent extends CreateRecord
         ]);
     }
 
-public function getBreadcrumbs(): array
+    public function getBreadcrumbs(): array
     {
         return [
             // Đã dịch: 'Sự kiện', 'Tạo sự kiện'
@@ -48,6 +48,7 @@ public function getBreadcrumbs(): array
             '' => __('event.general.create_event'),
         ];
     }
+    
     protected function handleRecordCreation(array $data): Model
     {
         DB::beginTransaction();
@@ -79,6 +80,7 @@ public function getBreadcrumbs(): array
                 'latitude' => $latitude,
                 'longitude' => $longitude,
                 'status' => $data['status'],
+                'free_to_join' => $data['free_to_join'],
             ];
 
             if (isset($data['image_represent_path']) && $data['image_represent_path'] instanceof TemporaryUploadedFile) {
@@ -156,8 +158,7 @@ public function getBreadcrumbs(): array
             DB::commit();
 
             return $event;
-
-        }catch (\Exception $exception){
+        } catch (\Exception $exception) {
             DB::rollBack();
             if (!empty($imageRepresentPath) && is_string($imageRepresentPath)) {
                 Storage::disk('public')->delete($imageRepresentPath);
