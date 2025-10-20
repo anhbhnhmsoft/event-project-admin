@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Utils\Constants\MembershipUserStatus;
 use App\Utils\Helper;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -29,8 +30,23 @@ class Organizer extends Model
         });
     }
 
-    public function users () : HasMany
+    public function users(): HasMany
     {
         return $this->hasMany(User::class);
+    }
+
+    public function plansActive()
+    {
+        return $this->belongsToMany(Membership::class, 'membership_organizer')
+            ->withPivot(['start_date', 'end_date', 'status'])
+            ->wherePivot('status', MembershipUserStatus::ACTIVE->value)
+            ->withTimestamps();
+    }
+
+    public function plans()
+    {
+        return $this->belongsToMany(Membership::class, 'membership_organizer')
+            ->withPivot(['start_date', 'end_date', 'status'])
+            ->withTimestamps();
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Events\Pages;
 
 use App\Filament\Resources\Events\EventResource;
+use App\Filament\Traits\CheckPlanBeforeAccess;
 use App\Models\Event;
 use App\Models\EventComment;
 use Filament\Actions\BulkActionGroup;
@@ -22,6 +23,7 @@ use Illuminate\Support\Facades\Vite;
 class EventComments extends Page implements HasTable
 {
     use InteractsWithRecord;
+    use CheckPlanBeforeAccess;
 
     use InteractsWithTable;
     // protected static ?string $title =
@@ -46,6 +48,7 @@ class EventComments extends Page implements HasTable
     public function mount(int|string $record): void
     {
         $this->record = $this->resolveRecord($record);
+        $this->ensurePlanAccessible();
     }
 
     public function table(Table $table): Table

@@ -27,12 +27,20 @@ class WebhookCassoController extends Controller
         if (empty($paymentLinkId)) {
             return response()->json(['message' => 'Missing reference'], 400);
         }
-        if ($success) {
-            $this->transactionService->confirmMembershipTransaction(TransactionStatus::SUCCESS, $paymentLinkId);
+
+        Log::info($data);
+        if ($data['data']['orderCode'] == 123) {
             return response()->json(['message' => 'success'], 200);
-        } else {
-            $this->transactionService->confirmMembershipTransaction(TransactionStatus::FAILED, $paymentLinkId);
-            return response()->json(['message' => 'failed'],  200);
         }
+        $status = $success ? TransactionStatus::SUCCESS : TransactionStatus::FAILED;
+        Log::info([' PaymentLinkId ' . $paymentLinkId]);
+        // Gọi gateway method để xử lý transaction
+        $result = $this->transactionService->confirmTransaction($status, $paymentLinkId);
+
+        if ($result['status']) {
+            return response()->json(['message' => 'success'], 200);
+        }
+
+        return response()->json(['message' => $result['message']], 400);
     }
 }

@@ -41,6 +41,10 @@ class EventResource extends Resource
     {
         return EventsTable::configure($table);
     }
+    public function mount(): void
+    {
+        parent::mount();
+    }
 
     public static function canAccess(): bool
     {

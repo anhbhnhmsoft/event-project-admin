@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Events\Pages;
 
 use App\Filament\Resources\Events\EventResource;
+use App\Filament\Traits\CheckPlanBeforeAccess;
 use App\Models\Event;
 use App\Models\EventSchedule;
 use App\Models\EventScheduleDocument;
@@ -22,6 +23,7 @@ use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class CreateEvent extends CreateRecord
 {
+    use CheckPlanBeforeAccess;
     protected static string $resource = EventResource::class;
 
     // protected static ?string $title = __('event.pages.create_title');
@@ -31,6 +33,12 @@ class CreateEvent extends CreateRecord
     protected function getRedirectUrl(): string
     {
         return static::getResource()::getUrl('index');
+    }
+
+    public function mount(): void
+    {
+        parent::mount();
+        $this->ensurePlanAccessible();
     }
 
     public function boot()

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Events\Pages;
 
 use App\Filament\Resources\Events\EventResource;
+use App\Filament\Traits\CheckPlanBeforeAccess;
 use App\Models\Event;
 use App\Models\EventGame;
 use App\Models\EventGameGift;
@@ -34,6 +35,7 @@ class EventGames extends Page implements HasTable
 {
     use InteractsWithRecord;
     use InteractsWithTable;
+    use CheckPlanBeforeAccess;
 
 // protected static ?string $title = __('event.pages.games_title');
 //     protected static ?string $modelLabel = __('event.pages.games_title');
@@ -47,6 +49,7 @@ class EventGames extends Page implements HasTable
     public function mount(int|string $record): void
     {
         $this->record = $this->resolveRecord($record);
+        $this->ensurePlanAccessible();
     }
 
     public function table(Table $table): Table
