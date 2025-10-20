@@ -30,7 +30,8 @@ class Transactions extends Model
         'user_id',
         'expired_at',
         'config_pay',
-        'type_trans'
+        'type_trans',
+        'organizer_id'
     ];
 
     protected function casts(): array
