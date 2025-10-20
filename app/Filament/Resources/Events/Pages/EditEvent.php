@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Events\Pages;
 
 use App\Filament\Resources\Events\EventResource;
+use App\Filament\Traits\CheckPlanBeforeAccess;
 use App\Models\Event;
 use App\Models\EventSchedule;
 use App\Models\EventScheduleDocument;
@@ -25,9 +26,14 @@ use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 class EditEvent extends EditRecord
 {
     protected static string $resource = EventResource::class;
+    use CheckPlanBeforeAccess;
 
     // protected static ?string $title = __('event.pages.edit_title');
-
+    public function mount(string|int $record): void
+    {
+        parent::mount($record);
+        $this->ensurePlanAccessible();
+    }
     public array $filesMarkedForDeletion = [];
 
     protected function mutateFormDataBeforeFill(array $data): array

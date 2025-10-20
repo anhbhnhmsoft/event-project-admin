@@ -30,6 +30,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->authGuard('web')
             ->path('admin')
+            ->globalSearch(false)
             ->login(Login::class)
             ->colors([
                 'primary' => Color::Blue,

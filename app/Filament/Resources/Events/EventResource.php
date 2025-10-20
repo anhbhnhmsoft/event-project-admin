@@ -13,6 +13,7 @@ use App\Filament\Resources\Events\Schemas\EventForm;
 use App\Filament\Resources\Events\Tables\EventsTable;
 use App\Models\Event;
 use App\Utils\Constants\RoleUser;
+use App\Utils\Helper;
 use BackedEnum;
 use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
@@ -40,11 +41,20 @@ class EventResource extends Resource
     {
         return EventsTable::configure($table);
     }
+    public function mount(): void
+    {
+        parent::mount();
+        Helper::checkPlanOrganizer();
+    }
 
     public static function canAccess(): bool
     {
         $user = Auth::user();
-        return $user->role === RoleUser::SUPER_ADMIN->value || $user->role === RoleUser::ADMIN->value || $user->role === RoleUser::SPEAKER->value;
+        return in_array($user->role, [
+            RoleUser::SUPER_ADMIN->value,
+            RoleUser::ADMIN->value,
+            RoleUser::SPEAKER->value,
+        ]);
     }
 
     public static function getEloquentQuery(): Builder

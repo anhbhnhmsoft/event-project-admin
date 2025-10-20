@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Events\Pages;
 
 use App\Filament\Resources\Events\EventResource;
+use App\Filament\Traits\CheckPlanBeforeAccess;
 use App\Models\Event;
 use App\Models\EventSchedule;
 use App\Models\EventScheduleDocument;
@@ -22,6 +23,7 @@ use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class CreateEvent extends CreateRecord
 {
+    use CheckPlanBeforeAccess;
     protected static string $resource = EventResource::class;
 
     // protected static ?string $title = __('event.pages.create_title');
@@ -33,6 +35,12 @@ class CreateEvent extends CreateRecord
         return static::getResource()::getUrl('index');
     }
 
+    public function mount(): void
+    {
+        parent::mount();
+        $this->ensurePlanAccessible();
+    }
+
     public function boot()
     {
         FilamentAsset::register([
@@ -40,7 +48,7 @@ class CreateEvent extends CreateRecord
         ]);
     }
 
-public function getBreadcrumbs(): array
+    public function getBreadcrumbs(): array
     {
         return [
             // Đã dịch: 'Sự kiện', 'Tạo sự kiện'
@@ -156,8 +164,7 @@ public function getBreadcrumbs(): array
             DB::commit();
 
             return $event;
-
-        }catch (\Exception $exception){
+        } catch (\Exception $exception) {
             DB::rollBack();
             if (!empty($imageRepresentPath) && is_string($imageRepresentPath)) {
                 Storage::disk('public')->delete($imageRepresentPath);

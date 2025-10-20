@@ -5,14 +5,12 @@ namespace App\Filament\Resources\Memberships;
 use App\Filament\Resources\Memberships\Pages\CreateMembership;
 use App\Filament\Resources\Memberships\Pages\EditMembership;
 use App\Filament\Resources\Memberships\Pages\ListMemberships;
-use App\Filament\Resources\Memberships\Schemas\MembershipForm;
 use App\Filament\Resources\Memberships\Schemas\MembershipSchema;
 use App\Filament\Resources\Memberships\Tables\MembershipsTable;
 use App\Models\Membership;
 use App\Utils\Constants\RoleUser;
 use BackedEnum;
 use Filament\Resources\Resource;
-use Filament\Forms\Form;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
@@ -51,6 +49,6 @@ class MembershipResource extends Resource
     public static function canAccess(): bool
     {
         $user = Auth::user();
-        return $user->role === RoleUser::SUPER_ADMIN->value;
+        return $user->role === RoleUser::SUPER_ADMIN->value|| $user->role === RoleUser::ADMIN->value;
     }
 }

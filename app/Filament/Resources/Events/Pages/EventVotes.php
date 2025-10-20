@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Events\Pages;
 
 use App\Filament\Resources\Events\EventResource;
+use App\Filament\Traits\CheckPlanBeforeAccess;
 use App\Models\EventPoll;
 use App\Models\EventPollQuestion;
 use App\Models\EventPollQuestionOption;
@@ -39,6 +40,7 @@ class EventVotes extends Page implements HasTable
 {
     use InteractsWithRecord;
     use Tables\Concerns\InteractsWithTable;
+    use CheckPlanBeforeAccess;
 
     protected static string $resource = EventResource::class;
 
@@ -58,6 +60,8 @@ class EventVotes extends Page implements HasTable
     public function mount(int|string $record): void
     {
         $this->record = $this->resolveRecord($record);
+        $this->ensurePlanAccessible();
+
     }
 
     public function table(Table $table): Table
