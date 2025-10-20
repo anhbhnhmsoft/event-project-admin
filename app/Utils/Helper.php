@@ -132,45 +132,49 @@ final class Helper
     public static function checkPlanOrganizer(): bool
     {
         $user = Auth::user();
+        if($user->role !== RoleUser::SUPER_ADMIN->value) {
 
-        $organizerService = app(OrganizerService::class);
-        $result = $organizerService->getOrganizerDetail($user->organizer_id);
+            $organizerService = app(OrganizerService::class);
+            $result = $organizerService->getOrganizerDetail($user->organizer_id);
 
-        if (!$result['status']) {
-            Auth::logout();
-            Notification::make()
-                ->title('Lỗi: Không tìm thấy thông tin tổ chức.')
-                ->danger()
-                ->send();
-
-            throw new Exception('Thông tin tổ chức không hợp lệ.');
-        }
-
-        $organizer = $result['organizer'];
-        $plan = $organizer->plansActive->first();
-
-        if (!$plan || $plan->pivot->end_date < now()) {
-
-            $message = 'Gói dịch vụ của tổ chức bạn đã hết hạn.';
-            if (!$plan) {
-                $message = 'Gói dịch vụ của tổ chức bạn cần kích hoạt.';
-            }
-
-            if ($plan && $plan->pivot->end_date < now() && !$organizer->status) {
+            if (!$result['status']) {
                 Auth::logout();
-                $message = 'Tổ chức của bạn hiện đã đóng, liên hệ quản trị viên để kích hoạt.';
+                Notification::make()
+                    ->title('Lỗi: Không tìm thấy thông tin tổ chức.')
+                    ->danger()
+                    ->send();
+
+                throw new Exception('Thông tin tổ chức không hợp lệ.');
             }
 
-            Notification::make()
-                ->title($message)
-                ->danger()
-                ->send();
+            $organizer = $result['organizer'];
+            $plan = $organizer->plansActive->first();
 
-            Redirect::to(ServicePlan::getUrl());
+            if (!$plan || $plan->pivot->end_date < now()) {
 
-            return false;
+                $message = 'Gói dịch vụ của tổ chức bạn đã hết hạn.';
+                if (!$plan) {
+                    $message = 'Gói dịch vụ của tổ chức bạn cần kích hoạt.';
+                }
+
+                if ($plan && $plan->pivot->end_date < now() && !$organizer->status) {
+                    Auth::logout();
+                    $message = 'Tổ chức của bạn hiện đã đóng, liên hệ quản trị viên để kích hoạt.';
+                }
+
+                Notification::make()
+                    ->title($message)
+                    ->danger()
+                    ->send();
+
+                Redirect::to(ServicePlan::getUrl());
+
+                return false;
+            }
+
+            return true;
         }
-
         return true;
+
     }
 }
