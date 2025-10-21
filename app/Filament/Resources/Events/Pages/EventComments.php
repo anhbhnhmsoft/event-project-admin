@@ -73,7 +73,7 @@ class EventComments extends Page implements HasTable
 
                 TextColumn::make('created_at')
                     ->label(
-                        __('event.comments.content_column')
+                        __('event.comments.time_column')
                     )
                     ->dateTime('d/m/Y H:i')
                     ->sortable(),
@@ -88,22 +88,24 @@ class EventComments extends Page implements HasTable
                         __('event.comments.record_title')
                     )
                     ->label(
-                    __('event.comments.delete_action'))
+                        __('event.comments.delete_action')
+                    )
                     ->successRedirectUrl(false)
                     ->action(function ($record) {
                         $record->delete();
                     })
                     ->successNotificationTitle(
-                    __('event.comments.delete_success'))
+                        __('event.comments.delete_success')
+                    )
                     ->after(fn() => $this->resetTable()),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
-          ->recordTitle(__('event.comments.record_title'))
-              ->label(__('event.comments.delete_action'))
+                        ->recordTitle(__('event.comments.record_title'))
+                        ->label(__('event.comments.delete_action'))
                         ->successRedirectUrl(false)
-           ->successNotificationTitle(__('event.comments.delete_success'))
+                        ->successNotificationTitle(__('event.comments.delete_success'))
                         ->after(fn() => $this->resetTable()),
                 ]),
             ]);

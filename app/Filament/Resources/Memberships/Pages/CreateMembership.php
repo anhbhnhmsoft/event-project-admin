@@ -40,10 +40,8 @@ class CreateMembership extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $user = Auth::user();
-        if ($user->role == RoleUser::SUPER_ADMIN->value) {
-            $type = MembershipType::FOR_ORGANIZER->value;
-            $data['config'] = [];
-        } elseif ($user->role == RoleUser::ADMIN->value) {
+
+        if ($user->role == RoleUser::ADMIN->value) {
             $type = MembershipType::FOR_CUSTOMER->value;
         };
         $data['type']        = $type;

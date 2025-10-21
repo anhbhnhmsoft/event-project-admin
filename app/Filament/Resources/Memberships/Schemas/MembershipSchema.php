@@ -3,8 +3,10 @@
 namespace App\Filament\Resources\Memberships\Schemas;
 
 use App\Utils\Constants\ConfigMembership;
+use App\Utils\Constants\MembershipType;
 use App\Utils\Constants\RoleUser;
 use Filament\Forms\Components\ColorPicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Components\Section;
@@ -48,7 +50,7 @@ class MembershipSchema
                             ->label('Miêu tả')
                     ]),
                 Section::make()->schema([
-                    Section::make('cấu hình hiển thị')
+                    Section::make('Cấu hình hiển thị')
                         ->schema([
                             TextInput::make('badge')
                                 ->label('Huy hiệu gói thành viên')
@@ -64,9 +66,15 @@ class MembershipSchema
                             Toggle::make('status')
                                 ->label('Trạng thái kích hoạt')
                                 ->required(),
+                            Select::make('type')
+                                ->label('Khách hàng sử dụng')
+                                ->placeholder('Khách hàng sử dụng gói')
+                                ->options(fn() => MembershipType::getOptions())
+                                ->hidden(fn(): bool => Auth::user()->role == RoleUser::ADMIN->value)
+                                ->required(),
                         ]),
                     Section::make('Cấu hình quyền')
-                        ->hidden(fn () => Auth::user()->role === RoleUser::SUPER_ADMIN->value)
+                        ->hidden(fn() => Auth::user()->role === RoleUser::SUPER_ADMIN->value)
                         ->schema(function () {
                             $user = Auth::user();
 

@@ -72,7 +72,6 @@ return new class extends Migration
                 ->default(1)
                 ->comment('Loại gói membership, Lưu trong enum MembershipType')
                 ->after('id');
-
             $table->foreignId('organizer_id')
                 ->constrained('organizers')
                 ->onDelete('cascade')
@@ -139,6 +138,10 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained();
             $table->timestamp('expired_at')->nullable();
             $table->json('config_pay')->nullable();
+            $table->foreignId('organizer_id')
+                ->constrained('organizers')
+                ->onUpdate('cascade')
+                ->onDelete('cascade');
             $table->softDeletes();
             $table->timestamps();
         });
@@ -351,6 +354,7 @@ return new class extends Migration
             $table->comment('Bảng event_comments lưu trữ các bình luận về sự kiện');
             $table->foreignId('event_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->tinyInteger('type')->comment('Phân loại nội dung bình luận');
             $table->text('content')->comment('Nội dung bình luận');
             $table->timestamps();
         });
@@ -363,6 +367,7 @@ return new class extends Migration
             $table->foreignId('event_seat_id')->nullable()->constrained()->nullOnDelete();
             $table->string('ticket_code')->nullable()->unique()->comment('Mã vé, định dạng như TICKET-123456');
             $table->tinyInteger('status')->comment('Trạng thái vé trong enum EventUserHistoryStatus');
+            $table->json('features')->nullable()->comment('Cấu hình quyền của người dùng trong sự kiện: Bình luận mất phí');
             $table->timestamps();
         });
 
