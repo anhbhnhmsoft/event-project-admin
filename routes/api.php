@@ -46,6 +46,7 @@ Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
         Route::get('/', [EventController::class, 'list']);
         Route::post('/history', [EventController::class, 'eventUserHistory']);
         Route::post('/history_register', [EventController::class, 'createEventUserHistory']);
+        Route::post('/document/register', [TransactionController::class, 'registerComment']);
         Route::post('/comment', [EventController::class, 'createEventComment']);
         Route::get('/list-comment', [EventController::class, 'listComment']);
         Route::get('/{id}', [EventController::class, 'show']);
@@ -74,6 +75,7 @@ Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
     });
     Route::prefix('/schedule')->group(function () {
         Route::get('/list', [EventController::class, 'listDocument']);
+        Route::post('/document/register', [TransactionController::class, 'registerDocument']);
         Route::get('/document/{id}', [EventController::class, 'getDetailScheduleDocument']);
         Route::get('/{id}', [EventController::class, 'getDetailSchedule']);
     });
