@@ -38,6 +38,7 @@ class Event extends Model
         'latitude',
         'longitude',
         'free_to_join',
+        'price_comment'
     ];
     protected $casts = [
         'start_time' => 'datetime',

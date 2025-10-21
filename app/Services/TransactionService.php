@@ -2,9 +2,12 @@
 
 namespace App\Services;
 
+use App\Models\EventScheduleDocumentUser;
+use App\Models\EventUserHistory;
 use App\Models\MembershipOrganizer;
 use App\Models\MembershipUser;
 use App\Models\Transactions;
+use App\Utils\Constants\EventDocumentUserStatus;
 use App\Utils\Constants\MembershipUserStatus;
 use App\Utils\Constants\TransactionStatus;
 use App\Utils\Constants\TransactionType;
@@ -16,7 +19,6 @@ use Illuminate\Support\Facades\Log;
 
 class TransactionService
 {
-
     public function confirmTransaction(TransactionStatus $status, string $transactionId): array
     {
         DB::beginTransaction();
@@ -39,8 +41,10 @@ class TransactionService
 
             Log::info('  Type  ' . $record->type);
             $result = match ($record->type) {
-                TransactionType::MEMBERSHIP->value => $this->confirmMembershipTransaction($status, $record),
+                TransactionType::MEMBERSHIP->value   => $this->confirmMembershipTransaction($status, $record),
                 TransactionType::PLAN_SERVICE->value => $this->confirmPlanServiceTransaction($status, $record),
+                TransactionType::BUY_DOCUMENT->value => $this->confirmDocumentTransaction($status, $record),
+                TransactionType::BUY_COMMENT->value => $this->confirmDocumentTransaction($status, $record),
                 default => [
                     'status' => false,
                     'message' => __('common.common_error.invalid_transaction_type'),
@@ -144,24 +148,10 @@ class TransactionService
         }
     }
 
-    public function confirmMembershipTransaction(TransactionStatus $status, string $transactionId): array
+    public function confirmMembershipTransaction(TransactionStatus $status, Transactions $record): array
     {
         DB::beginTransaction();
         try {
-            $record = Transactions::query()
-                ->where('transaction_id', $transactionId)
-                ->where('type', TransactionType::MEMBERSHIP->value)
-                ->where('type_trans', TransactionTypePayment::CASSO->value)
-                ->whereIn('status', [TransactionStatus::WAITING->value, TransactionStatus::FAILED->value])
-                ->first();
-            if (!$record) {
-                DB::rollBack();
-                return [
-                    'status' => false,
-                    'message' => __('common.common_error.data_not_found'),
-                ];
-            }
-
             $membershipUser = MembershipUser::query()->find($record->foreign_id);
             if (!$membershipUser) {
                 DB::rollBack();
@@ -223,6 +213,91 @@ class TransactionService
             ];
         } catch (Exception $e) {
             Log::debug(" Confirm Membership Transaction get error: " . $e->getMessage());
+            DB::rollBack();
+            return [
+                'status' => false,
+                'message' => __('common.common_success.update_success')
+            ];
+        }
+    }
+
+
+    public function confirmDocumentTransaction(TransactionStatus $status, Transactions $record): array
+    {
+        DB::beginTransaction();
+        try {
+            $documentUser = EventScheduleDocumentUser::query()->find($record->foreign_id);
+            if (!$documentUser) {
+                DB::rollBack();
+                return [
+                    'status' => false,
+                    'message' => __('common.common_error.data_not_found'),
+                ];
+            }
+
+            switch ($status) {
+                case TransactionStatus::SUCCESS:
+                    $documentUser->status = EventDocumentUserStatus::ACTIVE->value;
+                    $documentUser->save();
+                    $record->status = TransactionStatus::SUCCESS->value;
+                    $record->save();
+                    break;
+                case TransactionStatus::FAILED:
+                default:
+                    $record->status = TransactionStatus::FAILED;
+                    $record->save();
+                    break;
+            }
+            DB::commit();
+            return [
+                'status' => true,
+                'message' => __('common.common_success.update_success')
+            ];
+        } catch (Exception $e) {
+            Log::debug(" Confirm Document Transaction get error: " . $e->getMessage());
+            DB::rollBack();
+            return [
+                'status' => false,
+                'message' => __('common.common_success.update_success')
+            ];
+        }
+    }
+
+    public function confirmCommentTransaction(TransactionStatus $status, Transactions $record): array
+    {
+        DB::beginTransaction();
+        try {
+            $ticket = EventUserHistory::query()->find($record->foreign_id);
+            if (!$ticket) {
+                DB::rollBack();
+                return [
+                    'status' => false,
+                    'message' => __('common.common_error.data_not_found'),
+                ];
+            }
+
+            switch ($status) {
+                case TransactionStatus::SUCCESS:
+                    $ticket->features = [
+                        'allow_comment_private' => true
+                    ];
+                    $ticket->save();
+                    $record->status = TransactionStatus::SUCCESS->value;
+                    $record->save();
+                    break;
+                case TransactionStatus::FAILED:
+                default:
+                    $record->status = TransactionStatus::FAILED;
+                    $record->save();
+                    break;
+            }
+            DB::commit();
+            return [
+                'status' => true,
+                'message' => __('common.common_success.update_success')
+            ];
+        } catch (Exception $e) {
+            Log::debug(" Confirm Comment Transaction get error: " . $e->getMessage());
             DB::rollBack();
             return [
                 'status' => false,

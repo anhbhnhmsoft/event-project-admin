@@ -60,11 +60,13 @@ class AuthService
                 'user' => $user,
             ];
         } catch (ServiceException $e) {
+            Log::debug($e->getMessage());
             return [
                 'status' => false,
                 'message' => $e->getMessage(),
             ];
         } catch (\Throwable $e) {
+            Log::debug($e->getMessage());
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),

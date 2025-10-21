@@ -95,11 +95,7 @@ class MembershipController extends Controller
 
         $membership = $this->membershipService->getMembershipDetail($validator->getData()['membership_id']);
 
-        if (!$membership['status']) {
-            return response()->json(['message' => $membership['message']], 422);
-        }
-
-        $result = $this->membershipService->membershipRegister($membership['membership'], MembershipType::FOR_CUSTOMER->value);
+        $result = $this->membershipService->membershipRegister($membership['data'], MembershipType::FOR_CUSTOMER->value);
         if (!$result['status']) {
             return response()->json([
                 'message' => $result['message']

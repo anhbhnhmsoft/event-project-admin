@@ -58,6 +58,7 @@ class EditEvent extends EditRecord
                     'id' => $document->id,
                     'title' => $document->title,
                     'description' => $document->description,
+                    'price' => $document->price,
                     'files' => $document->files->map(function ($file) {
                         return [
                             'id' => $file->id,
@@ -141,6 +142,7 @@ class EditEvent extends EditRecord
                 'ward_code' => $data['ward_code'],
                 'status' => $data['status'],
                 'free_to_join' => $data['free_to_join'],
+                'price_comment' => $data['price_comment'],
             ];
 
             if (isset($data['image_represent_path']) && $data['image_represent_path'] instanceof TemporaryUploadedFile) {
@@ -220,6 +222,7 @@ class EditEvent extends EditRecord
                                         [
                                             'title' => $documentData['title'],
                                             'description' => $documentData['description'] ?? null,
+                                            'price' => $documentData['price'],
                                         ]
                                     );
 

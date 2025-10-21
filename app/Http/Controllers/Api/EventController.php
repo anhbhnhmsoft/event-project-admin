@@ -17,6 +17,7 @@ use App\Services\EventService;
 use App\Services\EventUserHistoryService;
 use App\Services\MemberShipService;
 use App\Utils\Constants\ConfigMembership;
+use App\Utils\Constants\EventDocumentUserStatus;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -236,7 +237,8 @@ class EventController extends Controller
             $request->all(),
             [
                 'event_id' => ['required', 'exists:events,id'],
-                'content' => ['required', 'string', 'max:1000'],
+                'content'  => ['required', 'string', 'max:1000'],
+                'type'     => ['required', 'int']
             ],
             [
                 'event_id.required' => __('event.validation.event_id_exists'),
@@ -244,6 +246,8 @@ class EventController extends Controller
                 'content.required' => __('common.common_error.validation_failed'),
                 'content.max' => __('common.common_error.max_content', ['max' => 1000]),
                 'content.string' => __('common.common_error.validation_failed'),
+                'type.required' => __('common.common_error.validation_failed'),
+                'type.int' => __('common.common_error.validation_failed'),
             ]
         );
         if ($validator->fails()) {
@@ -277,9 +281,10 @@ class EventController extends Controller
         }
 
         $newComment = [
-            'user_id' => $user->id,
+            'user_id'  => $user->id,
             'event_id' => $validated['event_id'],
-            'content' => $validated['content']
+            'content'  => $validated['content'],
+            'type'     => $validated['type']
         ];
 
         $result = $this->eventCommentService->eventCommentInsert($newComment);
@@ -375,7 +380,13 @@ class EventController extends Controller
             }
         }
 
-        $eventScheduleDocumentUser = $this->eventScheduleService->insertEventScheduleDocumentUser($user->id, $document['document']->id);
+        $data = [
+            'user_id' => $user->id,
+            'event_schedule_document_id' =>  $document['document']->id,
+            'status' => EventDocumentUserStatus::ACTIVE->value
+        ];
+
+        $eventScheduleDocumentUser = $this->eventScheduleService->insertEventScheduleDocumentUser($data);
         if (!$eventScheduleDocumentUser['status']) {
             return response()->json([
                 'message' => __('common.common_error.server_error'),

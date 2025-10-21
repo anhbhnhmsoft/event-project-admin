@@ -33,6 +33,9 @@ return [
         'status_exists' => 'Trạng thái không tồn tại',
         'history_id_required' => 'ID lịch sử là bắt buộc khi đặt vé',
         'already_booked' => 'Bạn đã đặt vé',
+        'document_id_required' => 'ID tài liệu là bắt buộc',
+        'document_id_exits' => 'Tài liệu không tồn tại',
+
     ],
     'general' => [
         'event_title' => 'Sự kiện',

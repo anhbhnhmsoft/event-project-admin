@@ -12,7 +12,6 @@ use App\Services\OrganizerService;
 use App\Services\EventUserHistoryService;
 use App\Services\TransactionService;
 use App\Services\NotificationService;
-use Filament\Auth\Http\Responses\Contracts\LoginResponse;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\ServiceProvider;
 
@@ -32,7 +31,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(NotificationService::class, fn() => new NotificationService());
         $this->app->singleton(DashboardService::class, fn() => new DashboardService());
         $this->app->singleton(EventPollService::class, fn() => new EventPollService());
-        // $this->app->singleton(LoginResponse::class,fn() => new CustomLoginResponse());
     }
 
     /**

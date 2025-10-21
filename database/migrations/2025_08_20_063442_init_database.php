@@ -218,6 +218,7 @@ return new class extends Migration
             $table->boolean('free_to_join')
                 ->default(true)
                 ->comment('Sự kiện miễn phí tham gia hay không');
+            $table->unsignedInteger('price_comment')->default(0)->comment('Phân loại khu vực bình luận nếu giá trị = 0, sự kiện không phân loại khu vực bình luận');
             $table->softDeletes();
             $table->timestamps();
         });
@@ -255,6 +256,8 @@ return new class extends Migration
             $table->foreignId('event_schedule_id')->constrained('event_schedules')->cascadeOnDelete();
             $table->string('title')->comment('Tiêu đề của tài liệu');
             $table->text('description')->comment('Mô tả chi tiết về tài liệu');
+            $table->unsignedInteger('price')->default(0)->comment('Giá tài liệu nếu giá trị = 0, tài liệu miễn phí');
+
             $table->softDeletes();
             $table->timestamps();
         });
@@ -280,6 +283,7 @@ return new class extends Migration
             $table->comment('Bảng event_schedule_document_user để lưu trữ các file trong lịch trình sự kiện người dùng từng tham gia');
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('event_schedule_document_id')->constrained('event_schedule_documents')->cascadeOnDelete();
+            $table->tinyInteger('status')->default(1)->comment('Lưu trạng thái của khách mời đối với tài liệu sự kiện');
             $table->softDeletes();
             $table->timestamps();
         });

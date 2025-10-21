@@ -23,6 +23,7 @@ class EventScheduleDocument extends Model
         'event_schedule_id',
         'title',
         'description',
+        'price'
     ];
 
     protected static function booted()

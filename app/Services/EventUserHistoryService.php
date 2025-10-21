@@ -171,6 +171,14 @@ class EventUserHistoryService
             ];
         }
     }
+
+    public function getDetailTicket ($event_id, $user_id) {
+        return EventUserHistory::where([
+            'event_id' => $event_id,
+            'user_id'  => $user_id ,
+        ])->first();
+    }
+
     public function getEventHistory(int $eventId, int $userId, int $organizerId, int $page, int $limit): array
     {
         try {

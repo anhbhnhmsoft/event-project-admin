@@ -56,7 +56,7 @@ class CreateEvent extends CreateRecord
             '' => __('event.general.create_event'),
         ];
     }
-    
+
     protected function handleRecordCreation(array $data): Model
     {
         DB::beginTransaction();
@@ -89,6 +89,7 @@ class CreateEvent extends CreateRecord
                 'longitude' => $longitude,
                 'status' => $data['status'],
                 'free_to_join' => $data['free_to_join'],
+                'price_comment' => $data['price_comment'],
             ];
 
             if (isset($data['image_represent_path']) && $data['image_represent_path'] instanceof TemporaryUploadedFile) {
@@ -138,6 +139,7 @@ class CreateEvent extends CreateRecord
                                         'event_schedule_id' => $eventSchedule->id,
                                         'title' => $documentData['title'],
                                         'description' => $documentData['description'] ?? null,
+                                        'price' => $documentData['price']
                                     ]);
 
                                     if (!empty($documentData['files'])) {

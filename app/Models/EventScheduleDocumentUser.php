@@ -15,7 +15,8 @@ class EventScheduleDocumentUser extends Model
 
     protected $fillable = [
         'user_id',
-        'event_schedule_document_id'
+        'event_schedule_document_id',
+        'status'
     ];
 
     protected static function booted()

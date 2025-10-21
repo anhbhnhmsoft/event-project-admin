@@ -206,6 +206,11 @@ class EventForm
                             ->validationMessages([
                                 'required' => 'Vui lòng tích chọn',
                             ]),
+                        TextInput::make('price_comment')
+                            ->label('Giá bình luận private')
+                            ->default(0)
+                            ->numeric()
+                            ->helperText('Nếu giá trị = 0 không phân loại bình luận'),
                     ]),
                 Tab::make('participants')
                     ->label('Người tham gia')
@@ -483,10 +488,16 @@ class EventForm
                                             ->validationMessages([
                                                 'required' => 'Vui lòng nhập tiêu đề tài liệu.',
                                             ]),
+                                        TextInput::make('price')
+                                            ->label('Giá tài liệu')
+                                            ->default(0)
+                                            ->numeric()
+                                            ->helperText('Nếu giá trị = 0 tài liệu miễn phí'),
                                         RichEditor::make('description')
                                             ->label('Mô tả tài liệu')
                                             ->required()
                                             ->extraAttributes(['style' => 'min-height: 300px;']),
+
                                         FileUpload::make('files')
                                             ->label('Tệp đính kèm')
                                             ->multiple()

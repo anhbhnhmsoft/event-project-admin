@@ -6,6 +6,7 @@ use App\Filament\Resources\Events\EventResource;
 use App\Filament\Traits\CheckPlanBeforeAccess;
 use App\Models\Event;
 use App\Models\EventComment;
+use App\Utils\Constants\EventCommentType;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -70,6 +71,9 @@ class EventComments extends Page implements HasTable
                     )
                     ->limit(80)
                     ->searchable(),
+                TextColumn::make('type')
+                    ->label('Loại')
+                    ->formatStateUsing(fn(int $state): string => EventCommentType::label($state)),
 
                 TextColumn::make('created_at')
                     ->label(
