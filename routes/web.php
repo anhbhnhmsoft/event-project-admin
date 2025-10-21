@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FileController;
 use App\Livewire\Events\QuickRegister;
 use App\Http\Controllers\Api\GameEventController;
+use App\Http\Controllers\Api\OrganizerController;
 
 Route::get('/image/{file_path}', [FileController::class, 'image'])
     ->where('file_path', '.*')
@@ -16,6 +17,8 @@ Route::middleware(['auth:sanctum', 'auth:web'])->get('/document/{file_path}', [F
 
 Route::middleware(['auth:sanctum'])->get('/file-private/{document_id}/{file_id}', [EventController::class, 'downloadDocumentFile'])
     ->name('private_file');
+Route::get('/register', [OrganizerController::class, 'viewRegisterNewOrganizer']);
+Route::post('/register', [OrganizerController::class, 'registerNewOrganizer']);
 
 Route::get('/event/quick-register', QuickRegister::class)->name('events.quick-register');
 Route::get("/", [EventController::class, 'index'])->name('home');

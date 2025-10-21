@@ -6,6 +6,7 @@ use App\Filament\Resources\Transactions\Pages\ListTransactions;
 use App\Filament\Resources\Transactions\Tables\TransactionsTable;
 use App\Models\Transactions;
 use App\Utils\Constants\RoleUser;
+use App\Utils\Helper;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
@@ -23,8 +24,7 @@ class TransactionsResource extends Resource
 
     public static function canAccess(): bool
     {
-        $user = Auth::user();
-        return $user->role === RoleUser::SUPER_ADMIN->value;
+        return Helper::checkAdmin();
     }
 
     public static function table(Table $table): Table

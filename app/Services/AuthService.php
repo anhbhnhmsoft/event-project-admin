@@ -7,7 +7,6 @@ use App\Models\Config;
 use App\Models\Event;
 use App\Models\EventUserHistory;
 use App\Models\User;
-use App\Utils\Constants\CommonStatus;
 use App\Utils\Constants\ConfigName;
 use App\Utils\Constants\EventStatus;
 use App\Utils\Constants\EventUserHistoryStatus;

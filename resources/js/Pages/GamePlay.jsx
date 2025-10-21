@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Wheel } from "react-custom-roulette";
 import { Gift, Users, Trophy, Sparkles, Award } from "lucide-react";
 import { usePage } from "@inertiajs/react";
