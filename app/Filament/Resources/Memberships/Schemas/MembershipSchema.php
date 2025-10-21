@@ -6,7 +6,6 @@ use App\Utils\Constants\ConfigMembership;
 use App\Utils\Constants\RoleUser;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\Toggle;
@@ -67,6 +66,7 @@ class MembershipSchema
                                 ->required(),
                         ]),
                     Section::make('Cấu hình quyền')
+                        ->hidden(fn () => Auth::user()->role === RoleUser::SUPER_ADMIN->value)
                         ->schema(function () {
                             $user = Auth::user();
 

@@ -4,11 +4,18 @@ namespace App\Services;
 
 use App\Models\Config;
 use App\Models\Organizer;
+use App\Models\User;
+use App\Utils\Constants\CommonStatus;
 use App\Utils\Constants\ConfigName;
 use App\Utils\Constants\ConfigType;
+use App\Utils\Constants\Language;
+use App\Utils\Constants\RoleUser;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 use Throwable;
 
 class OrganizerService
@@ -142,5 +149,64 @@ class OrganizerService
     public function getOrganizer($id)
     {
         return Organizer::with(['plansActive'])->find($id);
+    }
+
+    public function registerNewOrganizer($data)
+    {
+        DB::beginTransaction();
+        try {
+
+            $organizer = Organizer::create([
+                'name'   => $data['name'],
+                'status' => CommonStatus::ACTIVE->value,
+            ]);
+
+            $user = User::query()->create(
+                [
+                    'name'         => $data['name'],
+                    'email'        => $data['email'],
+                    'password'     => Hash::make($data['password']),
+                    'role'         => RoleUser::ADMIN->value,
+                    'phone'        => $data['phone'] ?? null,
+                    'organizer_id' => $organizer->id,
+                    'lang'         => Language::VI->value,
+                ]
+            );
+            DB::commit();
+            $verificationUrl = URL::temporarySignedRoute(
+                'api.verification.verify',
+                now()->addMinutes(60),
+                [
+                    'id' => $user->getKey(),
+                    'hash' => sha1($user->getEmailForVerification())
+                ]
+            );
+
+            Mail::send('emails.verify-email', ['url' => $verificationUrl, 'user' => $user], function ($message) use ($user) {
+                $message->to($user->email)
+                    ->subject('Xác thực tài khoản - ' . config('app.name'));
+            });
+
+            return [
+                'status'  => true,
+                'message' => 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.',
+                'data'    => [
+                    'organizer_id' => $organizer->id,
+                    'user_id'      => $user->id,
+                ],
+            ];
+        } catch (\Throwable $th) {
+
+            DB::rollBack();
+            Log::error('Register organizer failed: ' . $th->getMessage(), [
+                'trace' => $th->getTraceAsString(),
+                'data'  => $data,
+            ]);
+
+            return [
+                'status'  => false,
+                'message' => 'Có lỗi xảy ra khi đăng ký. Vui lòng thử lại sau.',
+            ];
+        }
     }
 }

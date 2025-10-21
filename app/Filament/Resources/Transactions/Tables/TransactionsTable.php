@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Transactions\Tables;
 
+use App\Models\Transactions;
 use App\Utils\Constants\TransactionStatus;
 use App\Utils\Constants\TransactionType;
 use Filament\Actions\Action;
@@ -14,12 +15,15 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use App\Services\TransactionService;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class TransactionsTable
 {
     public static function configure(Table $table): Table
     {
+        $user = Auth::user();
         return $table
+            ->query(fn() => Transactions::query()->where('organizer_id', $user->organizer_id))
             ->columns([
                 TextColumn::make('transaction_code')
                     ->label('Mã giao dịch')
