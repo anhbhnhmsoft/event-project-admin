@@ -51,13 +51,8 @@
                 <div class="flex justify-center flex-wrap gap-8">
                     @foreach ($areas as $area)
                         <div class="group relative">
-                            <div
-                                class="bg-gradient-to-br from-white to-gray-50 rounded-xl border-2 border-gray-200 hover:border-indigo-300 transition-all duration-300 overflow-hidden shadow-sm hover:shadow-xl transform hover:-translate-y-1">
-
-                                <div
-                                    class="
-                                        {{ $area['vip'] ? 'bg-[#ffb704]' : 'bg-[#3d3aff]' }} 
-                                    text-white p-4">
+                            <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl border-2 border-gray-200 hover:border-indigo-300 transition-all duration-300 overflow-hidden shadow-sm hover:shadow-xl transform hover:-translate-y-1">
+                                <div class="{{ $area['vip'] ? 'bg-[#EFAA0A]' : 'bg-[#3d3aff]' }} text-white p-4">
                                     <div class="flex justify-between items-center">
                                         <div>
                                             <h3 class="font-bold text-lg flex items-center gap-2">
@@ -88,7 +83,7 @@
                                             </button>
                                             <button wire:click="deleteArea('{{ $area['id'] }}')"
                                                 wire:confirm="Bạn có chắc chắn muốn xóa khu vực này?"
-                                                class="bg-red-500/20 hover:bg-red-500/30 p-2 rounded-lg transition-colors">
+                                                class="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition-colors">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round"

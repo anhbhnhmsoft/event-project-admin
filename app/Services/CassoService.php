@@ -23,6 +23,7 @@ class CassoService
         $organizerId = match ($typeTrans) {
             TransactionType::PLAN_SERVICE->value => 1,
             TransactionType::MEMBERSHIP->value => $user->organizer_id,
+            TransactionType::EVENT_SEAT->value => $user->organizer_id,
             default => null,
         };
 

@@ -19,7 +19,8 @@ class EventAreaResource extends JsonResource
             'name' => (string)$this->name,
             'capacity' => (int)$this->capacity,
             'vip' => $this->vip,
-            'seat_available_count' => $this->seat_available_count ?? 0
+            'seat_available_count' => $this->seat_available_count ?? 0,
+            'price' => $this->price ?? null
         ];
     }
 }

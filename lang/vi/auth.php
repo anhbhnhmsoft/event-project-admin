@@ -26,6 +26,8 @@ return [
         'password_not_match' => 'Mật khẩu không khớp',
         'organizer_not_found' => 'Nhà tổ chức không tồn tại',
         'unauthorized' => 'Không có quyền truy cập',
+        'unauthorized_access' => 'Tài khoản của bạn không có quyền truy cập vào hệ thống quản trị',
+        'email_not_verified' => 'Email chưa được xác thực, vui lòng kiểm tra email để xác thực tài khoản',
         'validation_failed' => 'Dữ liệu không hợp lệ',
         'server_error' => 'Lỗi máy chủ',
         'unverified_email' => 'Email chưa được xác thực, vui lòng kiểm tra email để xác thực tài khoản',
