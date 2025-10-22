@@ -11,8 +11,10 @@ use App\Http\Resources\EventScheduleDetailResource;
 use App\Http\Resources\EventScheduleDocumentResource;
 use App\Http\Resources\EventSeatResource;
 use App\Http\Resources\EventUserHistoryResource;
+use App\Http\Resources\EventSeatTransactionResource;
 use App\Services\EventCommentService;
 use App\Services\EventScheduleService;
+use App\Services\EventSeatService;
 use App\Services\EventService;
 use App\Services\EventUserHistoryService;
 use App\Services\MemberShipService;
@@ -216,17 +218,40 @@ class EventController extends Controller
         }
 
         $user = $request->user();
+        $data = $validator->getData();
 
-        $result = $this->eventUserHistoryService->createEventHistory($validator->getData(), $user->id, $user->organizer_id);
+        if ($data['status'] === EventUserHistoryStatus::BOOKED->value && isset($data['event_seat_id'])) {
+            $eventSeatService = app(EventSeatService::class);
+            $paymentResult = $eventSeatService->checkAndCreatePayment($data['event_id'], $data['event_seat_id']);
+
+            if ($paymentResult['status'] && $paymentResult['payment_required']) {
+                $transaction = $paymentResult['data'];
+                return response()->json([
+                    'message' => 'Vui lòng thanh toán để đặt ghế',
+                    'data' => new EventSeatTransactionResource($transaction),
+                    'payment_required' => true,
+                ], 200);
+            }
+
+            if (!$paymentResult['status']) {
+                return response()->json([
+                    'message' => $paymentResult['message'],
+                ], 400);
+            }
+        }
+
+        $result = $this->eventUserHistoryService->createEventHistory($data, $user->id, $user->organizer_id);
 
         if ($result['status'] === false) {
             return response()->json([
                 'message' => $result['message'],
             ], 422);
         }
+        
         return response()->json([
             'message' => $result['message'],
             'data' => EventUserHistoryResource::make($result['data']),
+            'payment_required' => false,
         ], 200);
     }
 

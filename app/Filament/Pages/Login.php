@@ -88,7 +88,7 @@ class Login extends BaseLogin
         if ($user->role == RoleUser::CUSTOMER->value) {
             Auth::logout();
             throw ValidationException::withMessages([
-                'data.email' => __('auth.unauthorized_access'),
+                'data.email' => __('auth.error.unauthorized_access'),
             ]);
         }
 

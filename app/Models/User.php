@@ -11,7 +11,7 @@ use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -75,7 +75,7 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
     }
     public function scopeWhereHasActiveOrganizer(Builder $query, int $organizerId): void
     {
-        $query->whereHas('organizer', function (Builder $q) use ($organizerId) {
+        $query->whereHas('organizer', function ($q) use ($organizerId) {
             $q->where('organizer_id', $organizerId)
                 ->where('status', CommonStatus::ACTIVE->value);
         });

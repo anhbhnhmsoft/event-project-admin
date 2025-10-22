@@ -66,6 +66,7 @@ Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
         Route::get('/{id}', [TransactionController::class, 'show']);
     });
 
+
     Route::prefix('/notifications')->group(function () {
         Route::get('/', [NotificationController::class, 'index']);
         Route::get('/unread', [NotificationController::class, 'getUnReadCount']);
@@ -99,3 +100,4 @@ Route::prefix('common')->middleware('set-locale')->group(function () {
 });
 
 Route::post('/webhook/payos', [WebhookCassoController::class, 'handle']);
+Route::post('/webhook/event-seat-payment', [EventController::class, 'handleSeatPaymentWebhook']);

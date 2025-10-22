@@ -3,11 +3,14 @@
 namespace App\Services;
 
 use App\Models\EventScheduleDocumentUser;
+use App\Models\EventSeat;
 use App\Models\EventUserHistory;
 use App\Models\MembershipOrganizer;
 use App\Models\MembershipUser;
 use App\Models\Transactions;
 use App\Utils\Constants\EventDocumentUserStatus;
+use App\Utils\Constants\EventSeatStatus;
+use App\Utils\Constants\EventUserHistoryStatus;
 use App\Utils\Constants\MembershipUserStatus;
 use App\Utils\Constants\TransactionStatus;
 use App\Utils\Constants\TransactionType;
@@ -45,6 +48,9 @@ class TransactionService
                 TransactionType::PLAN_SERVICE->value => $this->confirmPlanServiceTransaction($status, $record),
                 TransactionType::BUY_DOCUMENT->value => $this->confirmDocumentTransaction($status, $record),
                 TransactionType::BUY_COMMENT->value => $this->confirmDocumentTransaction($status, $record),
+                TransactionType::MEMBERSHIP->value => $this->confirmMembershipTransaction($status, $record->transaction_id),
+                TransactionType::PLAN_SERVICE->value => $this->confirmPlanServiceTransaction($status, $record),
+                TransactionType::EVENT_SEAT->value => $this->confirmEventSeatTransaction($status, $record->transaction_id),
                 default => [
                     'status' => false,
                     'message' => __('common.common_error.invalid_transaction_type'),
@@ -160,14 +166,9 @@ class TransactionService
                     'message' => __('common.common_error.data_not_found'),
                 ];
             }
+            
             $membershipPlan = $membershipUser->membership;
-
-            /**
-             * Lấy user
-             * @var $user User
-             */
             $user = $membershipUser->user;
-            // Tìm membership đang active
             $activeMembership = $user->activeMemberships()->first();
 
             switch ($status) {
@@ -216,7 +217,7 @@ class TransactionService
             DB::rollBack();
             return [
                 'status' => false,
-                'message' => __('common.common_success.update_success')
+                'message' => __('common.common_error.server_error')
             ];
         }
     }
@@ -404,6 +405,7 @@ class TransactionService
             $cancelResult = match ($transaction->type) {
                 TransactionType::MEMBERSHIP->value => $this->cancelMembershipRecord($transaction),
                 TransactionType::PLAN_SERVICE->value => $this->cancelPlanServiceRecord($transaction),
+                TransactionType::EVENT_SEAT->value => $this->cancelEventSeatRecord($transaction),
                 default => ['status' => false, 'message' => 'Loại giao dịch không hợp lệ']
             };
 
@@ -560,6 +562,142 @@ class TransactionService
                 'status' => false,
                 'message' => __('common.common_error.server_error'),
             ];
+        }
+    }
+
+    public function findByTransactionId(string $transactionId)
+    {
+        return Transactions::where('transaction_id', $transactionId)->first();
+    }
+
+    public function confirmEventSeatTransaction(TransactionStatus $status, string $transactionId): array
+    {
+        DB::beginTransaction();
+        try {
+            $record = Transactions::query()
+                ->where('transaction_id', $transactionId)
+                ->where('type', TransactionType::EVENT_SEAT->value)
+                ->whereIn('status', [TransactionStatus::WAITING->value, TransactionStatus::FAILED->value])
+                ->first();
+
+            if (!$record) {
+                DB::rollBack();
+                return [
+                    'status' => false,
+                    'message' => __('common.common_error.data_not_found'),
+                ];
+            }
+
+            switch ($status) {
+                case TransactionStatus::SUCCESS:
+                    $metadata = json_decode($record->metadata, true);
+                    $seatId = $metadata['seat_id'] ?? null;
+                    
+                    if (!$seatId) {
+                        DB::rollBack();
+                        return [
+                            'status' => false,
+                            'message' => 'Không tìm thấy thông tin ghế trong giao dịch',
+                        ];
+                    }
+
+                    $seat = EventSeat::find($seatId);
+                    if (!$seat) {
+                        DB::rollBack();
+                        return [
+                            'status' => false,
+                            'message' => 'Ghế không tồn tại',
+                        ];
+                    }
+
+                    if ($seat->status !== EventSeatStatus::AVAILABLE->value) {
+                        DB::rollBack();
+                        return [
+                            'status' => false,
+                            'message' => 'Ghế đã được đặt bởi người khác',
+                        ];
+                    }
+
+                    $alreadyBooked = EventUserHistory::query()
+                        ->where('event_id', $metadata['event_id'] ?? null)
+                        ->where('user_id', $record->user_id)
+                        ->whereIn('status', [EventUserHistoryStatus::BOOKED->value, EventUserHistoryStatus::PARTICIPATED->value])
+                        ->exists();
+                    if ($alreadyBooked) {
+                        DB::rollBack();
+                        return [
+                            'status' => false,
+                            'message' => __('event.validation.already_booked'),
+                        ];
+                    }
+
+                    $seat->update([
+                        'status' => EventSeatStatus::BOOKED->value,
+                        'user_id' => $record->user_id,
+                        'booked_at' => now(),
+                    ]);
+
+                    $history = EventUserHistory::query()->firstOrCreate(
+                        [
+                            'event_id' => $metadata['event_id'],
+                            'user_id' => $record->user_id,
+                        ],
+                        [
+                            'status' => EventUserHistoryStatus::SEENED->value,
+                        ]
+                    );
+
+                    if (empty($history->ticket_code)) {
+                        $history->ticket_code = 'TICKET-' . $record->transaction_code;
+                    }
+                    $history->event_seat_id = $seatId;
+                    $history->status = \App\Utils\Constants\EventUserHistoryStatus::BOOKED->value;
+                    $history->save();
+
+                    $record->status = TransactionStatus::SUCCESS->value;
+                    $record->save();
+
+                    Log::info("Event seat booked successfully", [
+                        'transaction_id' => $record->id,
+                        'seat_id' => $seatId,
+                        'user_id' => $record->user_id,
+                    ]);
+                    break;
+                    
+                case TransactionStatus::FAILED:
+                default:
+                    $record->status = TransactionStatus::FAILED->value;
+                    $record->save();
+                    break;
+            }
+
+            DB::commit();
+            return [
+                'status' => true,
+                'message' => __('common.common_success.update_success')
+            ];
+        } catch (Exception $e) {
+            Log::debug("Confirm Event Seat Transaction get error: " . $e->getMessage());
+            DB::rollBack();
+            return [
+                'status' => false,
+                'message' => __('common.common_error.update_failed')
+            ];
+        }
+    }
+
+    private function cancelEventSeatRecord(Transactions $transaction): array
+    {
+        try {
+            Log::info("Event seat transaction cancelled", [
+                'transaction_id' => $transaction->id,
+                'foreign_id' => $transaction->foreign_id,
+            ]);
+
+            return ['status' => true];
+        } catch (Exception $e) {
+            Log::error("Error cancelling EventSeat transaction: " . $e->getMessage());
+            throw $e;
         }
     }
 }

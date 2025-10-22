@@ -10,8 +10,8 @@ enum MembershipType: int
     public static function label(int $type): string
     {
         return match ($type) {
-            self::FOR_CUSTOMER->value   => 'Dùng cho khách hàng sự kiện',
-            self::FOR_ORGANIZER->value  => 'Dùng cho khách hàng hệ thống',
+            self::FOR_CUSTOMER->value   => 'Gói dùng cho tổ chức',
+            self::FOR_ORGANIZER->value  => 'Gói dùng cho người dùng tham gia',
         };
     }
 

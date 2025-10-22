@@ -31,6 +31,7 @@ class EventListResource extends JsonResource
             'image_represent_path' => Helper::generateURLImagePath($this->image_represent_path),
             'address' => $this->address,
             'day_represent' => $this->day_represent,
+            'free_to_join' => $this->free_to_join,
             'status_history' => $status_history
         ];
     }

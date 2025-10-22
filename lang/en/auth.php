@@ -25,6 +25,8 @@ return [
         'password_not_match' => 'Password does not match',
         'organizer_not_found' => 'Organizer not found',
         'unauthorized' => 'Unauthorized',
+        'unauthorized_access' => 'Your account does not have access to the admin system',
+        'email_not_verified' => 'Email not verified, please check your email to verify your account',
         'validation_failed' => 'Validation failed',
         'server_error' => 'Server error',
         'logout_failed' => 'Logout failed',

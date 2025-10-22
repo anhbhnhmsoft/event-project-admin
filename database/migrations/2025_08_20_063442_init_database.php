@@ -70,13 +70,11 @@ return new class extends Migration
             $table->boolean('status')->default(true)->comment('Trạng thái của gói membership, true nếu hoạt động, false nếu không hoạt động');
             $table->tinyInteger('type')
                 ->default(1)
-                ->comment('Loại gói membership, Lưu trong enum MembershipType')
-                ->after('id');
+                ->comment('Loại gói membership, Lưu trong enum MembershipType');
             $table->foreignId('organizer_id')
                 ->constrained('organizers')
                 ->onDelete('cascade')
-                ->comment('Khóa ngoại tới bảng organizer')
-                ->after('type');
+                ->comment('Khóa ngoại tới bảng organizer');
             $table->softDeletes();
             $table->timestamps();
         });
