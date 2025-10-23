@@ -93,15 +93,6 @@ class Register extends PagesRegister
         return new User();
     }
 
-    protected function sendVerificationEmail(User $user): void
-    {
-        try {
-            $user->sendEmailVerificationNotification();
-        } catch (\Exception $e) {
-            Log::error('Failed to send verification email: ' . $e->getMessage());
-        }
-    }
-
     public function switchLanguage(string $locale): void
     {
         if (in_array($locale, ['vi', 'en'])) {

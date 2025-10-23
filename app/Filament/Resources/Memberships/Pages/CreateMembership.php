@@ -37,6 +37,12 @@ class CreateMembership extends CreateRecord
             ->label('Tạo và tạo thêm');
     }
 
+    public function mount(): void
+    {
+        parent::mount();
+        $this->ensurePlanAccessible();
+    }
+
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $user = Auth::user();

@@ -29,6 +29,7 @@ class EventDetailSpeaker extends Page
     {
         $this->record = $this->resolveRecord($record);
         $this->loadEventData();
+        $this->ensurePlanAccessible();
     }
 
     protected function loadEventData(): void

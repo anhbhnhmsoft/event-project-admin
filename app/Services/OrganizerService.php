@@ -174,7 +174,7 @@ class OrganizerService
             );
             DB::commit();
             $verificationUrl = URL::temporarySignedRoute(
-                'api.verification.verify',
+                'verification.verify',
                 now()->addMinutes(60),
                 [
                     'id' => $user->getKey(),

@@ -166,7 +166,7 @@ class TransactionService
                     'message' => __('common.common_error.data_not_found'),
                 ];
             }
-            
+
             $membershipPlan = $membershipUser->membership;
             $user = $membershipUser->user;
             $activeMembership = $user->activeMemberships()->first();
@@ -592,7 +592,7 @@ class TransactionService
                 case TransactionStatus::SUCCESS:
                     $metadata = json_decode($record->metadata, true);
                     $seatId = $metadata['seat_id'] ?? null;
-                    
+
                     if (!$seatId) {
                         DB::rollBack();
                         return [
@@ -663,7 +663,7 @@ class TransactionService
                         'user_id' => $record->user_id,
                     ]);
                     break;
-                    
+
                 case TransactionStatus::FAILED:
                 default:
                     $record->status = TransactionStatus::FAILED->value;

@@ -24,7 +24,7 @@ Route::middleware('set-locale')->group(function () {
     Route::prefix('email')->group(function () {
         Route::get('/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
             ->middleware(['signed', 'throttle:6,1'])
-            ->name('api.verification.verify');
+            ->name('verification.verify');
         Route::post('/verification-notification', [AuthController::class, 'resendVerify'])
             ->middleware('throttle:6,1');
     });

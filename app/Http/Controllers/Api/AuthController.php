@@ -276,7 +276,7 @@ class AuthController extends Controller
         }
 
         $url = URL::temporarySignedRoute(
-            'api.verification.verify',
+            'verification.verify',
             now()->addMinutes(60),
             ['id' => $user->getKey(), 'hash' => sha1($user->getEmailForVerification())]
         );

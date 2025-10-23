@@ -57,6 +57,10 @@ class EventScheduleService
         }
     }
 
+    public function getEventDocumentUser($data) {
+        return EventScheduleDocumentUser::query()->where('user_id',$data['user_id'])->where('event_schedule_document_id',$data['event_schedule_document_id'])->where('status',$data['status'])->first();
+    }
+
     public function getDetailDocument($id): array
     {
         try {
@@ -124,7 +128,7 @@ class EventScheduleService
 
         $organizerId = $document->eventSchedule->event->organizer_id;
 
-        if ($organizerId != $user) {
+        if ($organizerId != $user->organizer_id) {
             return [
                 'status' => false,
                 'message' => __('common.common_error.permission_error'),
@@ -132,11 +136,15 @@ class EventScheduleService
         }
 
         if ($document->price == 0) {
-            $documentUser = EventScheduleDocumentUser::updateOrCreate([
-                'user_id'   => $user->id,
-                'event_schedule_document_id' => $document->id,
-                'status'    => EventDocumentUserStatus::ACTIVE->value
-            ]);
+            $documentUser = EventScheduleDocumentUser::updateOrCreate(
+                [
+                    'user_id' => $user->id,
+                    'event_schedule_document_id' => $document->id,
+                ],
+                [
+                    'status' => EventDocumentUserStatus::ACTIVE->value,
+                ]
+            );
 
             return [
                 'status' => true,
@@ -161,11 +169,15 @@ class EventScheduleService
                 'returnUrl' => route('home'),
             ];
 
-            $documentUser = EventScheduleDocumentUser::updateOrCreate([
-                'user_id' => $user->id,
-                'event_schedule_document_id' => $document->id,
-                'status'    => EventDocumentUserStatus::PAYMENT_PENDING->value
-            ]);
+            $documentUser = EventScheduleDocumentUser::updateOrCreate(
+                [
+                    'user_id' => $user->id,
+                    'event_schedule_document_id' => $document->id,
+                ],
+                [
+                    'status' => EventDocumentUserStatus::PAYMENT_PENDING->value,
+                ]
+            );
 
             // khởi tạo PayOS
             $response = $this->cassoService->registerPaymentRequest($payload, $expiredAt, TransactionType::BUY_DOCUMENT->value);

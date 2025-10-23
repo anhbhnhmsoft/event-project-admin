@@ -3,12 +3,15 @@
 namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
+use App\Filament\Traits\CheckPlanBeforeAccess;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Actions\Action;
 
 class EditUser extends EditRecord
 {
+    use CheckPlanBeforeAccess;
+
     protected static string $resource = UserResource::class;
 
     protected static ?string $title = 'Sửa người dùng';
@@ -19,6 +22,7 @@ class EditUser extends EditRecord
             DeleteAction::make(),
         ];
     }
+
     public function getBreadcrumbs(): array
     {
         return [

@@ -53,66 +53,13 @@ class TransactionController extends Controller
         ], 200);
     }
 
-    public function registerComment(Request $request): JsonResponse
-    {
-        $validated = Validator::make(
-            $request->all(),
-            [
-                'event_id' => ['required', 'integer', 'string', 'exits: events,id'],
-            ]
-        );
-
-        if ($validated->fails()) {
-            return response()->json([
-                'message' => __('common.common_error.validation_failed')
-            ], 422);
-        }
-        $user = $request->user();
-
-        $event = $this->eventService->getEventDetail($validated['event_id'])['event'];
-
-        if ($event->organizer_id != $user->oganizer_id) {
-            return response()->json([
-                'message' => __('common.common_error.validation_failed'),
-            ], 422);
-        };
-
-        $ticket = $this->ticketService->getDetailTicket($event->id, $user->id);
-
-        if(!$ticket) {
-            return response()->json([
-                'message' => __('common.common_error.validation_failed'),
-            ], 422);
-        }
-
-        $result =  $this->commentService->commentRegister($ticket, $event, $user);
-
-        if (!$result) {
-            return response()->json([
-                'message' =>  $result['message']
-            ], 422);
-        }
-
-        $trans = $result['data'];
-        return response()->json([
-            'message' => __('common.common_success.add_success'),
-            'data'    => [
-                'trans_id' => (string)$trans->id,
-                'expired_at' => $trans->expired_at,
-                'config_pay' => $trans->config_pay,
-                'money' => (string)$trans->money,
-                'description' => $trans->description
-            ]
-        ], 200);
-    }
-
     public function registerDocument(Request $request): JsonResponse
     {
 
         $validated = Validator::make(
             $request->all(),
             [
-                'document_id' => ['required', 'integer', 'string', 'exits:event_schedule_documents,id'],
+                'document_id' => ['required', 'numeric', 'exists:event_schedule_documents,id'],
             ]
         );
 
@@ -122,35 +69,54 @@ class TransactionController extends Controller
             ], 422);
         }
         $user = $request->user();
+        $document = $this->documentService->getDetailDocument($validated->validated()['document_id']);
 
-        $document = $this->documentService->getDetailDocument($validated['document_id']);
+        $membership = $user->activeMembership->first();
 
-        if (!$user->activeMembership->first() || !$user->activeMembership->first()->config[ConfigMembership::ALLOW_DOCUMENTARY->value]) {
-            $result = $this->documentService->documentRegister($document['document'], $user, EventDocumentUserStatus::INACTIVE->value);
+        $allowDocumentary = $membership?->config[ConfigMembership::ALLOW_DOCUMENTARY->value] ?? false;
+        if (!$membership || !$allowDocumentary) {
+
+            if($this->documentService->getEventDocumentUser([
+                'user_id'=> $user->id,
+                'event_schedule_document_id' => $document['document']->id,
+                'status'      => EventDocumentUserStatus::ACTIVE->value
+            ])){
+                $result = $this->documentService->documentRegister($document['document'], $user, EventDocumentUserStatus::ACTIVE->value);
+            }else{
+                $result = $this->documentService->documentRegister($document['document'], $user, EventDocumentUserStatus::INACTIVE->value);
+            };
+
             if (!$result) {
                 return response()->json([
                     'message' =>  __('common.common_error.validation_failed')
                 ], 422);
             }
 
-            if ($result['document']) {
+            if (!empty($result['document'])) {
                 return response()->json([
                     'message' => __('common.common_success.add_success'),
-                    'document' => new EventScheduleDocumentResource($document['document']),
-                ], 200);
-            } else {
-                $trans = $result['data'];
-                return response()->json([
-                    'message' => __('common.common_success.add_success'),
-                    'data'    => [
-                        'trans_id' => (string)$trans->id,
-                        'expired_at' => $trans->expired_at,
-                        'config_pay' => $trans->config_pay,
-                        'money' => (string)$trans->money,
-                        'description' => $trans->description
-                    ]
+                    'document' => new EventScheduleDocumentResource($result['document']),
                 ], 200);
             }
+
+            $trans = $result['data'] ?? null;
+
+            if (!$trans) {
+                return response()->json([
+                    'message' => __('common.common_error.validation_failed'),
+                ], 422);
+            }
+
+            return response()->json([
+                'message' => __('common.common_success.add_success'),
+                'data' => [
+                    'trans_id' => (string)($trans->id ?? ''),
+                    'expired_at' => $trans->expired_at ?? null,
+                    'config_pay' => $trans->config_pay ?? null,
+                    'money' => (string)($trans->money ?? 0),
+                    'description' => $trans->description ?? '',
+                ],
+            ], 200);
         }
 
         $result =  $this->documentService->documentRegister($document['document'], $user, EventDocumentUserStatus::ACTIVE->value);
@@ -161,23 +127,30 @@ class TransactionController extends Controller
             ], 422);
         }
 
-        if ($result['document']) {
+        if (!empty($result['document'])) {
             return response()->json([
-                'message' =>  __('common.common_success.add_success'),
-                'document' => new EventScheduleDocumentResource($document['document']),
-            ], 200);
-        } else {
-            $trans = $result['data'];
-            return response()->json([
-                'message' =>  __('common.common_success.add_success'),
-                'data'    => [
-                    'trans_id' => (string)$trans->id,
-                    'expired_at' => $trans->expired_at,
-                    'config_pay' => $trans->config_pay,
-                    'money' => (string)$trans->money,
-                    'description' => $trans->description
-                ]
+                'message' => __('common.common_success.add_success'),
+                'document' => new EventScheduleDocumentResource($result['document']),
             ], 200);
         }
+
+        $trans = $result['data'] ?? null;
+
+        if (!$trans) {
+            return response()->json([
+                'message' => __('common.common_error.validation_failed'),
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => __('common.common_success.add_success'),
+            'data' => [
+                'trans_id' => (string)($trans->id ?? ''),
+                'expired_at' => $trans->expired_at ?? null,
+                'config_pay' => $trans->config_pay ?? null,
+                'money' => (string)($trans->money ?? 0),
+                'description' => $trans->description ?? '',
+            ],
+        ], 200);
     }
 }

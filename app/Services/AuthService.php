@@ -26,6 +26,7 @@ use App\Mail\ResetPasswordMail;
 use App\Models\EventSeat;
 use App\Models\Organizer;
 use App\Utils\Constants\CommonStatus;
+use App\Utils\Constants\ConfigType;
 use App\Utils\Constants\EventSeatStatus;
 use App\Utils\Helper;
 use Illuminate\Contracts\Database\Eloquent\Builder;
@@ -89,7 +90,7 @@ class AuthService
                 'lang' => request()->input('locate') ?? Language::VI->value,
             ]);
             $url = URL::temporarySignedRoute(
-                'api.verification.verify',
+                'verification.verify',
                 now()->addMinutes(60),
                 ['id' => $user->getKey(), 'hash' => sha1($user->getEmailForVerification())]
             );
@@ -449,6 +450,40 @@ class AuthService
                 'organizer_id' => $organizer->id,
                 'lang' => Language::VI,
             ]);
+            $configs = [
+                [
+                    'config_key' => ConfigName::CLIENT_ID_APP->value,
+                    'config_type' => ConfigType::STRING->value,
+                    'config_value' => '',
+                    'organizer_id' => $organizer->id
+                ],
+                [
+                    'config_key' => ConfigName::API_KEY->value,
+                    'config_type' => ConfigType::STRING->value,
+                    'config_value' => '',
+                    'organizer_id' => $organizer->id
+                ],
+                [
+                    'config_key' => ConfigName::CHECKSUM_KEY->value,
+                    'config_type' => ConfigType::STRING->value,
+                    'config_value' => '',
+                    'organizer_id' => $organizer->id
+                ],
+                [
+                    'config_key' => ConfigName::LINK_ZALO_SUPPORT->value,
+                    'config_type' => ConfigType::STRING->value,
+                    'config_value' => 'https://zalo.me/your-support-link',
+                    'organizer_id' => $organizer->id
+                ],
+                [
+                    'config_key' => ConfigName::LINK_FACEBOOK_SUPPORT->value,
+                    'config_type' => ConfigType::STRING->value,
+                    'config_value' => 'https://facebook.com/your-support-page',
+                    'organizer_id' => $organizer->id
+                ],
+            ];
+
+            Config::query()->insert($configs);
 
             DB::commit();
 

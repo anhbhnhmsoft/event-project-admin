@@ -476,8 +476,6 @@ return new class extends Migration
                 ->cascadeOnDelete();
             $table->char('label', length: 255)->comment('Nội dung của tùy chọn/đáp án.');
             $table->tinyInteger('order')->comment('Thứ tự hiển thị của tùy chọn.');
-            // Đánh dấu đáp án đúng (Chỉ dùng cho nghiệp vụ Quiz/Thi đấu. Có thể bỏ nếu chỉ là bình chọn)
-            $table->tinyInteger('is_correct')->nullable()->comment('Đánh dấu đáp án đúng (0: Sai, 1: Đúng). Chỉ áp dụng cho kiểu câu hỏi Quiz.');
             $table->softDeletes();
             $table->timestamps();
         });
@@ -495,9 +493,11 @@ return new class extends Migration
             $table->foreignId('event_poll_question_option_id')
                 ->nullable()
                 ->comment('Khóa ngoại liên kết với tùy chọn/đáp án đã chọn.')
+                ->nullable()
                 ->constrained('event_poll_question_options')
                 ->cascadeOnDelete();
-            $table->unique(['user_id', 'event_poll_question_id'], 'unique_user_answer');
+            $table->string('answer_content')->nullable()->comment('Nội dung câu trả lời của người dùng cho câu hỏi dạng trả lời tự do');
+            $table->index(['user_id', 'event_poll_question_id']);
             $table->softDeletes();
             $table->timestamps();
         });
@@ -536,7 +536,6 @@ return new class extends Migration
         Schema::dropIfExists('user_notifications');
         Schema::dropIfExists('user_devices');
         Schema::dropIfExists('event_polls');
-        Schema::dropIfExists('event_poll_user');
         Schema::dropIfExists('event_poll_questions');
         Schema::dropIfExists('event_poll_question_options');
         Schema::dropIfExists('event_poll_votes');
