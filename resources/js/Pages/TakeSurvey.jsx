@@ -98,7 +98,7 @@ export default function TakeSurvey({ poll, user }) {
     };
 
     return (
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-7xl mx-auto">
             <div className="text-center mb-6 sm:mb-8 lg:mb-12">
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-3 px-2">
                     {poll.title}

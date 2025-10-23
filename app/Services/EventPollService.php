@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\EventPoll;
 use App\Models\EventPollVote;
+use App\Models\User;
 use App\Utils\Constants\CommonStatus;
 use App\Utils\Constants\UnitDurationType;
 use Exception;
@@ -148,15 +149,21 @@ class EventPollService
         }
     }
 
-    public function submitAnswers(int $pollId, int $userId, array $answers): array
+    public function submitAnswers(int $pollId, $email, array $answers): array
     {
 
         try {
-            DB::transaction(function () use ($userId, $answers, &$createdVotes) {
+            DB::transaction(function () use ($email, $answers, &$createdVotes) {
+
+                $user = User::query()->where('email', $email)->first();
+                if(!$user) {
+                    throw new Exception('Not found user');
+                }
+
                 $createdVotes = [];
                 foreach ($answers as $ans) {
                     $vote = EventPollVote::create([
-                        'user_id' => $userId,
+                        'user_id' => $user->id,
                         'event_poll_question_id' => $ans['question_id'],
                         'event_poll_question_option_id' => $ans['option_id'],
                     ]);

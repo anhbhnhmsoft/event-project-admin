@@ -18,19 +18,19 @@ class EventPollController extends Controller
         $this->eventPollService = $eventPollService;
     }
 
-    public function submit(Request $request, EventPoll $poll)
+    public function submit(Request $request, $idcode)
     {
         $data = $request->validate([
             'email' => 'required|email',
             'phone' => 'nullable|string',
             'answers' => 'required|array',
         ]);
-        dd($data);
-        foreach ($data['answers'] as $questionId => $answerValue) {
-        }
+        $pollId = Crypt::decryptString($idcode);
+        $result = $this->eventPollService->submitAnswers($pollId, $data['email'], $data['answers']);
 
         return back()->with('success', 'Cảm ơn bạn đã hoàn thành khảo sát!');
     }
+
     public function show($idcode)
     {
         $pollId = Crypt::decryptString($idcode);
