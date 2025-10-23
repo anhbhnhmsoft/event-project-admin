@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Events;
 use App\Filament\Resources\Events\Pages\CreateEvent;
 use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Filament\Resources\Events\Pages\EventComments;
+use App\Filament\Resources\Events\Pages\EventDetailSpeaker;
 use App\Filament\Resources\Events\Pages\EventGames;
 use App\Filament\Resources\Events\Pages\EventVotes;
 use App\Filament\Resources\Events\Pages\ListEvents;
@@ -12,7 +13,6 @@ use App\Filament\Resources\Events\Pages\SeatsEvent;
 use App\Filament\Resources\Events\Schemas\EventForm;
 use App\Filament\Resources\Events\Tables\EventsTable;
 use App\Models\Event;
-use App\Utils\Constants\RoleUser;
 use App\Utils\Helper;
 use BackedEnum;
 use Filament\Schemas\Schema;
@@ -48,7 +48,7 @@ class EventResource extends Resource
 
     public static function canAccess(): bool
     {
-        return Helper::checkAdmin();
+        return Helper::checkSpeaker();
     }
 
     public static function getEloquentQuery(): Builder
@@ -80,6 +80,7 @@ class EventResource extends Resource
             'comments-manage' => EventComments::route('/{record}/comments'),
             'games-manage' => EventGames::route('/{record}/games'),
             'votes-manage' => EventVotes::route('/{record}/votes'),
+            'speaker-screen' => EventDetailSpeaker::route('{record}/speaker')
         ];
     }
 

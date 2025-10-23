@@ -129,6 +129,16 @@ final class Helper
         }
         return false;
     }
+
+    public static function checkSpeaker(): bool
+    {
+        if (auth()->check()) {
+            $user = auth()->user();
+            return in_array($user->role, [RoleUser::SUPER_ADMIN->value, RoleUser::ADMIN->value, RoleUser::SPEAKER->value]);
+        }
+        return false;
+    }
+
     public static function checkPlanOrganizer(): bool
     {
         $user = Auth::user();
@@ -175,6 +185,5 @@ final class Helper
             return true;
         }
         return true;
-
     }
 }

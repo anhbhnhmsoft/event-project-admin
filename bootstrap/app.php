@@ -24,5 +24,6 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withSchedule(function (Schedule $schedule): void {
         $schedule->command('app:check-expires-at-user')->monthly();
         $schedule->command('app:check-time-event')->everyTwoMinutes();
+        $schedule->command('app:check-expire-membership')->everyTwoHours();
     })
     ->create();

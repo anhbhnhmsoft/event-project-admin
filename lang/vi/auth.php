@@ -68,5 +68,8 @@ return [
         'password'          => 'Mật khẩu',
         'organizer'         => 'Tổ chức',
         'select_organizer'  => 'Chọn tổ chức'
+    ],
+    'register' => [
+        'heading'           => 'Đăng ký',
     ]
 ];

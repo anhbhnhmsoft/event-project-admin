@@ -3,7 +3,9 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Login;
+use App\Filament\Pages\Register;
 use App\Http\Middleware\SetLocale;
+use Filament\Auth\Pages\EmailVerification\EmailVerificationPrompt;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -32,9 +34,11 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->globalSearch(false)
             ->login(Login::class)
+            ->registration(Register::class)
             ->colors([
                 'primary' => Color::Blue,
             ])
+            ->emailVerification(EmailVerificationPrompt::class)
             ->brandLogo(asset('images/logo-michec.png'))
             ->brandLogoHeight('6rem')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
