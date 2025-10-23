@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\Event;
 use App\Models\EventPoll;
 use App\Models\EventPollQuestion;
 use App\Models\EventPollVote;
+use App\Models\Organizer;
 use App\Models\User;
 use App\Utils\Constants\CommonStatus;
 use App\Utils\Constants\QuestionType;
@@ -151,54 +153,125 @@ class EventPollService
         }
     }
 
-    public function submitAnswers(int $pollId, $email, array $answers): array
+    public function submitAnswers(int $pollId, string $email, array $answers): array
     {
-
         try {
-            DB::transaction(function () use ($email, $answers, &$createdVotes) {
+            $createdVotes = [];
 
-                $user = User::query()->where('email', $email)->first();
-                if (!$user) {
-                    throw new Exception('Not found user');
+            DB::transaction(function () use ($email, $pollId, $answers, &$createdVotes) {
+                $poll = EventPoll::find($pollId);
+
+                if (!$poll) {
+                    Log::warning("Poll not found", ['poll_id' => $pollId]);
+                    throw new Exception(__('poll.validation.invalid_poll'));
                 }
 
-                $createdVotes = [];
-                foreach ($answers as  $q => $ans) {
-                    $question = EventPollQuestion::find($q);
+                if (!$poll->is_active) {
+                    Log::warning("Poll is inactive", ['poll_id' => $poll->id]);
+                    throw new Exception(__('poll.validation.poll_inactive'));
+                }
+
+                if ($poll->end_time < now()) {
+                    Log::warning("Poll expired", [
+                        'poll_id' => $poll->id,
+                        'end_time' => $poll->end_time,
+                        'now' => now()
+                    ]);
+                    throw new Exception(__('poll.validation.poll_expired'));
+                }
+
+                $event = Event::find($poll->event_id);
+                if (!$event) {
+                    Log::error("Event not found for poll", ['poll_id' => $poll->id]);
+                    throw new Exception(__('poll.validation.invalid_event'));
+                }
+
+                $organizer = Organizer::find($event->organizer_id);
+                if (!$organizer) {
+                    Log::error("Organizer not found", ['organizer_id' => $event->organizer_id]);
+                    throw new Exception(__('poll.validation.invalid_organizer'));
+                }
+
+                if ($organizer->status !== CommonStatus::ACTIVE->value) {
+                    Log::warning("Organizer inactive", [
+                        'organizer_id' => $organizer->id,
+                        'status' => $organizer->status
+                    ]);
+                    throw new Exception(__('poll.validation.organizer_inactive'));
+                }
+
+                $user = User::where('email', $email)->first();
+                if (!$user) {
+                    Log::warning("User not found", ['email' => $email]);
+                    throw new Exception(__('poll.validation.user_not_found'));
+                }
+
+                foreach ($answers as $questionId => $answer) {
+                    $question = EventPollQuestion::find($questionId);
                     if (!$question) {
-                        break;
+                        Log::error("Invalid question", ['question_id' => $questionId]);
+                        throw new Exception(__('poll.validation.invalid_question'));
                     }
+
                     switch ($question->type) {
                         case QuestionType::MULTIPLE->value:
                             $vote = EventPollVote::create([
                                 'user_id' => $user->id,
-                                'event_poll_question_id' => $ans['question_id'],
-                                'event_poll_question_option_id' => $ans,
+                                'event_poll_question_id' => $question->id,
+                                'event_poll_question_option_id' => $answer,
                             ]);
                             break;
 
                         case QuestionType::OPEN_ENDED->value:
                             $vote = EventPollVote::create([
                                 'user_id' => $user->id,
-                                'event_poll_question_id' => $ans['question_id'],
-                                'event_poll_question_option_id' => $ans['option_id'],
+                                'event_poll_question_id' => $question->id,
+                                'answer_content' => $answer,
                             ]);
                             break;
+
+                        default:
+                            Log::error("Unknown question type", [
+                                'question_id' => $question->id,
+                                'type' => $question->type
+                            ]);
+                            throw new Exception(__('poll.validation.invalid_type'));
                     }
 
+                    Log::info("Vote created", [
+                        'user_id' => $user->id,
+                        'question_id' => $question->id,
+                        'vote_id' => $vote->id
+                    ]);
 
                     $createdVotes[] = $vote->load(['question:id,question', 'option:id,label']);
                 }
             });
 
+            Log::info("Submit answers success", [
+                'poll_id' => $pollId,
+                'email' => $email,
+                'answers_count' => count($answers),
+            ]);
+
             return [
                 'status' => true,
                 'message' => __('common.common_success.success'),
-                'data'   => $createdVotes,
+                'data' => $createdVotes,
             ];
         } catch (Exception $e) {
-            Log::error("Submit answers failed: " . $e->getMessage());
-            return ['status' => false, 'message' => __('poll.validation.submit_failed')];
+            Log::error("Submit answers failed", [
+                'poll_id' => $pollId,
+                'email' => $email,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return [
+                'status' => false,
+                'message' => __('poll.validation.submit_failed'),
+                'error' => $e->getMessage(),
+            ];
         }
     }
 }

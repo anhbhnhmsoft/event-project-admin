@@ -344,7 +344,30 @@ class EventController extends Controller
         $page = $request->integer('page', 1);
         $limit = $request->integer('limit', 10);
 
+        $type = $filters['type'] ?? null;
+
+        if ($type == EventCommentType::PRIVATE->value) {
+            $user = $request->user();
+            $membership = $user->activeMembership->first();
+
+            $allowComment = $membership && ($membership->config[ConfigMembership::ALLOW_COMMENT->value] ?? false);
+
+            if (!$allowComment) {
+                return response()->json([
+                    'message' => __('common.common_success.get_success'),
+                    'data' => [],
+                    'pagination' => [
+                        'total' => 0,
+                        'per_page' => $limit,
+                        'current_page' => $page,
+                        'last_page' => 1,
+                    ],
+                ], 200);
+            }
+        }
+
         $comments = $this->eventCommentService->eventCommentPaginator($filters, $page, $limit);
+
         return response()->json([
             'message' => __('common.common_success.get_success'),
             'data' => EventListCommentResource::collection($comments),
@@ -352,7 +375,7 @@ class EventController extends Controller
                 'total' => $comments->total(),
                 'per_page' => $comments->perPage(),
                 'current_page' => $comments->currentPage(),
-                'last_page' => $comments->lastPage()
+                'last_page' => $comments->lastPage(),
             ],
         ], 200);
     }

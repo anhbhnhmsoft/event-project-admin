@@ -25,10 +25,13 @@ class EventPollController extends Controller
             'phone' => 'nullable|string',
             'answers' => 'required|array',
         ]);
-        $pollId = Crypt::decryptString($idcode);
-        $result = $this->eventPollService->submitAnswers($pollId, $data['email'], $data['answers']);
+        $result = $this->eventPollService->submitAnswers($idcode, $data['email'], $data['answers']);
 
-        return back()->with('success', 'Cảm ơn bạn đã hoàn thành khảo sát!');
+        return response()->json(
+            [
+                'message' => $result['message']
+            ]
+        );
     }
 
     public function show($idcode)

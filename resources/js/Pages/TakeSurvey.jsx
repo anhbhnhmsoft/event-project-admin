@@ -69,7 +69,6 @@ export default function TakeSurvey({ poll, user }) {
             .post(`/survey/${poll.id}`, data)
             .then((response) => {
                 alert("Cảm ơn bạn đã hoàn thành khảo sát!");
-                window.location.reload();
             })
             .catch((error) => {
                 if (error.response?.data?.errors) {

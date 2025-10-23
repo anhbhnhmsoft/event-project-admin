@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Utils\Constants\EventCommentType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -30,7 +31,10 @@ class EventComment extends Model
 
         if (!empty($filters['type'])) {
             $query->where('type', $filters['type']);
+        }else {
+            $query->where('type', EventCommentType::PUBLIC->value);
         }
+
 
         if (!empty($filters['keyword'])) {
             $keyword = trim($filters['keyword']);
