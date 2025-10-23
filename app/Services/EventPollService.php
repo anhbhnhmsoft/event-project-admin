@@ -3,8 +3,6 @@
 namespace App\Services;
 
 use App\Models\EventPoll;
-use App\Models\EventPollQuestion;
-use App\Models\EventPollUser;
 use App\Models\EventPollVote;
 use App\Utils\Constants\CommonStatus;
 use App\Utils\Constants\UnitDurationType;
@@ -58,10 +56,6 @@ class EventPollService
                 'message' => __('common.common_error.server_error')
             ];
         }
-    }
-
-    public function getUserEventPoll( $pollId ) {
-
     }
 
     public function updateEventPoll($data): array
@@ -119,41 +113,6 @@ class EventPollService
         }
     }
 
-    public function makeUsersForPoll(array $usersId, $pollId): array
-    {
-        if (empty($usersId)) {
-            return [
-                'status'  => false,
-                'message' => __('common.common_error.data_not_found')
-            ];
-        }
-
-        try {
-            $syncedResult = DB::transaction(function () use ($pollId, $usersId) {
-
-                $poll = EventPoll::find($pollId);
-
-                if (!$poll) {
-                    throw new Exception(__('common.common_error.data_not_found'));
-                }
-                $syncResult = $poll->users()->sync($usersId);
-
-                return $syncResult;
-            });
-
-            return [
-                'status' => true,
-                'data'   => $syncedResult
-            ];
-        } catch (Exception $e) {
-            Log::debug("EventPollUser make failed for poll: " . $e->getMessage());
-            return [
-                'status'  => false,
-                'message' => __('common.common_error.server_error')
-            ];
-        }
-    }
-
     public function getPollsByEvent(?int $eventId): array
     {
         try {
@@ -169,7 +128,6 @@ class EventPollService
             return ['status' => false, 'message' => __('common.common_error.server_error')];
         }
     }
-
 
     public function getPollDetail(int $pollId): array
     {
@@ -190,64 +148,8 @@ class EventPollService
         }
     }
 
-    public function getUsersByPoll(int $pollId): array
-    {
-        try {
-            $poll = EventPoll::with('users:id,name,email')->find($pollId);
-
-            if (!$poll) {
-                return ['status' => false, 'message' => __('common.validation.data_not_found')];
-            }
-
-            return ['status' => true, 'data' => $poll->users];
-        } catch (Exception $e) {
-            Log::error("Get users poll failed: " . $e->getMessage());
-            return ['status' => false, 'message' => __('common.common_error.server_error')];
-        }
-    }
-
-    public function getQuestionsByPoll(int $pollId): array
-    {
-        try {
-            $questions = EventPollQuestion::with('options')
-                ->where('event_poll_id', $pollId)
-                ->orderBy('order')
-                ->get();
-
-            return ['status' => true, 'data' => $questions];
-        } catch (Exception $e) {
-            Log::error("Get questions failed: " . $e->getMessage());
-            return ['status' => false, 'message' => __('common.common_error.server_error')];
-        }
-    }
-
-    public function getAnswers(int $pollId): array
-    {
-        try {
-            $answers = EventPollVote::query()
-                ->whereHas('question', fn($q) => $q->where('event_poll_id', $pollId))
-                ->get(['event_poll_question_id', 'event_poll_question_option_id']);
-
-            return ['status' => true, 'data' => $answers];
-        } catch (Exception $e) {
-            Log::error("Get answers failed: " . $e->getMessage());
-            return ['status' => false, 'message' => __('common.common_error.server_error')];
-        }
-    }
-
     public function submitAnswers(int $pollId, int $userId, array $answers): array
     {
-        $isParticipant = EventPollUser::query()
-            ->where('event_poll_id', $pollId)
-            ->where('user_id', $userId)
-            ->exists();
-
-        if (!$isParticipant) {
-            return [
-                'status'  => false,
-                'message' => __('poll.validation.user_not_in_poll')
-            ];
-        }
 
         try {
             DB::transaction(function () use ($userId, $answers, &$createdVotes) {

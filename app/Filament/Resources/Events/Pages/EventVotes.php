@@ -168,7 +168,6 @@ class EventVotes extends Page implements HasTable
                                 'options' => $q->options->map(fn($o) => [
                                     'label' => $o->label,
                                     'order' => $o->order,
-                                    'is_correct' => (bool) $o->is_correct,
                                 ])->toArray(),
                             ])
                             ->toArray(),
@@ -176,8 +175,8 @@ class EventVotes extends Page implements HasTable
                     ->action(function (EventPoll $record, array $data): void {
                         DB::transaction(function () use ($record, $data) {
                             EventPollQuestion::where('event_poll_id', $record->id)->get()->each(function ($q) {
-                                $q->options()->delete();
-                                $q->delete();
+                                $q->options()->forceDelete();
+                                $q->forceDelete();
                             });
 
                             if (!empty($data['questions']) && is_array($data['questions'])) {
@@ -195,7 +194,6 @@ class EventVotes extends Page implements HasTable
                                                 'event_poll_question_id' => $question->id,
                                                 'label' => $opt['label'] ?? '',
                                                 'order' => $opt['order'] ?? ($optIndex + 1),
-                                                'is_correct' => isset($opt['is_correct']) ? (int) $opt['is_correct'] : 0,
                                             ]);
                                         }
                                     }
@@ -282,7 +280,7 @@ class EventVotes extends Page implements HasTable
                         ->label('Loại câu hỏi')
                         ->options(QuestionType::getOptions())
                         ->required()
-                        ->default(1)
+                        ->default(QuestionType::MULTIPLE->value)
                         ->reactive(),
 
                     Textarea::make('question')
@@ -309,17 +307,15 @@ class EventVotes extends Page implements HasTable
                                 ->numeric()
                                 ->default(1)
                                 ->minValue(1),
-                            Toggle::make('is_correct')
-                                ->label('Đáp án đúng (cho quiz)')
-                                ->helperText('Đánh dấu nếu đây là đáp án đúng'),
                         ])
-                        ->columns(3)
+                        ->columns(2)
                         ->addActionLabel('Thêm tùy chọn')
                         ->collapsible()
                         ->cloneable()
                         ->reorderable()
                         ->minItems(2)
-                        ->helperText('Tối thiểu 2 tùy chọn cho câu hỏi trắc nghiệm'),
+                        ->helperText('Tối thiểu 2 tùy chọn cho câu hỏi trắc nghiệm')
+                        ->visible(fn($get) => $get('type') == QuestionType::MULTIPLE->value),
                 ])
                 ->columns(1)
                 ->cloneable()

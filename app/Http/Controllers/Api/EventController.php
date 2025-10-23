@@ -19,6 +19,7 @@ use App\Services\EventService;
 use App\Services\EventUserHistoryService;
 use App\Services\MemberShipService;
 use App\Utils\Constants\ConfigMembership;
+use App\Utils\Constants\EventCommentType;
 use App\Utils\Constants\EventDocumentUserStatus;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -247,7 +248,7 @@ class EventController extends Controller
                 'message' => $result['message'],
             ], 422);
         }
-        
+
         return response()->json([
             'message' => $result['message'],
             'data' => EventUserHistoryResource::make($result['data']),
@@ -263,7 +264,7 @@ class EventController extends Controller
             [
                 'event_id' => ['required', 'exists:events,id'],
                 'content'  => ['required', 'string', 'max:1000'],
-                'type'     => ['required', 'int']
+                'type'     => ['required', 'numeric']
             ],
             [
                 'event_id.required' => __('event.validation.event_id_exists'),
@@ -297,20 +298,32 @@ class EventController extends Controller
             ], 403);
         }
 
-
-        $checkPermission = $this->membershipService->getMembershipUser($user->id);
-        if (!$checkPermission['status'] || !$checkPermission['membershipUser'] || !$checkPermission['membershipUser']->config[ConfigMembership::ALLOW_COMMENT->value]) {
-            return response()->json([
-                'message' => __('common.common_error.permission_error'),
-            ], 403);
-        }
-
         $newComment = [
             'user_id'  => $user->id,
             'event_id' => $validated['event_id'],
             'content'  => $validated['content'],
             'type'     => $validated['type']
         ];
+
+        if ($validated['type'] == EventCommentType::PRIVATE->value) {
+            $checkPermission = $this->membershipService->getMembershipUser($user->id);
+            if (!$checkPermission['status'] || !$checkPermission['membershipUser'] || !$checkPermission['membershipUser']?->config[ConfigMembership::ALLOW_COMMENT->value]) {
+                return response()->json([
+                    'message' => __('common.common_error.permission_error'),
+                ], 403);
+            }
+
+            $result = $this->eventCommentService->eventCommentInsert($newComment);
+
+            if (!$result['status']) {
+                return response()->json([
+                    'message' => $result['message'],
+                ], 500);
+            }
+            return response()->json([
+                'message' => $result['message'],
+            ], 200);
+        }
 
         $result = $this->eventCommentService->eventCommentInsert($newComment);
 

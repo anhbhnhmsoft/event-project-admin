@@ -45,11 +45,4 @@ class EventPoll extends Model
     {
         return $this->hasMany(EventPollQuestion::class);
     }
-
-    public function users(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class, 'event_poll_user', 'event_poll_id', 'user_id')
-            ->withTimestamps()
-            ->using(EventPollUser::class); 
-    }
 }
