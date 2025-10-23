@@ -24,6 +24,8 @@ use Illuminate\Support\Facades\App;
 use App\Models\UserResetCode;
 use App\Mail\ResetPasswordMail;
 use App\Models\EventSeat;
+use App\Models\Organizer;
+use App\Utils\Constants\CommonStatus;
 use App\Utils\Constants\EventSeatStatus;
 use App\Utils\Helper;
 use Illuminate\Contracts\Database\Eloquent\Builder;
@@ -419,6 +421,54 @@ class AuthService
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error("Quick register failed: " . $e->getMessage());
+
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
+        }
+    }
+
+
+    public function registerOrganizer(array $data): array
+    {
+        DB::beginTransaction();
+
+        try {
+            $organizer = Organizer::create([
+                'name' => $data['name'],
+                'status' => CommonStatus::ACTIVE,
+            ]);
+
+            $user = \App\Models\User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => Hash::make($data['password']),
+                'role' => RoleUser::ADMIN,
+                'phone' => $data['phone'] ?? null,
+                'organizer_id' => $organizer->id,
+                'lang' => Language::VI,
+            ]);
+
+            DB::commit();
+
+            try {
+                $user->sendEmailVerificationNotification();
+            } catch (\Throwable $e) {
+                Log::error('Failed to send verification email: ' . $e->getMessage());
+                throw $e;
+            }
+
+            return [
+                'status' => true,
+                'user' => $user,
+            ];
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Register organizer failed: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'data' => $data,
+            ]);
 
             return [
                 'status' => false,

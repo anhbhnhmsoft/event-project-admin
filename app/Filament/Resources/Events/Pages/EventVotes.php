@@ -34,7 +34,7 @@ use Filament\Tables\Table;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\Facades\Log;
-
+use Illuminate\Support\Facades\Crypt;
 
 class EventVotes extends Page implements HasTable
 {
@@ -44,7 +44,7 @@ class EventVotes extends Page implements HasTable
 
     protected static string $resource = EventResource::class;
 
-// protected static ?string $title = __('event.pages.votes_title');
+    // protected static ?string $title = __('event.pages.votes_title');
     // protected static ?string $modelLabel = 'Khảo sát';
     // protected static ?string $pluralModelLabel = 'Khảo sát / Bình chọn';
 
@@ -61,7 +61,6 @@ class EventVotes extends Page implements HasTable
     {
         $this->record = $this->resolveRecord($record);
         $this->ensurePlanAccessible();
-
     }
 
     public function table(Table $table): Table
@@ -285,6 +284,11 @@ class EventVotes extends Page implements HasTable
                         }
                         $this->resetTable();
                     }),
+                Action::make('get-link')
+                    ->label('Lấy link khảo sát')
+                    ->url(function ($record): string {
+                        return route('event.poll.show', ['idcode' => Crypt::encryptString((string) $record->id)]);
+                    })
 
             ])])
             ->defaultSort('start_time', 'desc');

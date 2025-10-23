@@ -60,6 +60,9 @@ class EventPollService
         }
     }
 
+    public function getUserEventPoll( $pollId ) {
+
+    }
 
     public function updateEventPoll($data): array
     {

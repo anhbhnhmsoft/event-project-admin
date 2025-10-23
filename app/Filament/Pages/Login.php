@@ -33,12 +33,14 @@ class Login extends BaseLogin
             Css::make('app-css', Vite::asset('resources/css/app.css')),
         ]);
     }
+
     public function form(Schema $schema): Schema
     {
         return $schema
             ->components([
                 Select::make('organizer_id')
                     ->label(__('auth.login.organizer'))
+                    ->searchable()
                     ->placeholder(__(''))
                     ->options(fn() => Organizer::query()->pluck('name', 'id'))
                     ->required()

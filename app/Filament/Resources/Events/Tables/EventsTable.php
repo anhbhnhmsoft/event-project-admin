@@ -114,6 +114,12 @@ class EventsTable
                         ->url(fn($record) => EventResource::getUrl('votes-manage', ['record' => $record]))
                         ->openUrlInNewTab()
                         ->color('success'),
+                    Action::make('speaker-screen')
+                        ->label('Màn hình sự kiện')
+                        ->icon('heroicon-o-cube')
+                        ->url(fn($record) => EventResource::getUrl('speaker-screen', ['record' => $record]))
+                        ->openUrlInNewTab()
+                        ->color('primary'),
                 ])
             ])
             ->toolbarActions([

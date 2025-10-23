@@ -455,22 +455,6 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // Tạo bảng event_poll_user để lưu trữ danh sách người dùng được phép tham gia bình chọn/khảo sát
-        Schema::create('event_poll_user', function (Blueprint $table) {
-            $table->id();
-            $table->comment('Lưu trữ danh sách User (đã Check-in) được phép tham gia một cuộc Khảo sát cụ thể.');
-            $table->foreignId('user_id')
-                ->constrained('users')
-                ->cascadeOnDelete();
-            $table->foreignId('event_poll_id')
-                ->constrained('event_polls')
-                ->cascadeOnDelete();
-            // Đảm bảo mỗi User chỉ được ghi nhận một lần cho mỗi Poll
-            $table->unique(['user_id', 'event_poll_id'], 'unique_user_poll');
-            $table->softDeletes();
-            $table->timestamps();
-        });
-
         // Tạo bảng event_poll_questions để lưu trữ các câu hỏi trong cuộc khảo sát/bình chọn
         Schema::create('event_poll_questions', function (Blueprint $table) {
             $table->id();
