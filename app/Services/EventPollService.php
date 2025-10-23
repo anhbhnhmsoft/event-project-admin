@@ -18,6 +18,12 @@ use Illuminate\Support\Facades\Log;
 
 class EventPollService
 {
+
+    public function getPoll($id)
+    {
+        return  EventPoll::with(['event.organizer', 'questions.options'])->find($id);
+    }
+
     public function createEventPoll($data): array
     {
         try {
@@ -134,25 +140,6 @@ class EventPollService
         }
     }
 
-    public function getPollDetail(int $pollId): array
-    {
-        try {
-            $now = Carbon::now();
-            $poll = EventPoll::with([
-                'questions.options' => fn($q) => $q->orderBy('order')
-            ])->where('is_active', CommonStatus::ACTIVE)->where('start_time', '<=', $now)->find($pollId);
-
-            if (!$poll) {
-                return ['status' => false, 'message' => __('common.common_error.data_not_found')];
-            }
-
-            return ['status' => true, 'data' => $poll];
-        } catch (Exception $e) {
-            Log::error("Get poll detail failed: " . $e->getMessage());
-            return ['status' => false, 'message' => __('common.common_error.server_error')];
-        }
-    }
-
     public function submitAnswers(int $pollId, string $email, array $answers): array
     {
         try {
@@ -162,7 +149,7 @@ class EventPollService
                 $poll = EventPoll::find($pollId);
 
                 if (!$poll) {
-                    Log::warning("Poll not found", ['poll_id' => $pollId]);
+
                     throw new Exception(__('poll.validation.invalid_poll'));
                 }
 
@@ -204,6 +191,21 @@ class EventPollService
                 if (!$user) {
                     Log::warning("User not found", ['email' => $email]);
                     throw new Exception(__('poll.validation.user_not_found'));
+                }
+                $hasVoted = EventPollVote::query()
+                    ->whereHas('question', function ($q) use ($pollId) {
+                        $q->where('event_poll_id', $pollId);
+                    })
+                    ->where('user_id', $user->id)
+                    ->exists();
+
+                if ($hasVoted) {
+                    Log::info("User already participated in poll", [
+                        'poll_id' => $pollId,
+                        'user_id' => $user->id,
+                        'email' => $email,
+                    ]);
+                    return;
                 }
 
                 foreach ($answers as $questionId => $answer) {
