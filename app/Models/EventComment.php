@@ -28,6 +28,10 @@ class EventComment extends Model
             $query->where('event_id', $filters['event_id']);
         }
 
+        if (!empty($filters['type'])) {
+            $query->where('type', $filters['type']);
+        }
+
         if (!empty($filters['keyword'])) {
             $keyword = trim($filters['keyword']);
             $query->where('content', 'like', '%' . $keyword . '%');

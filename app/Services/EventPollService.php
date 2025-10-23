@@ -3,9 +3,11 @@
 namespace App\Services;
 
 use App\Models\EventPoll;
+use App\Models\EventPollQuestion;
 use App\Models\EventPollVote;
 use App\Models\User;
 use App\Utils\Constants\CommonStatus;
+use App\Utils\Constants\QuestionType;
 use App\Utils\Constants\UnitDurationType;
 use Exception;
 use Illuminate\Support\Carbon;
@@ -156,17 +158,35 @@ class EventPollService
             DB::transaction(function () use ($email, $answers, &$createdVotes) {
 
                 $user = User::query()->where('email', $email)->first();
-                if(!$user) {
+                if (!$user) {
                     throw new Exception('Not found user');
                 }
 
                 $createdVotes = [];
-                foreach ($answers as $ans) {
-                    $vote = EventPollVote::create([
-                        'user_id' => $user->id,
-                        'event_poll_question_id' => $ans['question_id'],
-                        'event_poll_question_option_id' => $ans['option_id'],
-                    ]);
+                foreach ($answers as  $q => $ans) {
+                    $question = EventPollQuestion::find($q);
+                    if (!$question) {
+                        break;
+                    }
+                    switch ($question->type) {
+                        case QuestionType::MULTIPLE->value:
+                            $vote = EventPollVote::create([
+                                'user_id' => $user->id,
+                                'event_poll_question_id' => $ans['question_id'],
+                                'event_poll_question_option_id' => $ans,
+                            ]);
+                            break;
+
+                        case QuestionType::OPEN_ENDED->value:
+                            $vote = EventPollVote::create([
+                                'user_id' => $user->id,
+                                'event_poll_question_id' => $ans['question_id'],
+                                'event_poll_question_option_id' => $ans['option_id'],
+                            ]);
+                            break;
+                    }
+
+
                     $createdVotes[] = $vote->load(['question:id,question', 'option:id,label']);
                 }
             });
