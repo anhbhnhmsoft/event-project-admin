@@ -142,7 +142,6 @@ class EditEvent extends EditRecord
                 'ward_code' => $data['ward_code'],
                 'status' => $data['status'],
                 'free_to_join' => $data['free_to_join'],
-                'price_comment' => $data['price_comment'],
             ];
 
             if (isset($data['image_represent_path']) && $data['image_represent_path'] instanceof TemporaryUploadedFile) {
