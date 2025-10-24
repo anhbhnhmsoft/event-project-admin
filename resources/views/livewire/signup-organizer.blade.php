@@ -186,9 +186,7 @@
                                         @else
                                             <button type="button" wire:click="selectPlan('{{ $plan->id }}')"
                                                 class="w-full py-3.5 px-6 rounded-xl font-bold transition-all duration-200 cursor-pointer
-                                                {{ !empty($plan->badge)
-                                                    ? 'text-blue-600 bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl'
-                                                    : 'text-blue-600 bg-white border-2 border-blue-600 hover:bg-blue-50 dark:bg-gray-800 dark:text-blue-400 dark:border-blue-400 dark:hover:bg-gray-700' }}">
+                                                text-blue-600 bg-white border-2 border-blue-600 hover:bg-blue-50 dark:bg-gray-800 dark:text-blue-400 dark:border-blue-400 dark:hover:bg-gray-700">
                                                 Chọn Gói Này
                                             </button>
                                         @endif
@@ -396,7 +394,7 @@
                                             class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-2 border-blue-500 dark:border-blue-400 rounded-xl p-6 shadow-lg">
                                             @if (!empty($selectedPlan->badge))
                                                 <span
-                                                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold text-blue-600 bg-blue-600 mb-3">
+                                                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold text-white bg-blue-600 mb-3">
                                                     {{ $selectedPlan->badge }}
                                                 </span>
                                             @endif
@@ -456,7 +454,7 @@
                                                             </h5>
                                                             @if (!empty($plan->badge))
                                                                 <span
-                                                                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold text-blue-600 bg-blue-600">
+                                                                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold text-white bg-blue-600">
                                                                     {{ $plan->badge }}
                                                                 </span>
                                                             @endif
