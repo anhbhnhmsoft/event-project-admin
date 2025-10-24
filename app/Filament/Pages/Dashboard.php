@@ -38,7 +38,7 @@ class Dashboard extends PagesDashboard
     {
         return [
             Action::make('export')
-                ->label('Xuất Excel')
+                ->label(__('common.resource.dashboard.export_excel'))
                 ->icon('heroicon-o-arrow-down-tray')
                 ->color('success')
                 ->requiresConfirmation()

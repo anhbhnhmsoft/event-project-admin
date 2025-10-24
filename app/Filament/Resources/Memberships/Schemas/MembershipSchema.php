@@ -13,104 +13,86 @@ use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Flex;
 use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Utilities\Get;
 use Illuminate\Support\Facades\Auth;
 
 class MembershipSchema
 {
     public static function configure(Schema $schema): Schema
     {
+        $isSuperAdmin = Auth::user()->role === RoleUser::SUPER_ADMIN->value;
+
         return $schema
             ->components([
-                Section::make('Thông tin gói')
+                Section::make(__('admin.memberships.form.package_info'))
                     ->schema([
                         TextInput::make('name')
-                            ->label('Tên gói')
+                            ->label(__('admin.memberships.form.name'))
                             ->required(),
                         TextInput::make('price')
-                            ->label('Giá')
+                            ->label(__('admin.memberships.form.price'))
                             ->minValue(0)
                             ->required()
-                            ->helperText('Đơn vị: VND')
+                            ->helperText(__('admin.memberships.form.price_unit'))
                             ->numeric(),
                         TextInput::make('duration')
-                            ->label('Thời gian sử dụng')
+                            ->label(__('admin.memberships.form.duration'))
                             ->numeric()
-                            ->helperText('Đơn vị: Tháng')
-                            ->placeholder('Bao nhiêu tháng')
+                            ->helperText(__('admin.memberships.form.duration_unit'))
+                            ->placeholder(__('admin.memberships.form.duration_placeholder'))
                             ->minValue(0)
                             ->required(),
                         TextInput::make('sort')
-                            ->label('Sắp xếp')
-                            ->helperText("Số càng nhỏ, gói sẽ hiển thị càng cao trong danh sách")
+                            ->label(__('admin.memberships.form.sort'))
+                            ->helperText(__('admin.memberships.form.sort_help'))
                             ->integer()
                             ->minValue(0)
                             ->required(),
                         Textarea::make('description')
                             ->required()
-                            ->label('Miêu tả')
+                            ->label(__('admin.memberships.form.description'))
                     ]),
                 Section::make()->schema([
-                    Section::make('Cấu hình hiển thị')
+                    Section::make(__('admin.memberships.form.display_config'))
                         ->schema([
                             TextInput::make('badge')
-                                ->label('Huy hiệu gói thành viên')
+                                ->label(__('admin.memberships.form.badge'))
                                 ->maxLength(255),
                             Flex::make(
                                 [
                                     ColorPicker::make('badge_color_background')
-                                        ->label('Màu nền huy hiệu trên trang chủ'),
+                                        ->label(__('admin.memberships.form.badge_bg_color')),
                                     ColorPicker::make('badge_color_text')
-                                        ->label('Màu chữ huy hiệu trên trang chủ'),
+                                        ->label(__('admin.memberships.form.badge_text_color')),
                                 ]
                             ),
                             Toggle::make('status')
-                                ->label('Trạng thái kích hoạt')
+                                ->label(__('admin.memberships.form.status'))
                                 ->required(),
                             Select::make('type')
-                                ->label('Khách hàng sử dụng')
-                                ->placeholder('Khách hàng sử dụng gói')
+                                ->label(__('admin.memberships.form.customer_type'))
+                                ->placeholder(__('admin.memberships.form.customer_type_placeholder'))
                                 ->options(fn() => MembershipType::getOptions())
-                                ->hidden(fn(): bool => Auth::user()->role == RoleUser::ADMIN->value)
+                                ->hidden(!$isSuperAdmin)
+                                ->default(MembershipType::FOR_CUSTOMER->value)
+                                ->live()
                                 ->required(),
                         ]),
-                    Section::make('Cấu hình quyền')
-                        ->hidden(fn() => Auth::user()->role === RoleUser::SUPER_ADMIN->value)
-                        ->schema(function () {
-                            $user = Auth::user();
+                    Section::make(__('admin.memberships.form.permission_config'))
+                        ->hidden(function (Get $get) use ($isSuperAdmin) {
 
-                            if ($user->role === RoleUser::SUPER_ADMIN->value) {
-                                return [
-                                    // TextInput::make('config.' . ConfigMembership::LIMIT_EVENT->value)
-                                    //     ->label(ConfigMembership::LIMIT_EVENT->labelSuperAdmin())
-                                    //     ->required()
-                                    //     ->helperText('Giá trị = 99 ~ Không giới hạn')
-                                    //     ->minValue(1)
-                                    //     ->maxValue(99)
-                                    //     ->numeric(),
-                                    // TextInput::make('config.' . ConfigMembership::LIMIT_MEMBER->value)
-                                    //     ->label(ConfigMembership::LIMIT_MEMBER->labelSuperAdmin())
-                                    //     ->required()
-                                    //     ->helperText('Giá trị = 99999 ~ Không giới hạn')
-                                    //     ->minValue(1)
-                                    //     ->maxValue(99999)
-                                    //     ->numeric(),
-                                    // Toggle::make('config.' . ConfigMembership::FEATURE_POLL->value)
-                                    //     ->label(ConfigMembership::FEATURE_POLL->labelSuperAdmin()),
-                                    // Toggle::make('config.' . ConfigMembership::FEATURE_GAME->value)
-                                    //     ->label(ConfigMembership::FEATURE_GAME->labelSuperAdmin()),
-                                    // Toggle::make('config.' . ConfigMembership::FEATURE_COMMENT->value)
-                                    //     ->label(ConfigMembership::FEATURE_COMMENT->labelSuperAdmin()),
-                                ];
-                            } else {
-                                return [
-                                    Toggle::make('config.' . ConfigMembership::ALLOW_COMMENT->value)
-                                        ->label(ConfigMembership::ALLOW_COMMENT->labelAdmin()),
-                                    Toggle::make('config.' . ConfigMembership::ALLOW_CHOOSE_SEAT->value)
-                                        ->label(ConfigMembership::ALLOW_CHOOSE_SEAT->labelAdmin()),
-                                    Toggle::make('config.' . ConfigMembership::ALLOW_DOCUMENTARY->value)
-                                        ->label(ConfigMembership::ALLOW_DOCUMENTARY->labelAdmin()),
-                                ];
-                            }
+                            $type = $get('type');
+                            return (int) $type != MembershipType::FOR_CUSTOMER->value;
+                        })
+                        ->schema(function () use ($isSuperAdmin) {
+                            return [
+                                Toggle::make('config.' . ConfigMembership::ALLOW_COMMENT->value)
+                                    ->label(ConfigMembership::ALLOW_COMMENT->labelAdmin()),
+                                Toggle::make('config.' . ConfigMembership::ALLOW_CHOOSE_SEAT->value)
+                                    ->label(ConfigMembership::ALLOW_CHOOSE_SEAT->labelAdmin()),
+                                Toggle::make('config.' . ConfigMembership::ALLOW_DOCUMENTARY->value)
+                                    ->label(ConfigMembership::ALLOW_DOCUMENTARY->labelAdmin()),
+                            ];
                         })
                 ])
             ]);

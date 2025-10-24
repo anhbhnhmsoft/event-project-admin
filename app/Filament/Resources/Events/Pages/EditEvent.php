@@ -54,18 +54,23 @@ class EditEvent extends EditRecord
             $endTime = Carbon::parse($endTime);
 
             $documents = $schedule->documents->map(function ($document) {
+
+                $filesMetadata = $document->files->map(function ($file) {
+                    return [
+                        'id' => $file->id,
+                        'file_path' => str_replace('\\', '/', $file->file_path),
+                        'file_name' => $file->file_name,
+                    ];
+                })->toArray();
+
                 return [
                     'id' => $document->id,
                     'title' => $document->title,
                     'description' => $document->description,
                     'price' => $document->price,
-                    'files' => $document->files->map(function ($file) {
-                        return [
-                            'id' => $file->id,
-                            'file_path' => str_replace('\\', '/', $file->file_path),
-                            'file_name' => $file->file_name,
-                        ];
-                    })->toArray()
+                    'files' => array_column($filesMetadata, 'file_path'),
+                    // Đầy đủ metadata cho ViewField
+                    'files_metadata' => $filesMetadata,
                 ];
             })->toArray();
 
@@ -142,7 +147,6 @@ class EditEvent extends EditRecord
                 'ward_code' => $data['ward_code'],
                 'status' => $data['status'],
                 'free_to_join' => $data['free_to_join'],
-                'price_comment' => $data['price_comment'],
             ];
 
             if (isset($data['image_represent_path']) && $data['image_represent_path'] instanceof TemporaryUploadedFile) {
@@ -444,16 +448,16 @@ class EditEvent extends EditRecord
     {
         return [
             Action::make('seats-manager')
-                ->label(__('event.pages.seats_title'))
+                ->label(__('admin.events.pages.seats_title'))
                 ->icon('heroicon-o-building-office')
                 ->url(fn() => static::getResource()::getUrl('seats-manage', ['record' => $this->record]))
                 ->color('success'),
             DeleteAction::make()
-                ->label(__('event.general.delete')),
+                ->label(__('common.common_success.delete')),
         ];
     }
 
-    public function markFileForDeletion( $filePath)
+    public function markFileForDeletion($filePath)
     {
         $this->filesMarkedForDeletion[] = [
             'file_path' => $filePath,
@@ -482,12 +486,12 @@ class EditEvent extends EditRecord
 
 
             \Filament\Notifications\Notification::make()
-                ->title(__('event.general.delete_file_success'))
+                ->title(__('admin.events.notifications.delete_file_success'))
                 ->success()
                 ->send();
         } catch (\Throwable $e) {
             \Filament\Notifications\Notification::make()
-                ->title(__('event.general.delete_file_error'))
+                ->title(__('admin.events.notifications.delete_file_error'))
                 ->body($e->getMessage())
                 ->danger()
                 ->send();

@@ -7,6 +7,7 @@ use App\Utils\Helper;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+
 /**
  * @method static \Illuminate\Database\Eloquent\Builder|static filter(array $filters = []) // scope Filter query builder
  * @method static \Illuminate\Database\Eloquent\Builder|static sortBy(string $sortBy = '') // scope SortBy query builder
@@ -50,11 +51,9 @@ class Membership extends Model
         ];
     }
 
-
-
     public function scopeFilter(Builder $query, array $filters = [])
     {
-        if (!empty($filters['status'])) {
+        if (array_key_exists('status', $filters)) {
             $query->where('status', $filters['status']);
         }
 
@@ -62,17 +61,20 @@ class Membership extends Model
             $query->where('duration', $filters['duration']);
         }
 
-        if(!empty($filters['type'])){
+        if (!empty($filters['type'])) {
             $query->where('type', $filters['type']);
         }
 
-        if(!empty($filters['organizer_id'])){
+        if (!empty($filters['organizer_id'])) {
             $query->where('organizer_id', $filters['organizer_id']);
         }
 
         if (!empty($filters['keyword'])) {
             $keyword = trim($filters['keyword']);
-            $query->where('name', 'like', '%' . $keyword . '%')->orWhere('description', 'like', '%' . $keyword . '%');;
+            $query->where(function ($q) use ($keyword) {
+                $q->where('name', 'like', '%' . $keyword . '%')
+                    ->orWhere('description', 'like', '%' . $keyword . '%');
+            });
         }
     }
 

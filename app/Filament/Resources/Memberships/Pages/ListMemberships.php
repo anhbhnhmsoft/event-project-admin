@@ -10,20 +10,23 @@ class ListMemberships extends ListRecords
 {
     protected static string $resource = MembershipResource::class;
 
-    protected static ?string $title = 'Danh sách gói thành viên';
+    public function getTitle(): string
+    {
+        return __('admin.memberships.pages.list_title');
+    }
 
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make()->label('Tạo mới'),
+            CreateAction::make()->label(__('common.common_success.create')),
         ];
     }
 
     public function getBreadcrumbs(): array
     {
         return [
-            url()->previous() => 'Gói thành viên',
-            '' => 'Danh sách',
+            url()->previous() => __('admin.memberships.model_label'),
+            '' => __('admin.memberships.pages.list_title'),
         ];
     }
 }

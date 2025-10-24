@@ -14,8 +14,7 @@ class ListEvents extends ListRecords
     {
         return [
             CreateAction::make()
-                ->label(
-                __('event.general.create_event')),
+                ->label(__('admin.events.general.create_event')),
         ];
     }
 }

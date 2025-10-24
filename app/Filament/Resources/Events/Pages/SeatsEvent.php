@@ -16,13 +16,16 @@ class SeatsEvent extends Page
 
     protected string $view = 'filament.pages.seats-event';
     
-    protected static ?string $title = 'Quản lý Khu vực & Ghế ngồi';
+    public function getTitle(): string
+    {
+        return __('admin.events.pages.seats_title');
+    }
     
     public function getBreadcrumbs(): array
     {
         return [
-            route('filament.admin.resources.events.index') => __('event.general.event_title'),
-            '' => __('event.pages.seats_title'),
+            route('filament.admin.resources.events.index') => __('admin.events.model_label'),
+            '' => __('admin.events.pages.seats_title'),
         ];
     }
     

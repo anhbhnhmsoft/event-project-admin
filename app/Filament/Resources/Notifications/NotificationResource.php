@@ -20,9 +20,15 @@ class NotificationResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-bell';
 
-    protected static \UnitEnum|string|null $navigationGroup = 'Hệ thống';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.navigation.system');
+    }
 
-    protected static ?string $navigationLabel = 'Thông báo';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.notifications.navigation_label');
+    }
 
     public static function form(Schema $schema): Schema
     {

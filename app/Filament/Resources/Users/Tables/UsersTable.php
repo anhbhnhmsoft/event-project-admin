@@ -27,7 +27,7 @@ class UsersTable
             ->defaultSort('created_at', 'desc')
             ->columns([
                 ImageColumn::make('avatar_path')
-                    ->label('Ảnh đại diện')
+                    ->label(__('admin.users.table.avatar'))
                     ->circular()
                     ->disk('public')
                     ->state(function ($record) {
@@ -37,7 +37,7 @@ class UsersTable
                         return Helper::generateUiAvatarUrl($record->name, $record->email);
                     }),
                 TextColumn::make('name')
-                    ->label('Tên người dùng')
+                    ->label(__('admin.users.table.name'))
                     ->limit(30)
                     ->tooltip(function ($column): ?string {
                         $state = $column->getState();
@@ -59,39 +59,39 @@ class UsersTable
                     })
                     ->searchable(),
                 TextColumn::make('phone')
-                    ->label('Số điện thoại')
+                    ->label(__('admin.users.table.phone'))
                     ->searchable(),
                 TextColumn::make('organizer.name')
-                    ->label('Nhà tổ chức')
+                    ->label(__('admin.users.table.organizer'))
                     ->visible($isSuperAdmin),
             ])
             ->filters([
                 SelectFilter::make('role')
-                    ->label('Vai trò')
+                    ->label(__('admin.users.table.role'))
                     ->options(RoleUser::getOptions())
-                    ->placeholder('Tất cả vai trò'),
+                    ->placeholder(__('admin.users.table.all_roles')),
 
                 SelectFilter::make('organizer_id')
-                    ->label('Nhà tổ chức')
+                    ->label(__('admin.users.table.organizer'))
                     ->options(fn() => Organizer::query()->pluck('name', 'id'))
-                    ->placeholder('Tất cả nhà tổ chức')
+                    ->placeholder(__('admin.users.table.all_organizers'))
                     ->searchable()
                     ->visible($isSuperAdmin),
             ])
             ->recordActions([
                 EditAction::make()
-                    ->label('Sửa')
+                    ->label(__('common.common_success.edit'))
                     ->disabled(!$isAdmin)
                     ->visible($isAdmin),
                 DeleteAction::make()
-                    ->label('Xóa')
+                    ->label(__('common.common_success.delete'))
                     ->disabled(!$isAdmin)
                     ->visible($isAdmin),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
-                        ->label('Xóa')
+                        ->label(__('common.common_success.delete'))
                         ->visible($isAdmin),
                 ]),
             ]);

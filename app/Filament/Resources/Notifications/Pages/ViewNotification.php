@@ -8,7 +8,10 @@ use Filament\Resources\Pages\ViewRecord;
 class ViewNotification extends ViewRecord
 {
     protected static string $resource = NotificationResource::class;
-    protected static ?string $title = 'Xem thông báo';
+    public function getTitle(): string
+    {
+        return __('admin.notifications.pages.view_title');
+    }
 
     public function getBreadcrumbs(): array
     {

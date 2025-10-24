@@ -19,8 +19,15 @@ class TransactionsResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCreditCard;
 
-    protected static ?string $modelLabel = 'Giao dịch';
-    protected static ?string $pluralModelLabel = 'Thống Kê Giao Dịch';
+    public static function getModelLabel(): string
+    {
+        return __('admin.transactions.model_label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.transactions.plural_model_label');
+    }
 
     public static function canAccess(): bool
     {

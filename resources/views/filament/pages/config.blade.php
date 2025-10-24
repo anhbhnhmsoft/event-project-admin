@@ -4,15 +4,14 @@
     @if($isSuperAdmin)
 
         <x-slot name="description">
-            Là nơi chứa tất cả các cấu hình hệ thống, mỗi cấu hình ở dưới đây đều ảnh hưởng đến hệ thống nên sẽ phải
-            chỉnh sửa cẩn thận !
+            {{ __('admin.config.super_admin_description') }}
         </x-slot>
 
         {{-- Content --}}
         @livewire('filament.config-form',['isSuperAdmin' => $isSuperAdmin, 'organizerId' => $organizerId])
     @else
         <x-slot name="description">
-            Cài đặt tổ chức
+            {{ __('admin.config.organizer_description') }}
         </x-slot>
         {{-- Content --}}
         @livewire('filament.config-form',['isSuperAdmin' => $isSuperAdmin, 'organizerId' => $organizerId])

@@ -41,7 +41,7 @@ class EventService
 
         if ($organizerId) {
             $query->where('organizer_id', $organizerId);
-        }else {
+        } else {
             return [];
         }
 
@@ -58,7 +58,7 @@ class EventService
             ->get();
     }
 
-    public function getAreaById($areaId,$eventId)
+    public function getAreaById($areaId, $eventId)
     {
         try {
             $area = EventArea::query()
@@ -87,7 +87,7 @@ class EventService
     public function getSeatsByAreaId($areaId)
     {
         return EventSeat::query()
-            ->where('event_area_id',$areaId)
+            ->where('event_area_id', $areaId)
             ->orderByRaw('CAST(seat_code AS UNSIGNED) ASC')
             ->get();
     }
@@ -171,10 +171,15 @@ class EventService
                         $emails,
                         __('event.mail.subject_event_start', ['name' => $event->title]),
                         [
-                            'event_id'  => $event->id,
-                            'latitude'  => $event->latitude,
+                            'event_name' => $event->title,
+                            'start_time' => $event->start_time,
+                            'short_description' => $event->short_description,
+                            'address' => $event->address,
+                            'organizer_name' => $event->organizer->name ?? 'Đơn vị tổ chức',
+                            'latitude' => $event->latitude,
                             'longitude' => $event->longitude,
                             'map_link'  => "https://www.google.com/maps?q={$event->latitude},{$event->longitude}",
+                            'event_id'  => $event->id,
                         ]
                     )->onQueue('emails');
                 }

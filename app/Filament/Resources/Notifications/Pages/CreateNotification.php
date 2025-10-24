@@ -23,7 +23,10 @@ class CreateNotification extends CreateRecord
 {
     use CheckPlanBeforeAccess;
     protected static string $resource = NotificationResource::class;
-    protected static ?string $title = 'Tạo thông báo';
+    public function getTitle(): string
+    {
+        return __('admin.notifications.pages.create_title');
+    }
 
     protected NotificationService $notificationService;
 

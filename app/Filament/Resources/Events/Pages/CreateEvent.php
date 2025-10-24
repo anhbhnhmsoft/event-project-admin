@@ -51,9 +51,8 @@ class CreateEvent extends CreateRecord
     public function getBreadcrumbs(): array
     {
         return [
-            // Đã dịch: 'Sự kiện', 'Tạo sự kiện'
-            url()->previous() => __('event.general.event_title'),
-            '' => __('event.general.create_event'),
+            url()->previous() => __('admin.events.model_label'),
+            '' => __('admin.events.pages.create_title'),
         ];
     }
 

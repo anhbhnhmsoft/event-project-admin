@@ -55,7 +55,7 @@
                 @endif
             @endforeach
             <x-filament::button type="submit" icon="heroicon-m-pencil" wire:loading.attr="disabled">
-                Chỉnh sửa
+                {{ __('common.common_success.save') }}
                 <div wire:loading>
                     <x-filament::loading-indicator class="h-5 w-5" />
                 </div>
@@ -66,7 +66,7 @@
 
             @if($this->configList->isNotEmpty())
             <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">Cấu hình hệ thống</h3>
+                <h3 class="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">{{ __('admin.config.system_config') }}</h3>
 
                 @foreach ($this->configList as $index => $config)
                     <div class="flex flex-col items-start gap-2">
@@ -117,15 +117,12 @@
                             @endswitch
                         </p>
                     </div>
-                    @if (!$loop->last)
-                        <hr class="my-4 dark:border-gray-700">
-                    @endif
                 @endforeach
             </div>
             @endif
 
             <x-filament::button type="submit" icon="heroicon-m-pencil" wire:loading.attr="disabled">
-                Chỉnh sửa
+                {{ __('common.common_success.save') }}
                 <div wire:loading>
                     <x-filament::loading-indicator class="h-5 w-5" />
                 </div>

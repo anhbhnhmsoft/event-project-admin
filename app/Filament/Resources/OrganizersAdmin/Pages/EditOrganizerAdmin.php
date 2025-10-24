@@ -11,31 +11,34 @@ class EditOrganizerAdmin extends EditRecord
 {
     protected static string $resource = OrganizerAdminResource::class;
 
-    protected static ?string $title = 'Sửa nhà tổ chức';
+    public function getTitle(): string
+    {
+        return __('admin.organizers.pages.edit_title');
+    }
 
     protected function getHeaderActions(): array
     {
         return [
             DeleteAction::make()
-            ->label('Xóa'),
+            ->label(__('common.common_success.delete')),
         ];
     }
     public function getBreadcrumbs(): array
     {
         return [
-            url()->previous() => 'Nhà tổ chức',
-            '' => 'Sửa nhà tổ chức',
+            url()->previous() => __('admin.organizers.model_label'),
+            '' => __('admin.organizers.pages.edit_title'),
         ];
     }
 
     protected function getSaveFormAction(): Action
     {
-        return parent::getSaveFormAction()->label('Lưu thay đổi');
+        return parent::getSaveFormAction()->label(__('common.common_success.save'));
     }
 
     protected function getCancelFormAction(): Action
     {
-        return parent::getCancelFormAction()->label('Hủy');
+        return parent::getCancelFormAction()->label(__('common.common_success.cancel'));
     }
 }
 
