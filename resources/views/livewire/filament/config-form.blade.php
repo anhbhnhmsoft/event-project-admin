@@ -99,6 +99,7 @@
                             @switch($config->config_key)
                                 @case('CLIENT_ID_APP')
                                     {{__('admin.config.CLIENT_ID_APP')}}
+                                    @break
                                 @case('API_KEY')
                                     {{__('admin.config.API_KEY')}}
                                     @break
@@ -115,7 +116,7 @@
                                     {{ $config->description }}
                             @endswitch
                         </p>
-                    @endif
+                    </div>
                 @endforeach
             </div>
             @endif
