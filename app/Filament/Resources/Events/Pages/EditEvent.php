@@ -54,18 +54,23 @@ class EditEvent extends EditRecord
             $endTime = Carbon::parse($endTime);
 
             $documents = $schedule->documents->map(function ($document) {
+
+                $filesMetadata = $document->files->map(function ($file) {
+                    return [
+                        'id' => $file->id,
+                        'file_path' => str_replace('\\', '/', $file->file_path),
+                        'file_name' => $file->file_name,
+                    ];
+                })->toArray();
+
                 return [
                     'id' => $document->id,
                     'title' => $document->title,
                     'description' => $document->description,
                     'price' => $document->price,
-                    'files' => $document->files->map(function ($file) {
-                        return [
-                            'id' => $file->id,
-                            'file_path' => str_replace('\\', '/', $file->file_path),
-                            'file_name' => $file->file_name,
-                        ];
-                    })->toArray()
+                    'files' => array_column($filesMetadata, 'file_path'),
+                    // Đầy đủ metadata cho ViewField
+                    'files_metadata' => $filesMetadata,
                 ];
             })->toArray();
 
@@ -452,7 +457,7 @@ class EditEvent extends EditRecord
         ];
     }
 
-    public function markFileForDeletion( $filePath)
+    public function markFileForDeletion($filePath)
     {
         $this->filesMarkedForDeletion[] = [
             'file_path' => $filePath,

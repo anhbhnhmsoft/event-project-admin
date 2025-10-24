@@ -395,8 +395,17 @@ class EventForm
                                     ->view('filament.forms.components.event-existing-files')
                                     ->dehydrated(false)
                                     ->viewData(function (Get $get) {
+                                        $documents = $get('documents') ?? [];
+
+                                        $documentsWithMetadata = array_map(function ($doc) {
+                                            if (isset($doc['files_metadata']) && is_array($doc['files_metadata'])) {
+                                                $doc['files'] = $doc['files_metadata'];
+                                            }
+                                            return $doc;
+                                        }, $documents);
+
                                         return [
-                                            'documentData' => $get('documents'),
+                                            'documentData' => $documentsWithMetadata,
                                         ];
                                     }),
                                 TextInput::make('start_time')
@@ -476,6 +485,8 @@ class EventForm
                                     ->schema([
                                         Hidden::make('id')
                                             ->label('ID tài liệu'),
+                                        Hidden::make('files_metadata')
+                                            ->dehydrated(false),
                                         TextInput::make('title')
                                             ->label('Tiêu đề tài liệu')
                                             ->required()
@@ -509,17 +520,17 @@ class EventForm
                                             ->validationMessages([
                                                 'required' => 'Vui lòng chọn tệp đính kèm.',
                                             ])
-                                            ->formatStateUsing(function ($state) {
-                                                if (is_array($state)) {
-                                                    return array_map(function ($file) {
-                                                        if (is_array($file) && isset($file['file_path'])) {
-                                                            return $file['file_path'];
-                                                        }
-                                                        return $file;
-                                                    }, $state);
-                                                }
-                                                return $state;
-                                            }),
+                                        // ->formatStateUsing(function ($state) {
+                                        //     if (is_array($state)) {
+                                        //         return array_map(function ($file) {
+                                        //             if (is_array($file) && isset($file['file_path'])) {
+                                        //                 return $file;
+                                        //             }
+                                        //             return $file;
+                                        //         }, $state);
+                                        //     }
+                                        //     return $state;
+                                        // }),
                                     ])
                                     ->default([]),
                             ])
