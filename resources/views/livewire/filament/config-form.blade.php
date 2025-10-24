@@ -5,7 +5,6 @@
                 <div class="flex flex-col items-start gap-2">
                     <label for="config_{{ $config->config_key }}"
                         class="block text-sm font-bold text-gray-900 dark:text-white">{{ $config->config_key }}</label>
-
                     @if ($config->config_key === 'LOGO')
                         <x-filament::input.wrapper class="w-full">
                             <input type="file" wire:model="config_value.{{ $config->config_key }}"
@@ -30,7 +29,25 @@
                     @endif
 
                     <p class="block text-sm italic text-gray-500 dark:text-gray-400">
-                        Chú thích: {{ $config->description }}
+                        @switch($config->config_key)
+                            @case('CLIENT_ID_APP')
+                                {{__('admin.config.CLIENT_ID_APP')}}
+                                @break
+                            @case('API_KEY')
+                                {{__('admin.config.API_KEY')}}
+                                @break
+                            @case('CHECKSUM_KEY')
+                                {{__('admin.config.CHECKSUM_KEY')}}
+                                @break
+                            @case('LINK_ZALO_SUPPORT')
+                                {{__('admin.config.LINK_ZALO_SUPPORT')}}
+                                @break
+                            @case('LINK_FACEBOOK_SUPPORT')
+                                {{__('admin.config.LINK_FACEBOOK_SUPPORT')}}
+                                @break
+                            @default
+                                {{ $config->description }}
+                        @endswitch
                     </p>
                 </div>
                 @if (!$loop->last)
@@ -79,7 +96,25 @@
                         @endif
 
                         <p class="block text-sm italic text-gray-500 dark:text-gray-400">
-                            Chú thích: {{ $config->description }}
+                            @switch($config->config_key)
+                                @case('CLIENT_ID_APP')
+                                    {{__('admin.config.CLIENT_ID_APP')}}
+                                    @break
+                                @case('API_KEY')
+                                    {{__('admin.config.API_KEY')}}
+                                    @break
+                                @case('CHECKSUM_KEY')
+                                    {{__('admin.config.CHECKSUM_KEY')}}
+                                    @break
+                                @case('LINK_ZALO_SUPPORT')
+                                    {{__('admin.config.LINK_ZALO_SUPPORT')}}
+                                    @break
+                                @case('LINK_FACEBOOK_SUPPORT')
+                                    {{__('admin.config.LINK_FACEBOOK_SUPPORT')}}
+                                    @break
+                                @default
+                                    {{ $config->description }}
+                            @endswitch
                         </p>
                     </div>
                     @if (!$loop->last)

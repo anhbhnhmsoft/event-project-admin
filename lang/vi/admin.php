@@ -14,8 +14,12 @@ return [
             'status' => 'Trạng thái',
         ]
     ],
-    'users' => [
-
+    'config' => [
+        'CLIENT_ID_APP' => 'Client ID App của PayOS',
+        'API_KEY' => 'API Key của PayOS',
+        'CHECKSUM_KEY' => 'Checksum Key của PayOS',
+        'LINK_ZALO_SUPPORT' => 'Link Zalo hỗ trợ',
+        'LINK_FACEBOOK_SUPPORT' => 'Link Facebook hỗ trợ',
     ],
 ];
 
