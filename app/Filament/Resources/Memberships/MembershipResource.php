@@ -22,9 +22,20 @@ class MembershipResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::Users;
 
-    protected static ?string $navigationLabel = 'Gói thành viên';
-    protected static ?string $modelLabel = 'Gói thành viên';
-    protected static ?string $pluralModelLabel = 'Gói thành viên';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.memberships.navigation_label');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('admin.memberships.model_label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.memberships.plural_model_label');
+    }
 
 
     public static function form(Schema $form): Schema

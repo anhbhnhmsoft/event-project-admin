@@ -14,7 +14,10 @@ class EditUser extends EditRecord
 
     protected static string $resource = UserResource::class;
 
-    protected static ?string $title = 'Sửa người dùng';
+    public function getTitle(): string
+    {
+        return __('admin.users.pages.edit_title');
+    }
 
     protected function getHeaderActions(): array
     {
@@ -26,8 +29,8 @@ class EditUser extends EditRecord
     public function getBreadcrumbs(): array
     {
         return [
-            url()->previous() => 'Người dùng',
-            '' => 'Sửa người dùng',
+            url()->previous() => __('admin.users.model_label'),
+            '' => __('admin.users.pages.edit_title'),
         ];
     }
 
@@ -51,12 +54,12 @@ class EditUser extends EditRecord
     protected function getSaveFormAction(): Action
     {
         return parent::getSaveFormAction()
-            ->label('Lưu thay đổi');
+            ->label(__('common.common_success.save'));
     }
 
     protected function getCancelFormAction(): Action
     {
         return parent::getCancelFormAction()
-            ->label('Hủy');
+            ->label(__('common.common_success.cancel'));
     }
 }

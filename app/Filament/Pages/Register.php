@@ -38,27 +38,27 @@ class Register extends PagesRegister
         return $schema
             ->components([
                 TextInput::make('name')
-                    ->label(__('Tên tổ chức'))
+                    ->label(__('auth.register.organization_name'))
                     ->required()
                     ->maxLength(255),
                 TextInput::make('email')
-                    ->label(__('Email'))
+                    ->label(__('auth.register.email'))
                     ->email()
                     ->required()
                     ->unique(User::class),
                 TextInput::make('phone')
-                    ->label(__('Số điện thoại'))
+                    ->label(__('auth.register.phone'))
                     ->tel()
                     ->required()
                     ->maxLength(20),
                 TextInput::make('password')
-                    ->label(__('Mật khẩu'))
+                    ->label(__('auth.register.password'))
                     ->password()
                     ->required()
                     ->revealable()
                     ->same('passwordConfirmation'),
                 TextInput::make('passwordConfirmation')
-                    ->label(__('Xác nhận mật khẩu'))
+                    ->label(__('auth.register.password_confirmation'))
                     ->password()
                     ->required()
                     ->revealable()
@@ -75,8 +75,8 @@ class Register extends PagesRegister
         if ($result['status'] === true) {
             Notification::make()
                 ->success()
-                ->title(__('Đăng ký thành công!'))
-                ->body(__('Vui lòng kiểm tra email để xác thực tài khoản.'))
+                ->title(__('auth.register.success_title'))
+                ->body(__('auth.register.success_message'))
                 ->persistent()
                 ->send();
 
@@ -85,8 +85,8 @@ class Register extends PagesRegister
 
         Notification::make()
             ->danger()
-            ->title(__('Đăng ký thất bại'))
-            ->body(__('Có lỗi xảy ra khi đăng ký. Vui lòng thử lại sau.'))
+            ->title(__('auth.register.error_title'))
+            ->body(__('auth.register.error_message'))
             ->persistent()
             ->send();
 
@@ -114,7 +114,7 @@ class Register extends PagesRegister
     {
         return [
             Action::make('register')
-                ->label(__('Đăng ký'))
+                ->label(__('auth.register.register'))
                 ->submit('register')
                 ->extraAttributes([
                     'wire:loading.attr' => 'disabled',

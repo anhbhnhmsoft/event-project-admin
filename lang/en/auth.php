@@ -60,5 +60,18 @@ return [
         'password'          => 'Password',
         'organizer'         => 'Organizer',
         'select_organizer'  => 'Select Organizer'
+    ],
+    'register' => [
+        'heading'           => 'Register',
+        'organization_name' => 'Organization Name',
+        'email'             => 'Email',
+        'phone'             => 'Phone Number',
+        'password'          => 'Password',
+        'password_confirmation' => 'Confirm Password',
+        'register'          => 'Register',
+        'success_title'     => 'Registration Successful!',
+        'success_message'   => 'Please check your email to verify your account.',
+        'error_title'       => 'Registration Failed',
+        'error_message'     => 'An error occurred during registration. Please try again later.'
     ]
 ];

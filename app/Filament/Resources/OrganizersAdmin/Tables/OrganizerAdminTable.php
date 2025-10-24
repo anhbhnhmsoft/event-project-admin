@@ -18,7 +18,7 @@ class OrganizerAdminTable
     {
         return $table->columns([
             ImageColumn::make('image')
-                ->label('Ảnh')
+                ->label(__('admin.organizers.table.image'))
                 ->disk('public')
                 ->width(100)
                 ->state(function ($record) {
@@ -27,7 +27,7 @@ class OrganizerAdminTable
                         : null;
                 }),
             TextColumn::make('name')
-                ->label('Tên')
+                ->label(__('admin.organizers.table.name'))
                 ->limit(30)
                 ->tooltip(function ($column): ?string {
                     $state = $column->getState();
@@ -38,27 +38,27 @@ class OrganizerAdminTable
                 })
                 ->searchable(),
             TextColumn::make('status')
-                ->label('Trạng thái')
+                ->label(__('admin.organizers.table.status'))
                 ->badge()
                 ->color(fn($state) => match ($state) {
                     CommonStatus::ACTIVE->value => 'success',
                     CommonStatus::INACTIVE->value => 'warning'
-                })->formatStateUsing(fn($state) => $state == CommonStatus::ACTIVE->value ? 'Hoạt động' : 'Không hoạt động'),
-            TextColumn::make('created_at')->label('Tạo lúc')->dateTime('d/m/Y H:i'),
+                })->formatStateUsing(fn($state) => $state == CommonStatus::ACTIVE->value ? __('admin.organizers.table.active') : __('admin.organizers.table.inactive')),
+            TextColumn::make('created_at')->label(__('admin.organizers.table.created_at'))->dateTime('d/m/Y H:i'),
         ])
             ->filters([
                 //
             ])
             ->recordActions([
                 EditAction::make()
-                    ->label('Sửa'),
+                    ->label(__('common.common_success.edit')),
                 DeleteAction::make()
-                    ->label('Xóa'),
+                    ->label(__('common.common_success.delete')),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
-                        ->label('Xóa'),
+                        ->label(__('common.common_success.delete')),
                 ]),
             ]);;
     }

@@ -12,7 +12,10 @@ class ListUsers extends ListRecords
 {
     protected static string $resource = UserResource::class;
 
-    protected static ?string $title = 'Danh sách người dùng';
+    public function getTitle(): string
+    {
+        return __('admin.users.pages.list_title');
+    }
 
     protected function getHeaderActions(): array
     {
@@ -21,7 +24,7 @@ class ListUsers extends ListRecords
         if ($user->role === RoleUser::SUPER_ADMIN->value || $user->role === RoleUser::ADMIN->value) {
             return [ 
                 CreateAction::make()
-                ->label('Tạo người dùng mới')
+                ->label(__('admin.users.pages.create_title'))
             ];
         }
         
@@ -30,8 +33,8 @@ class ListUsers extends ListRecords
     public function getBreadcrumbs(): array
     {
         return [
-            url()->previous() => 'Người dùng',
-            '' => 'Danh sách',
+            url()->previous() => __('admin.users.model_label'),
+            '' => __('admin.users.pages.list_title'),
         ];
     }
 }
