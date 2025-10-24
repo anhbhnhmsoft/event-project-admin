@@ -11,10 +11,10 @@ enum TransactionStatus: int
     public static function getLabel(int $value): string
     {
         return match ($value) {
-            self::WAITING->value => 'Đang chờ xử lý',
-            self::SUCCESS->value => 'Thành công',
-            self::FAILED->value => 'Thất bại',
-            default => 'Không xác định',
+            self::WAITING->value => __('constants.transaction_status.waiting'),
+            self::SUCCESS->value => __('constants.transaction_status.success'),
+            self::FAILED->value => __('constants.transaction_status.failed'),
+            default => __('constants.transaction_status.unknown'),
         };
     }
 

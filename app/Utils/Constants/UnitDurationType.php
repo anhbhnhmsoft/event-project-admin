@@ -12,9 +12,9 @@ enum UnitDurationType: int
     public static function label(int $type): string
     {
         return match ($type) {
-            self::MINUTE->value => 'Phút',
-            self::HOUR->value   => 'Giờ',
-            self::DAY->value    => 'Ngày',
+            self::MINUTE->value => __('constants.unit_duration_type.minute'),
+            self::HOUR->value   => __('constants.unit_duration_type.hour'),
+            self::DAY->value    => __('constants.unit_duration_type.day'),
         };
     }
 

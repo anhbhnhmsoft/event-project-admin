@@ -64,17 +64,21 @@
                                                     </span>
                                                 @endif
                                             </h3>
-                                            <p >{{ $area['capacity'] }} {{ __('admin.events.form.seat') }}</p>
+                                            <p class="text-white dark:text-black">{{ $area['capacity'] }} {{ __('admin.events.form.seat') }}</p>
                                             @if (!$event->free_to_join)
                                                 <p class="text-white/90 mt-1 dark:text-black">
                                                     {{ __('admin.events.form.ticket_price') }}:
-                                                    {{ isset($area['price']) && $area['price'] !== null && $area['price'] !== '' ? number_format((float) $area['price']) . ' đ' : '—' }}
+                                                    @if (isset($area['price']) && $area['price'] !== null && $area['price'] !== '' && $area['price'] > 0)
+                                                        {{ number_format((float) $area['price']) }} đ
+                                                    @else
+                                                        {{ __('admin.events.form.free') }}
+                                                    @endif
                                                 </p>
                                             @endif
                                         </div>
                                         <div class="flex space-x-2">
                                             <button wire:click="selectArea('{{ $area['id'] }}')"
-                                                class="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition-colors">
+                                                class="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition-colors text-white">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -84,7 +88,7 @@
                                             </button>
                                             <button wire:click="deleteArea('{{ $area['id'] }}')"
                                                 wire:confirm="Bạn có chắc chắn muốn xóa khu vực này?"
-                                                class="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition-colors">
+                                                class="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition-colors text-white">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -104,10 +108,10 @@
                                         @endphp
                                         @foreach ($seatsToShow as $seat)
                                             <div
-                                                class="w-7 h-7 rounded-sm flex items-center justify-center text-xs font-medium
-                                                @if ($seat['status'] == \App\Utils\Constants\EventSeatStatus::AVAILABLE->value) bg-green-200 text-green-800
-                                                @elseif($seat['status'] == \App\Utils\Constants\EventSeatStatus::BOOKED->value) bg-red-200 text-red-800
-                                                @else bg-gray-200 text-gray-600 @endif">
+                                                class="w-7 h-7 rounded-sm flex items-center justify-center text-xs font-medium border border-gray-300
+                                                @if ($seat['status'] == \App\Utils\Constants\EventSeatStatus::AVAILABLE->value) bg-white text-gray-800
+                                                @elseif($seat['status'] == \App\Utils\Constants\EventSeatStatus::BOOKED->value) bg-gray-100 text-gray-600
+                                                @else bg-white text-gray-600 @endif">
                                                 {{ $seat['seat_code'] }}
                                             </div>
                                         @endforeach

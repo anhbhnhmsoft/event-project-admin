@@ -10,8 +10,8 @@ enum ConfigType: int
     public static function getOptions(): array
     {
         return [
-            self::IMAGE->value => 'Ảnh',
-            self::STRING->value => 'Chuỗi',
+            self::IMAGE->value => __('constants.config_type.image'),
+            self::STRING->value => __('constants.config_type.string'),
         ];
     }
 

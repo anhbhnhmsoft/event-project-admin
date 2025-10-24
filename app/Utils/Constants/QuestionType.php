@@ -13,9 +13,9 @@ enum QuestionType: int
     public static function label(int $type): string
     {
         return match ($type) {
-            self::MULTIPLE->value   => 'Choice (Nhiều lựa chọn)',
-            self::OPEN_ENDED->value => 'Text Answer (Trả lời tự do)',
-            default => 'Không xác định',
+            self::MULTIPLE->value   => __('constants.question_type.multiple'),
+            self::OPEN_ENDED->value => __('constants.question_type.open_ended'),
+            default => __('constants.question_type.unknown'),
         };
     }
 

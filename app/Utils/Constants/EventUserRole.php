@@ -10,8 +10,8 @@ enum EventUserRole: int
     public static function options(): array
     {
         return [
-            self::ORGANIZER->value => 'Người tổ chức',
-            self::PRESENTER->value => 'Người dẫn chương trình',
+            self::ORGANIZER->value => __('constants.event_user_role.organizer'),
+            self::PRESENTER->value => __('constants.event_user_role.presenter'),
         ];
     }
 }

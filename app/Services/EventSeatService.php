@@ -5,9 +5,11 @@ namespace App\Services;
 use App\Models\Event;
 use App\Models\EventArea;
 use App\Models\EventSeat;
+use App\Models\EventUserHistory;
 use App\Models\User;
 use App\Utils\Constants\EventSeatStatus;
 use App\Utils\Constants\EventStatus;
+use App\Utils\Constants\EventUserHistoryStatus;
 use App\Utils\Constants\TransactionStatus;
 use App\Utils\Constants\TransactionType;
 use App\Utils\Constants\TransactionTypePayment;
@@ -114,12 +116,12 @@ class EventSeatService
             $seat = EventSeat::with('area')->findOrFail($seatId);
 
             if ($seat->status === EventSeatStatus::BOOKED->value) {
-                return ['status' => false, 'message' => 'Ghế đã được đặt.'];
+                return ['status' => false, 'message' => __('event.validation.seat_already_booked')];
             }
 
             // Kiểm tra ghế thuộc sự kiện
             if ($seat->area->event_id !== $event->id) {
-                return ['status' => false, 'message' => 'Ghế không thuộc sự kiện này.'];
+                return ['status' => false, 'message' => __('event.validation.seat_not_belong_to_event')];
             }
 
             $seat->update([
@@ -131,7 +133,7 @@ class EventSeatService
             return ['status' => true, 'data' => $seat];
         } catch (\Exception $e) {
             DB::rollBack();
-            return ['status' => false, 'message' => 'Không thể gán ghế.'];
+            return ['status' => false, 'message' => __('event.validation.cannot_assign_seat')];
         }
     }
 
@@ -148,7 +150,7 @@ class EventSeatService
             return ['status' => true];
         } catch (\Exception $e) {
             DB::rollBack();
-            return ['status' => false, 'message' => 'Không thể huỷ ghế.'];
+            return ['status' => false, 'message' => __('event.validation.cannot_cancel_seat')];
         }
     }
 
@@ -164,14 +166,14 @@ class EventSeatService
             if ($event->free_to_join) {
                 return [
                     'status' => false,
-                    'message' => 'Sự kiện này miễn phí, không cần thanh toán.',
+                    'message' => __('event.validation.free_to_join'),
                 ];
             }
 
             if ($seat->status !== EventSeatStatus::AVAILABLE->value) {
                 return [
                     'status' => false,
-                    'message' => 'Ghế này đã được đặt.',
+                    'message' => __('event.validation.seat_already_booked'),
                 ];
             }
 
@@ -253,7 +255,7 @@ class EventSeatService
             if (!$transaction || $transaction->type !== TransactionType::EVENT_SEAT->value) {
                 return [
                     'status' => false,
-                    'message' => 'Transaction không hợp lệ.',
+                    'message' => __('transaction.validation.invalid_transaction'),
                 ];
             }
 
@@ -263,7 +265,7 @@ class EventSeatService
             if (!$seat) {
                 return [
                     'status' => false,
-                    'message' => 'Ghế không tồn tại.',
+                    'message' => __('event.validation.seat_not_found'),
                 ];
             }
 
@@ -283,7 +285,7 @@ class EventSeatService
 
             return [
                 'status' => true,
-                'message' => 'Thanh toán thành công! Ghế đã được đặt.',
+                'message' => __('event.validation.payment_success'),
                 'seat' => $seat,
             ];
 
@@ -325,7 +327,7 @@ class EventSeatService
             if (!$seat) {
                 return [
                     'status' => false,
-                    'message' => 'Ghế không tồn tại',
+                    'message' => __('event.validation.seat_not_found'),
                 ];
             }
 
@@ -333,7 +335,7 @@ class EventSeatService
             if (!$area) {
                 return [
                     'status' => false,
-                    'message' => 'Khu vực không tồn tại',
+                    'message' => __('event.validation.area_not_found'),
                 ];
             }
 
@@ -348,7 +350,7 @@ class EventSeatService
             if (!$this->canAccessSeat($event, $area, $seat)) {
                 return [
                     'status' => false,
-                    'message' => 'Bạn không có quyền truy cập ghế này',
+                    'message' => __('common.common_error.permission_error'),
                 ];
             }
 

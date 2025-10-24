@@ -37,7 +37,7 @@ class CassoService
 
             return [
                 'status' => false,
-                'message' => 'Không xác định được tổ chức để tạo giao dịch thanh toán.',
+                'message' => __('casso.error.organizer_not_found'),
             ];
         }
         $config = app(ConfigService::class);

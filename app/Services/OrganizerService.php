@@ -142,7 +142,7 @@ class OrganizerService
 
             return [
                 'status'  => false,
-                'message' => 'Lỗi trong quá trình khởi tạo tổ chức và cấu hình.'
+                'message' => __('organizer.error.init_failed'),
             ];
         }
     }
@@ -189,7 +189,7 @@ class OrganizerService
 
             return [
                 'status'  => true,
-                'message' => 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.',
+                'message' => __('organizer.success.register_success'),
                 'data'    => [
                     'organizer_id' => $organizer->id,
                     'user_id'      => $user->id,
@@ -205,7 +205,7 @@ class OrganizerService
 
             return [
                 'status'  => false,
-                'message' => 'Có lỗi xảy ra khi đăng ký. Vui lòng thử lại sau.',
+                'message' => __('organizer.error.register_failed'),
             ];
         }
     }

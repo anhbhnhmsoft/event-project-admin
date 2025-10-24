@@ -10,8 +10,8 @@ enum EventCommentType: int
     public static function label(int $type): string
     {
         return match ($type) {
-            self::PUBLIC->value   => 'Bình luận chung',
-            self::PRIVATE->value  => 'Bình luận riêng ',
+            self::PUBLIC->value   => __('constants.event_comment_type.public'),
+            self::PRIVATE->value  => __('constants.event_comment_type.private'),
         };
     }
 }

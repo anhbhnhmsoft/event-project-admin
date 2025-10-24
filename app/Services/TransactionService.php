@@ -383,7 +383,7 @@ class TransactionService
                 DB::rollBack();
                 return [
                     'status' => false,
-                    'message' => 'Không thể hủy giao dịch đã hoàn thành hoặc đã hủy',
+                    'message' => __('transaction.validation.cannot_cancel_completed'),
                 ];
             }
 
@@ -393,7 +393,7 @@ class TransactionService
                 DB::rollBack();
                 return [
                     'status' => false,
-                    'message' => 'Bạn không có quyền hủy giao dịch này',
+                    'message' => __('common.common_error.permission_error'),
                 ];
             }
 
@@ -406,7 +406,7 @@ class TransactionService
                 TransactionType::MEMBERSHIP->value => $this->cancelMembershipRecord($transaction),
                 TransactionType::PLAN_SERVICE->value => $this->cancelPlanServiceRecord($transaction),
                 TransactionType::EVENT_SEAT->value => $this->cancelEventSeatRecord($transaction),
-                default => ['status' => false, 'message' => 'Loại giao dịch không hợp lệ']
+                default => ['status' => false, 'message' => __('transaction.validation.invalid_type')]
             };
 
             if (!$cancelResult['status']) {
@@ -435,7 +435,7 @@ class TransactionService
 
             return [
                 'status' => true,
-                'message' => 'Hủy giao dịch thành công',
+                'message' => __('transaction.validation.cancel_success'),
             ];
         } catch (Exception $e) {
             DB::rollBack();
@@ -597,7 +597,7 @@ class TransactionService
                         DB::rollBack();
                         return [
                             'status' => false,
-                            'message' => 'Không tìm thấy thông tin ghế trong giao dịch',
+                            'message' => __('transaction.validation.seat_info_not_found'),
                         ];
                     }
 
@@ -606,7 +606,7 @@ class TransactionService
                         DB::rollBack();
                         return [
                             'status' => false,
-                            'message' => 'Ghế không tồn tại',
+                            'message' => __('event.validation.seat_not_found'),
                         ];
                     }
 
@@ -614,7 +614,7 @@ class TransactionService
                         DB::rollBack();
                         return [
                             'status' => false,
-                            'message' => 'Ghế đã được đặt bởi người khác',
+                            'message' => __('event.validation.seat_already_booked'),
                         ];
                     }
 
