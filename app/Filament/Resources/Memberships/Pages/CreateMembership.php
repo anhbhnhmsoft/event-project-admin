@@ -48,9 +48,8 @@ class CreateMembership extends CreateRecord
         $user = Auth::user();
 
         if ($user->role == RoleUser::ADMIN->value) {
-            $type = MembershipType::FOR_CUSTOMER->value;
+            $data['type']  = MembershipType::FOR_CUSTOMER->value;
         };
-        $data['type']        = $type;
         $data['organizer_id'] = $user->organizer_id;
         return $data;
     }
