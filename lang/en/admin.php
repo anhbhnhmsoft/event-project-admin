@@ -263,6 +263,11 @@ return [
         ]
     ],
     'config' => [
+        'CLIENT_ID_APP' => 'PayOS Client ID App',
+        'API_KEY' => 'PayOS API Key',
+        'CHECKSUM_KEY' => 'PayOS Checksum Key',
+        'LINK_ZALO_SUPPORT' => 'Zalo Support Link',
+        'LINK_FACEBOOK_SUPPORT' => 'Facebook Support Link',
         'super_admin_description' => 'This is where all system configurations are stored. Each configuration below affects the system, so please edit carefully!',
         'organizer_description' => 'Organizer settings',
         'note' => 'Note',
