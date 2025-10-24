@@ -15,7 +15,10 @@ class OrganizerResource extends Resource
     protected static ?string $model = Organizer::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingOffice;
-    protected static \UnitEnum|string|null $navigationGroup = 'Hệ thống';
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.navigation.system');
+    }
     public static function getNavigationLabel(): string
     {
         return __('admin.organizers.label_admin_organizer');

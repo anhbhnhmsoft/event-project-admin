@@ -25,11 +25,20 @@ class UserResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static ?string $navigationLabel = 'Người dùng';
+    public static function getNavigationLabel(): string
+    {
+        return __('admin.users.navigation_label');
+    }
 
-    protected static ?string $modelLabel = 'Người dùng';
+    public static function getModelLabel(): string
+    {
+        return __('admin.users.model_label');
+    }
 
-    protected static ?string $pluralModelLabel = 'Người dùng';
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.users.plural_model_label');
+    }
 
     public static function form(Schema $schema): Schema
     {

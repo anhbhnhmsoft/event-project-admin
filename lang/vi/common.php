@@ -6,6 +6,17 @@ return [
         'get_success' => 'Lấy dữ liệu thành công',
         'add_success' => 'Thêm dữ liệu thành công',
         'update_success' => 'Cập nhật dữ liệu thành công',
+        'processing' => 'Đang xử lý...',
+        'cancel' => 'Hủy bỏ',
+        'save' => 'Lưu thay đổi',
+        'close' => 'Đóng',
+        'all' => 'Tất cả',
+        'empty' => 'Trống',
+        'create' => 'Tạo mới',
+        'edit' => 'Sửa',
+        'delete' => 'Xóa',
+        'view' => 'Xem',
+        'create_and_create_another' => 'Tạo và tạo thêm',
     ],
     'common_error' => [
         'server_error' => 'Đã xảy ra lỗi trên máy chủ, vui lòng liên hệ quản trị viên để được hỗ trợ.',
@@ -48,6 +59,7 @@ return [
     'resource' => [
         'dashboard' => [
             'choose_event' => 'Vui lòng chọn sự kiện trước khi xuất Excel.',
+            'export_excel' => 'Xuất Excel',
             'select' => [
                 'heading' => 'Bộ lọc sự kiện',
                 'choose_event_label' => 'Chọn sự kiện',

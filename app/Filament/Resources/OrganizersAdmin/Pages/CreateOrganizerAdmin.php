@@ -13,19 +13,22 @@ class CreateOrganizerAdmin extends CreateRecord
 {
     protected static string $resource = OrganizerAdminResource::class;
 
-    protected static ?string $title = 'Tạo nhà tổ chức';
+    public function getTitle(): string
+    {
+        return __('admin.organizers.pages.create_title');
+    }
 
     public function getBreadcrumbs(): array
     {
         return [
-            url()->previous() => 'Nhà tổ chức',
-            '' => 'Tạo nhà tổ chức',
+            url()->previous() => __('admin.organizers.model_label'),
+            '' => __('admin.organizers.pages.create_title'),
         ];
     }
 
     protected function getCreateFormAction(): Action
     {
-        return parent::getCreateFormAction()->label('Tạo mới');
+        return parent::getCreateFormAction()->label(__('common.common_success.create'));
     }
 
     protected function handleRecordCreation(array $data): Model
@@ -35,7 +38,7 @@ class CreateOrganizerAdmin extends CreateRecord
 
         if (!$result['status']) {
             Notification::make()
-                ->title('Tạo tổ chức thất bại!')
+                ->title(__('admin.organizers.notifications.create_failed'))
                 ->body($result['message'])
                 ->danger()
                 ->send();
@@ -46,11 +49,11 @@ class CreateOrganizerAdmin extends CreateRecord
     protected function getCreateAnotherFormAction(): Action
     {
         return parent::getCreateAnotherFormAction()
-            ->label('Tạo và tạo thêm');
+            ->label(__('common.common_success.create_and_create_another'));
     }
 
     protected function getCancelFormAction(): Action
     {
-        return parent::getCancelFormAction()->label('Hủy');
+        return parent::getCancelFormAction()->label(__('common.common_success.cancel'));
     }
 }

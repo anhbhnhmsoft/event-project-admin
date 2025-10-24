@@ -8,25 +8,25 @@
             @if (empty($this->list))
                 <x-filament::section class="max-w-4xl mx-auto">
                     <div class="text-center text-gray-500 dark:text-gray-400 p-8">
-                        <p class="text-lg font-semibold">Hiện chưa có gói dịch vụ nào được thiết lập.</p>
-                        <p class="mt-2 text-sm">Vui lòng quay lại sau hoặc liên hệ quản trị viên.</p>
+                        <p class="text-lg font-semibold">{{ __('admin.service_plan.no_plans') }}</p>
+                        <p class="mt-2 text-sm">{{ __('admin.service_plan.contact_admin') }}</p>
                     </div>
                 </x-filament::section>
             @else
                 <x-filament::section>
                     @if ($this->activePlan)
                         <x-filament::section class="max-w-4xl mx-auto mb-6 bg-primary-50 dark:bg-primary-900/10">
-                            <x-slot name="heading">Thời Gian Kích Hoạt Còn Lại</x-slot>
+                            <x-slot name="heading">{{ __('admin.service_plan.active_time_remaining') }}</x-slot>
                             <div
                                 class="flex flex-col sm:flex-row justify-between items-start sm:items-center text-primary-700 dark:text-primary-300">
 
                                 <div
                                     class="mt-3 sm:mt-0 text-sm font-semibold p-2 rounded-lg bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
-                                    Kích hoạt từ ngày:
+                                    {{ __('admin.service_plan.activated_from') }}:
                                     <span class="font-mono">
                                         {{ \Carbon\Carbon::parse($this->activePlan->pivot->start_date)->format('d/m/Y') }}
                                     </span>
-                                    - Hết hạn:
+                                    - {{ __('admin.service_plan.expires') }}:
                                     <span class="font-mono">
                                         {{ \Carbon\Carbon::parse($this->activePlan->pivot->end_date)->format('d/m/Y') }}
                                     </span>
@@ -34,7 +34,7 @@
                             </div>
                         </x-filament::section>
                     @endif
-                    <x-slot name="heading">Gói Dịch Vụ Phù Hợp</x-slot>
+                    <x-slot name="heading">{{ __('admin.service_plan.suitable_plans') }}</x-slot>
 
                     <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 pt-4">
                         @foreach ($this->list as $item)
@@ -64,7 +64,7 @@
                                             <span class="text-lg font-normal">VND</span>
                                         </h6>
                                         <span class="text-sm text-gray-500 dark:text-gray-400">
-                                            Thời hạn: {{ $item->duration }} tháng
+                                            {{ __('admin.service_plan.duration') }}: {{ $item->duration }} {{ __('admin.service_plan.months') }}
                                         </span>
 
                                         <p class="text-sm text-gray-700 dark:text-gray-300 mt-2 italic">
@@ -75,7 +75,7 @@
                                     <x-filament::button wire:key="buy-{{ $item->id }}" class="w-full mt-4"
                                         color="primary" icon="heroicon-m-shopping-cart"
                                         wire:click="onNextStep('{{ $item->id }}')">
-                                        Mua
+                                        {{ __('admin.service_plan.buy') }}
                                     </x-filament::button>
                                 </div>
                             </div>
@@ -85,7 +85,7 @@
             @endif
         @else
             <x-filament::section class="max-w-7xl mx-auto">
-                <x-slot name="heading">Thanh toán Gói Dịch Vụ</x-slot>
+                <x-slot name="heading">{{ __('admin.service_plan.payment') }}</x-slot>
 
                 <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
                     {{-- Thông tin gói --}}
@@ -129,14 +129,14 @@
                                 <div class="flex flex-col gap-3">
                                     <x-filament::button class="w-full" color="gray" icon="heroicon-m-arrow-left"
                                         wire:click="changeMembershipSelected()">
-                                        Chọn gói khác
+                                        {{ __('admin.service_plan.choose_other') }}
                                     </x-filament::button>
 
                                     @if ($paymentStatus == \App\Utils\Constants\TransactionStatus::WAITING->value)
                                         <x-filament::button class="w-full" color="danger" icon="heroicon-m-x-circle"
                                             wire:click="cancelTransaction"
                                             wire:confirm="Bạn có chắc chắn muốn hủy giao dịch này không?">
-                                            Hủy giao dịch
+                                            {{ __('admin.service_plan.cancel_transaction') }}
                                         </x-filament::button>
                                     @endif
                                 </div>
@@ -158,10 +158,10 @@
                                     </div>
                                     <h3
                                         class="text-lg sm:text-xl font-semibold text-green-800 dark:text-green-200 text-center px-4">
-                                        Thanh toán thành công!
+                                        {{ __('admin.service_plan.payment_success') }}!
                                     </h3>
                                     <p class="text-sm text-green-600 dark:text-green-400 text-center mt-1">
-                                        Đang chuyển hướng...
+                                        {{ __('admin.service_plan.redirecting') }}...
                                     </p>
                                 </div>
                             @elseif($paymentStatus == \App\Utils\Constants\TransactionStatus::WAITING->value)
@@ -191,7 +191,7 @@
                                         <span
                                             class="text-yellow-600 dark:text-yellow-400 font-semibold flex items-center justify-center gap-2 text-sm sm:text-base">
                                             <x-heroicon-s-clock class="w-5 h-5" />
-                                            Đang chờ thanh toán...
+                                            {{ __('admin.service_plan.waiting_payment') }}...
                                         </span>
 
                                         {{-- Countdown section --}}
@@ -214,14 +214,14 @@
 
                                                 updateCountdown() {
                                                     if (!this.expiryTime) {
-                                                        this.remaining = 'Không xác định';
+                                                        this.remaining = '{{ __('admin.service_plan.unknown') }}';
                                                         return;
                                                     }
                                                     const now = Math.floor(Date.now() / 1000);
                                                     const diff = this.expiryTime - now;
 
                                                     if (diff <= 0) {
-                                                        this.remaining = 'Đã hết hạn';
+                                                        this.remaining = '{{ __('admin.service_plan.expired') }}';
                                                         this.isExpired = true;
                                                         clearInterval(this.intervalId);
                                                         this.intervalId = null;
@@ -242,8 +242,7 @@
                                                     'bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600':
                                                         !isExpired
                                                 }">
-                                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Thời gian còn
-                                                    lại</p>
+                                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">{{ __('admin.service_plan.time_remaining') }}</p>
                                                 <p class="text-2xl font-bold font-mono transition-colors"
                                                     :class="{
                                                         'text-red-600 dark:text-red-400': isExpired,
@@ -257,26 +256,26 @@
                                         <div
                                             class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-2">
                                             <x-heroicon-s-information-circle class="w-4 h-4" />
-                                            <span>Giao dịch tự động hủy khi hết thời gian</span>
+                                            <span>{{ __('admin.service_plan.auto_cancel') }}</span>
                                         </div>
                                     </div>
                                 @elseif ($paymentStatus == \App\Utils\Constants\TransactionStatus::SUCCESS->value)
                                     <span
                                         class="text-green-600 dark:text-green-400 font-semibold flex items-center justify-center gap-2 text-sm sm:text-base">
                                         <x-heroicon-s-check-badge class="w-5 h-5" />
-                                        Thanh toán thành công!
+                                        {{ __('admin.service_plan.payment_success') }}!
                                     </span>
                                 @elseif ($paymentStatus == \App\Utils\Constants\TransactionStatus::CANCELLED->value)
                                     <span
                                         class="text-orange-600 dark:text-orange-400 font-semibold flex items-center justify-center gap-2 text-sm sm:text-base">
                                         <x-heroicon-s-x-circle class="w-5 h-5" />
-                                        <span class="text-center">Giao dịch đã bị hủy</span>
+                                        <span class="text-center">{{ __('admin.service_plan.transaction_cancelled') }}</span>
                                     </span>
                                 @else
                                     <span
                                         class="text-red-600 dark:text-red-400 font-semibold flex items-center justify-center gap-2 text-sm sm:text-base">
                                         <x-heroicon-s-x-circle class="w-5 h-5" />
-                                        <span class="text-center">Thanh toán thất bại</span>
+                                        <span class="text-center">{{ __('admin.service_plan.payment_failed') }}</span>
                                     </span>
                                 @endif
                             </div>

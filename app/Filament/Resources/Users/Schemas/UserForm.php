@@ -24,10 +24,10 @@ class UserForm
         return $schema
             ->components([
                 TextInput::make('name')
-                    ->label('Tên người dùng')
+                    ->label(__('admin.users.form.name'))
                     ->required(),
                 TextInput::make('email')
-                    ->label('Email')
+                    ->label(__('admin.users.form.email'))
                     ->email()
                     ->required()
                     ->readOnly(fn(string $context) => $context === 'edit')
@@ -40,12 +40,12 @@ class UserForm
                         }
                     )
                     ->validationMessages([
-                        'required' => 'Vui lòng nhập email.',
-                        'email' => 'Email không hợp lệ.',
-                        'unique' => 'Email đã tồn tại.',
+                        'required' => __('admin.users.form.validation.email_required'),
+                        'email' => __('admin.users.form.validation.email_invalid'),
+                        'unique' => __('admin.users.form.validation.email_unique'),
                     ]),
                 TextInput::make('phone')
-                    ->label('Số điện thoại')
+                    ->label(__('admin.users.form.phone'))
                     ->tel()
                     ->unique(
                         table: User::class,
@@ -56,15 +56,15 @@ class UserForm
                         }
                     ),
                 TextInput::make('address')
-                    ->label('Địa chỉ'),
+                    ->label(__('admin.users.form.address')),
                 Textarea::make('introduce')
-                    ->label('Giới thiệu')
+                    ->label(__('admin.users.form.introduce'))
                     ->columnSpanFull(),
                 Fieldset::make('Password')
-                    ->label('Mật khẩu')
+                    ->label(__('admin.users.form.password'))
                     ->schema([
                         TextInput::make('password')
-                            ->label('Mật khẩu hiện tại')
+                            ->label(__('admin.users.form.current_password'))
                             ->readOnly()
                             ->columnSpanFull()
                             ->placeholder('●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●')
@@ -73,20 +73,20 @@ class UserForm
                             ->visible(fn($get, $record) => $record !== null && $get('showChangePassword') !== true)
                             ->suffixAction(
                                 Action::make('changePassword')
-                                    ->label('Thay đổi mật khẩu')
+                                    ->label(__('admin.users.form.change_password'))
                                     ->icon('heroicon-o-pencil')
                                     ->action(function ($get, $set) {
                                         $set('showChangePassword', true);
                                     })
                             ),
                         TextInput::make('new_password')
-                            ->label('Mật khẩu mới')
+                            ->label(__('admin.users.form.new_password'))
                             ->password()
                             ->visible(fn($get, $record) => $record === null || $get('showChangePassword') === true)
                             ->required(fn($record) => $record === null)
                             ->maxLength(255),
                         TextInput::make('new_password_confirmation')
-                            ->label('Xác nhận mật khẩu mới')
+                            ->label(__('admin.users.form.confirm_password'))
                             ->password()
                             ->visible(fn($get, $record) => $record === null || $get('showChangePassword') === true)
                             ->same('new_password')
@@ -95,7 +95,7 @@ class UserForm
                     ])
                     ->columnSpanFull(),
                 Select::make('role')
-                    ->label('Vai trò')
+                    ->label(__('admin.users.form.role'))
                     ->options(function () {
                         $user = Auth::user();
                         $options = RoleUser::getOptions();
@@ -108,17 +108,17 @@ class UserForm
                     })
                     ->required(),
                 Select::make('organizer_id')
-                    ->label('Nhà tổ chức')
+                    ->label(__('admin.users.form.organizer'))
                     ->options(function () {
                         return app(OrganizerService::class)->getActiveOptions();
                     })
                     ->required()
                     ->validationMessages([
-                        'required' => 'Vui lòng chọn nhà tổ chức.',
+                        'required' => __('admin.users.form.validation.organizer_required'),
                     ])
                     ->searchable(),
                 FileUpload::make('avatar_path')
-                    ->label('Ảnh đại diện')
+                    ->label(__('admin.users.form.avatar'))
                     ->image()
                     ->imageEditor()
                     ->disk('public')
@@ -127,14 +127,14 @@ class UserForm
                     ->nullable()
                     ->columnSpanFull(),
                 Toggle::make('verify_email')
-                    ->label('Cho phép đăng nhập')
+                    ->label(__('admin.users.form.allow_login'))
                     ->default(false)
                     ->dehydrateStateUsing(fn($state) => $state ? now() : null)
                     ->afterStateHydrated(function ($set, $record) {
                         $set('verify_email', filled($record?->email_verified_at));
                     }),
                 Select::make('lang')
-                    ->label('Ngôn ngữ')
+                    ->label(__('admin.users.form.language'))
                     ->options(Language::getOptions())
                     ->default('vi'),
             ]);

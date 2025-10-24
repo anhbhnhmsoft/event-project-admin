@@ -29,8 +29,15 @@ class EventResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static ?string $modelLabel = 'Sự kiện';
-    protected static ?string $pluralModelLabel = 'Sự kiện';
+    public static function getModelLabel(): string
+    {
+        return __('admin.events.model_label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.events.plural_model_label');
+    }
 
     public static function form(Schema $schema): Schema
     {

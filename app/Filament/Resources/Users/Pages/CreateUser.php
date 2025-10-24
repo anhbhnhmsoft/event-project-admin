@@ -14,13 +14,16 @@ class CreateUser extends CreateRecord
 
     protected static string $resource = UserResource::class;
 
-    protected static ?string $title = 'Tạo người dùng mới';
+    public function getTitle(): string
+    {
+        return __('admin.users.pages.create_title');
+    }
 
     public function getBreadcrumbs(): array
     {
         return [
-            url()->previous() => 'Người dùng',
-            '' => 'Tạo người dùng mới',
+            url()->previous() => __('admin.users.model_label'),
+            '' => __('admin.users.pages.create_title'),
         ];
     }
     public function mount(): void
@@ -31,19 +34,19 @@ class CreateUser extends CreateRecord
     protected function getCreateFormAction(): Action
     {
         return parent::getCreateFormAction()
-            ->label('Tạo mới');
+            ->label(__('common.common_success.create'));
     }
 
     protected function getCreateAnotherFormAction(): Action
     {
         return parent::getCreateAnotherFormAction()
-            ->label('Tạo và tạo thêm');
+            ->label(__('common.common_success.create_and_create_another'));
     }
 
     protected function getCancelFormAction(): Action
     {
         return parent::getCancelFormAction()
-            ->label('Hủy');
+            ->label(__('common.common_success.cancel'));
     }
 
     protected function handleRecordCreation(array $data): Model

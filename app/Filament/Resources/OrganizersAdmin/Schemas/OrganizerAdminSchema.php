@@ -16,10 +16,10 @@ class OrganizerAdminSchema
     {
         return $schema->components([
             TextInput::make('name')
-                ->label('Tên nhà tổ chức')
+                ->label(__('admin.organizers.form.name'))
                 ->required(),
             FileUpload::make('image')
-                ->label('Ảnh đại diện')
+                ->label(__('admin.organizers.form.image'))
                 ->image()
                 ->imageEditor()
                 ->disk('public')
@@ -27,12 +27,12 @@ class OrganizerAdminSchema
                 ->visibility('public')
                 ->nullable(),
             RichEditor::make('description')
-                ->label('Mô tả chi tiết')
+                ->label(__('admin.organizers.form.description'))
                 ->required()
                 ->columnSpanFull()
                 ->extraAttributes(['style' => 'min-height: 300px;']),
             Select::make('status')
-                ->label('Trạng thái')
+                ->label(__('admin.organizers.form.status'))
                 ->options(CommonStatus::getOptions())
                 ->default(CommonStatus::ACTIVE->value)
                 ->required(),

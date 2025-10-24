@@ -11,7 +11,10 @@ class ListNotifications extends ListRecords
 {
     protected static string $resource = NotificationResource::class;
 
-    protected static ?string $title = 'Danh sách thông báo';
+    public function getTitle(): string
+    {
+        return __('admin.notifications.pages.list_title');
+    }
 
     protected function getHeaderActions(): array
     {

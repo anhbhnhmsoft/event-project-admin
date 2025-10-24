@@ -32,7 +32,7 @@
                     @if ($isToday)
                         <div class="mt-4">
                             <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-2">
-                                <span>Tiến độ sự kiện</span>
+                                <span>{{ __('admin.events.detail.event_progress') }}</span>
                                 <span class="font-medium">{{ number_format($eventProgress, 1) }}%</span>
                             </div>
                             <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -45,7 +45,7 @@
 
                 {{-- Đồng hồ --}}
                 <div class="text-right ml-8 flex-shrink-0">
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Thời gian hiện tại</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">{{ __('admin.events.detail.current_time') }}</div>
                     <div class="text-4xl font-bold text-gray-900 dark:text-white font-mono" id="current-time">
                         {{ now()->format('H:i') }}
                     </div>
@@ -73,7 +73,7 @@
                                             class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                                         <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
                                     </span>
-                                    ĐANG DIỄN RA
+                                    {{ __('admin.events.detail.ongoing') }}
                                 </div>
                                 <h2 class="text-2xl font-bold mb-2">{{ $current['title'] }}</h2>
                                 <div class="flex items-center gap-3 text-sm text-white/90">
@@ -82,7 +82,7 @@
                                         {{ $current['end_time'] }}</span>
                                     @if ($timeRemaining)
                                         <span class="font-medium">
-                                            • Còn {{ $this->formatTimeRemaining($timeRemaining) }}
+                                            • {{ __('admin.events.detail.time_remaining', ['time' => $this->formatTimeRemaining($timeRemaining)]) }}
                                         </span>
                                     @endif
                                 </div>
@@ -110,7 +110,7 @@
                             <div class="mt-4 bg-white/10 backdrop-blur-sm rounded-lg p-4">
                                 <h3 class="font-semibold mb-3 flex items-center gap-2">
                                     <x-filament::icon icon="heroicon-o-document-text" class="w-5 h-5" />
-                                    Tài liệu ({{ count($current['documents']) }})
+                                    {{ __('admin.events.detail.documents_count', ['count' => count($current['documents'])]) }}
                                 </h3>
                                 <div class="space-y-2">
                                     @foreach ($current['documents'] as $doc)
@@ -121,7 +121,7 @@
                                                 @if ($doc['price'] > 0)
                                                     <div class="text-sm">{{ number_format($doc['price']) }} VNĐ</div>
                                                 @else
-                                                    <div class="text-sm">Miễn phí</div>
+                                                    <div class="text-sm">{{ __('admin.events.detail.free') }}</div>
                                                 @endif
                                             </div>
                                         </div>
@@ -142,7 +142,7 @@
                                 <div
                                     class="inline-flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-semibold mb-3">
                                     <x-filament::icon icon="heroicon-o-clock" class="w-4 h-4" />
-                                    TIẾP THEO
+                                    {{ __('admin.events.detail.next') }}
                                 </div>
                                 <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">{{ $next['title'] }}
                                 </h2>
@@ -166,7 +166,7 @@
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
                     <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                         <x-filament::icon icon="heroicon-o-queue-list" class="w-6 h-6" />
-                        Toàn bộ lịch trình
+                        {{ __('admin.events.detail.full_schedule') }}
                     </h2>
                     <div class="space-y-3">
                         @foreach ($schedules as $index => $schedule)
@@ -183,7 +183,7 @@
                                     <div class="text-sm font-bold text-gray-900 dark:text-white">
                                         {{ $schedule['start_time'] }}
                                     </div>
-                                    <div class="text-xs text-gray-500 dark:text-gray-400">đến</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ __('admin.events.detail.to') }}</div>
                                     <div class="text-sm font-bold text-gray-900 dark:text-white">
                                         {{ $schedule['end_time'] }}
                                     </div>
@@ -204,22 +204,22 @@
                                             <span
                                                 class="flex-shrink-0 inline-flex items-center gap-1 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-medium">
                                                 <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-                                                Đang diễn ra
+                                                {{ __('admin.events.detail.ongoing') }}
                                             </span>
                                         @elseif($index === $nextScheduleIndex && $currentScheduleIndex !== null)
                                             <span
                                                 class="flex-shrink-0 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-medium">
-                                                Tiếp theo
+                                                {{ __('admin.events.detail.next') }}
                                             </span>
                                         @elseif($index < $refIndex)
                                             <span
                                                 class="flex-shrink-0 bg-gray-400 dark:bg-gray-600 text-white px-3 py-1 rounded-full text-xs font-medium">
-                                                Đã qua
+                                                {{ __('admin.events.detail.passed') }}
                                             </span>
                                         @else
                                             <span
                                                 class="flex-shrink-0 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1 rounded-full text-xs font-medium">
-                                                Sắp tới
+                                                {{ __('admin.events.detail.upcoming') }}
                                             </span>
                                         @endif
                                     </div>
@@ -228,7 +228,7 @@
                                     @if (isset($schedule['documents']) && count($schedule['documents']) > 0)
                                         <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
                                             <x-filament::icon icon="heroicon-o-document-text" class="w-3 h-3" />
-                                            {{ count($schedule['documents']) }} tài liệu
+                                            {{ __('admin.events.detail.documents_count', ['count' => count($schedule['documents'])]) }}
                                         </div>
                                     @endif
                                 </div>
@@ -244,7 +244,7 @@
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
                     <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                         <x-filament::icon icon="heroicon-o-user-group" class="w-5 h-5" />
-                        Người tham gia ({{ count($participants) }})
+                        {{ __('admin.events.detail.participants_count', ['count' => count($participants)]) }}
                     </h2>
 
                     @if (count($participants) > 0)
@@ -274,7 +274,7 @@
                         </div>
                     @else
                         <p class="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-                            Chưa có người tham gia
+                            {{ __('admin.events.detail.no_participants') }}
                         </p>
                     @endif
                 </div>
@@ -283,18 +283,18 @@
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
                     <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                         <x-filament::icon icon="heroicon-o-information-circle" class="w-5 h-5" />
-                        Thông tin sự kiện
+                        {{ __('admin.events.detail.event_info') }}
                     </h2>
                     <div class="space-y-4 text-sm">
                         <div>
-                            <div class="text-gray-500 dark:text-gray-400 mb-1 text-xs">Nhà tổ chức</div>
+                            <div class="text-gray-500 dark:text-gray-400 mb-1 text-xs">{{ __('admin.events.detail.organizer') }}</div>
                             <div class="font-medium text-gray-900 dark:text-white">
                                 {{ $event->organizer?->name ?? 'N/A' }}
                             </div>
                         </div>
 
                         <div>
-                            <div class="text-gray-500 dark:text-gray-400 mb-1 text-xs">Trạng thái</div>
+                            <div class="text-gray-500 dark:text-gray-400 mb-1 text-xs">{{ __('admin.events.detail.status') }}</div>
                             <div>
                                 @php
                                     $statusColors = [
@@ -315,19 +315,19 @@
                         </div>
 
                         <div>
-                            <div class="text-gray-500 dark:text-gray-400 mb-1 text-xs">Loại vé</div>
+                            <div class="text-gray-500 dark:text-gray-400 mb-1 text-xs">{{ __('admin.events.detail.ticket_type') }}</div>
                             <div class="font-medium text-gray-900 dark:text-white">
                                 @if ($event->free_to_join)
-                                    <span class="text-green-600 dark:text-green-400">Miễn phí</span>
+                                    <span class="text-green-600 dark:text-green-400">{{ __('admin.events.detail.free') }}</span>
                                 @else
-                                    <span class="text-primary-600 dark:text-primary-400">Có phí</span>
+                                    <span class="text-primary-600 dark:text-primary-400">{{ __('admin.events.detail.paid') }}</span>
                                 @endif
                             </div>
                         </div>
 
                         @if ($event->short_description)
                             <div>
-                                <div class="text-gray-500 dark:text-gray-400 mb-1 text-xs">Mô tả</div>
+                                <div class="text-gray-500 dark:text-gray-400 mb-1 text-xs">{{ __('admin.events.detail.description') }}</div>
                                 <div class="text-gray-700 dark:text-gray-300 text-sm">
                                     {{ \Illuminate\Support\Str::limit($event->short_description, 150) }}
                                 </div>

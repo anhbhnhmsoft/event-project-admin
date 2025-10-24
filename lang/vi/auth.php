@@ -71,5 +71,15 @@ return [
     ],
     'register' => [
         'heading'           => 'Đăng ký',
+        'organization_name' => 'Tên tổ chức',
+        'email'             => 'Email',
+        'phone'             => 'Số điện thoại',
+        'password'          => 'Mật khẩu',
+        'password_confirmation' => 'Xác nhận mật khẩu',
+        'register'          => 'Đăng ký',
+        'success_title'     => 'Đăng ký thành công!',
+        'success_message'   => 'Vui lòng kiểm tra email để xác thực tài khoản.',
+        'error_title'       => 'Đăng ký thất bại',
+        'error_message'     => 'Có lỗi xảy ra khi đăng ký. Vui lòng thử lại sau.'
     ]
 ];

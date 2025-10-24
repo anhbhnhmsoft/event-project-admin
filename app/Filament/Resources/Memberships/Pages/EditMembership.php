@@ -12,7 +12,10 @@ class EditMembership extends EditRecord
 {
     use CheckPlanBeforeAccess;
     protected static string $resource = MembershipResource::class;
-    protected static ?string $title = 'Sửa gói thành viên';
+    public function getTitle(): string
+    {
+        return __('admin.memberships.pages.edit_title');
+    }
 
     public function mount(string|int $record): void
     {
@@ -24,24 +27,24 @@ class EditMembership extends EditRecord
     {
         return [
             DeleteAction::make()
-                ->label('Xóa'),
+                ->label(__('common.common_success.delete')),
         ];
     }
     public function getBreadcrumbs(): array
     {
         return [
-            url()->previous() => 'Gói thành viên',
-            '' => 'Sửa gói thành viên',
+            url()->previous() => __('admin.memberships.model_label'),
+            '' => __('admin.memberships.pages.edit_title'),
         ];
     }
 
     protected function getSaveFormAction(): Action
     {
-        return parent::getSaveFormAction()->label('Lưu thay đổi');
+        return parent::getSaveFormAction()->label(__('common.common_success.save'));
     }
 
     protected function getCancelFormAction(): Action
     {
-        return parent::getCancelFormAction()->label('Hủy');
+        return parent::getCancelFormAction()->label(__('common.common_success.cancel'));
     }
 }

@@ -16,25 +16,28 @@ class CreateMembership extends CreateRecord
 
     protected static string $resource = MembershipResource::class;
 
-    protected static ?string $title = 'Tạo gói thành viên';
+    public function getTitle(): string
+    {
+        return __('admin.memberships.pages.create_title');
+    }
 
     public function getBreadcrumbs(): array
     {
         return [
-            url()->previous() => 'Gói thành viên',
-            '' => 'Tạo gói thành viên',
+            url()->previous() => __('admin.memberships.model_label'),
+            '' => __('admin.memberships.pages.create_title'),
         ];
     }
 
     protected function getCreateFormAction(): Action
     {
-        return parent::getCreateFormAction()->label('Tạo mới');
+        return parent::getCreateFormAction()->label(__('common.common_success.create'));
     }
 
     protected function getCreateAnotherFormAction(): Action
     {
         return parent::getCreateAnotherFormAction()
-            ->label('Tạo và tạo thêm');
+            ->label(__('common.common_success.create_and_create_another'));
     }
 
     public function mount(): void
@@ -56,6 +59,6 @@ class CreateMembership extends CreateRecord
 
     protected function getCancelFormAction(): Action
     {
-        return parent::getCancelFormAction()->label('Hủy');
+        return parent::getCancelFormAction()->label(__('common.common_success.cancel'));
     }
 }

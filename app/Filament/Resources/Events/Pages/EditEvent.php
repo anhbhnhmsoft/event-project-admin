@@ -448,12 +448,12 @@ class EditEvent extends EditRecord
     {
         return [
             Action::make('seats-manager')
-                ->label(__('event.pages.seats_title'))
+                ->label(__('admin.events.pages.seats_title'))
                 ->icon('heroicon-o-building-office')
                 ->url(fn() => static::getResource()::getUrl('seats-manage', ['record' => $this->record]))
                 ->color('success'),
             DeleteAction::make()
-                ->label(__('event.general.delete')),
+                ->label(__('common.common_success.delete')),
         ];
     }
 
@@ -486,12 +486,12 @@ class EditEvent extends EditRecord
 
 
             \Filament\Notifications\Notification::make()
-                ->title(__('event.general.delete_file_success'))
+                ->title(__('admin.events.notifications.delete_file_success'))
                 ->success()
                 ->send();
         } catch (\Throwable $e) {
             \Filament\Notifications\Notification::make()
-                ->title(__('event.general.delete_file_error'))
+                ->title(__('admin.events.notifications.delete_file_error'))
                 ->body($e->getMessage())
                 ->danger()
                 ->send();

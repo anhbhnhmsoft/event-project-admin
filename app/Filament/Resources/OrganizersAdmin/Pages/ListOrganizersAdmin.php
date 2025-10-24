@@ -10,20 +10,23 @@ class ListOrganizersAdmin extends ListRecords
 {
     protected static string $resource = OrganizerAdminResource::class;
 
-    protected static ?string $title = 'Danh sách nhà tổ chức';
+    public function getTitle(): string
+    {
+        return __('admin.organizers.pages.list_title');
+    }
 
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make()->label('Tạo mới'),
+            CreateAction::make()->label(__('common.common_success.create')),
         ];
     }
 
     public function getBreadcrumbs(): array
     {
         return [
-            url()->previous() => 'Nhà tổ chức',
-            '' => 'Danh sách',
+            url()->previous() => __('admin.organizers.model_label'),
+            '' => __('admin.organizers.pages.list_title'),
         ];
     }
 }

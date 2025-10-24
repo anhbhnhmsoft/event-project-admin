@@ -33,7 +33,7 @@
     >
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">
-                Địa chỉ
+                {{ __('admin.events.form.location') }}
             </label>
             <input
                 x-ref="addressInput"
@@ -41,7 +41,7 @@
                 @input="handleInputChange"
                 type="text"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                placeholder="Nhập địa chỉ để tìm kiếm..."
+                placeholder="{{ __('admin.events.form.location_search_placeholder') }}"
             />
         </div>
 
@@ -83,7 +83,7 @@
                         <path class="opacity-75" fill="currentColor"
                               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Đang tải bản đồ...
+                    {{ __('admin.events.form.loading_map') }}
                 </div>
             </div>
             <div
@@ -259,7 +259,7 @@
 
                         script.onerror = () => {
                             delete window.initGoogleMaps;
-                            reject(new Error('Không thể tải Google Maps API'));
+                            reject(new Error('{{ __('admin.events.form.google_maps_error') }}'));
                         };
 
                         document.head.appendChild(script);
@@ -300,7 +300,7 @@
                         position: {lat: parseFloat(this.lat), lng: parseFloat(this.lng)},
                         map: this.map,
                         draggable: true,
-                        title: 'Kéo marker để thay đổi vị trí'
+                        title: '{{ __('admin.events.form.drag_marker_title') }}'
                     });
 
                     // Initialize geocoder
