@@ -142,7 +142,7 @@ final class Helper
     public static function checkPlanOrganizer(): bool
     {
         $user = Auth::user();
-        if($user->role !== RoleUser::SUPER_ADMIN->value) {
+        if ($user->role !== RoleUser::SUPER_ADMIN->value) {
 
             $organizerService = app(OrganizerService::class);
             $result = $organizerService->getOrganizerDetail($user->organizer_id);
@@ -185,5 +185,42 @@ final class Helper
             return true;
         }
         return true;
+    }
+
+    public static function containsProfanity(string $text): bool
+    {
+        $badWords = [
+            'địt',
+            'lồn',
+            'cặc',
+            'buồi',
+            'chịch',
+            'đụ',
+            'mẹ mày',
+            'bố mày',
+            'đm',
+            'dm',
+            'vcl',
+            'vl',
+            'cc',
+            'fuck',
+            'shit',
+            'bitch',
+            'asshole',
+            'dick',
+            'pussy'
+        ];
+
+        $text = trim(preg_replace('/\s+/', ' ', $text));
+        $text = mb_strtolower($text, 'UTF-8');
+
+        foreach ($badWords as $word) {
+            $pattern = '/(^|\s)' . preg_quote($word, '/') . '(\s|$|[.,!?])/ui';
+            if (preg_match($pattern, $text)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -194,56 +194,58 @@
                                             Đang chờ thanh toán...
                                         </span>
 
-                                        <div x-data="{
-                                            expiryTime: {{ $expiryTime ?? 'null' }},
-                                            remaining: '',
-                                            isExpired: false,
-                                            intervalId: null,
+                                        {{-- Countdown section --}}
+                                        <div wire:ignore.self wire:key="countdown-{{ $expiryTime ?? 'none' }}"
+                                            x-data="{
+                                                expiryTime: {{ $expiryTime ?? 'null' }},
+                                                remaining: 'Đang tải...',
+                                                isExpired: false,
+                                                intervalId: null,
 
-                                            updateCountdown() {
-                                                if (!this.expiryTime) {
-                                                    this.remaining = 'Không xác định';
-                                                    return;
-                                                }
+                                                init() {
+                                                    this.startCountdown();
+                                                },
 
-                                                const now = Math.floor(Date.now() / 1000);
-                                                const diff = this.expiryTime - now;
-
-                                                if (diff <= 0) {
-                                                    this.remaining = 'Đã hết hạn';
-                                                    this.isExpired = true;
-                                                    if (this.intervalId) {
-                                                        clearInterval(this.intervalId);
-                                                    }
-                                                    $wire.checkExpiry();
-                                                } else {
-                                                    const minutes = Math.floor(diff / 60);
-                                                    const seconds = diff % 60;
-                                                    this.remaining = minutes + ':' + seconds.toString().padStart(2, '0');
-                                                    this.isExpired = false;
-                                                }
-                                            },
-
-                                            startCountdown() {
-                                                this.updateCountdown();
-                                                this.intervalId = setInterval(() => {
+                                                startCountdown() {
+                                                    if (this.intervalId) clearInterval(this.intervalId);
                                                     this.updateCountdown();
-                                                }, 1000);
-                                            }
-                                        }" x-init="startCountdown()"
-                                            x-on:cleanup.window="if (intervalId) clearInterval(intervalId)"
+                                                    this.intervalId = setInterval(() => this.updateCountdown(), 1000);
+                                                },
+
+                                                updateCountdown() {
+                                                    if (!this.expiryTime) {
+                                                        this.remaining = 'Không xác định';
+                                                        return;
+                                                    }
+                                                    const now = Math.floor(Date.now() / 1000);
+                                                    const diff = this.expiryTime - now;
+
+                                                    if (diff <= 0) {
+                                                        this.remaining = 'Đã hết hạn';
+                                                        this.isExpired = true;
+                                                        clearInterval(this.intervalId);
+                                                        this.intervalId = null;
+                                                        $wire.checkExpiry();
+                                                    } else {
+                                                        const m = Math.floor(diff / 60);
+                                                        const s = diff % 60;
+                                                        this.remaining = `${m}:${s.toString().padStart(2, '0')}`;
+                                                        this.isExpired = false;
+                                                    }
+                                                }
+                                            }"
+                                            x-on:livewire:navigating.window="if (intervalId) clearInterval(intervalId)"
                                             class="w-full">
                                             <div class="px-4 py-3 rounded-lg border transition-colors"
-                                                x-bind:class="{
+                                                :class="{
                                                     'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800': isExpired,
                                                     'bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600':
                                                         !isExpired
                                                 }">
-                                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                                                    Thời gian còn lại
-                                                </p>
-                                                <p class="text-xl sm:text-2xl font-bold font-mono transition-colors"
-                                                    x-bind:class="{
+                                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Thời gian còn
+                                                    lại</p>
+                                                <p class="text-2xl font-bold font-mono transition-colors"
+                                                    :class="{
                                                         'text-red-600 dark:text-red-400': isExpired,
                                                         'text-gray-900 dark:text-gray-100': !isExpired
                                                     }"
@@ -252,7 +254,8 @@
                                             </div>
                                         </div>
 
-                                        <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                        <div
+                                            class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-2">
                                             <x-heroicon-s-information-circle class="w-4 h-4" />
                                             <span>Giao dịch tự động hủy khi hết thời gian</span>
                                         </div>

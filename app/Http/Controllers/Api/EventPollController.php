@@ -7,6 +7,7 @@ use App\Models\EventPoll;
 use App\Services\EventPollService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class EventPollController extends Controller
@@ -20,12 +21,13 @@ class EventPollController extends Controller
 
     public function submit(Request $request, $idcode)
     {
+        $pollId = Crypt::decryptString($idcode);
         $data = $request->validate([
             'email' => 'required|email',
             'phone' => 'nullable|string',
             'answers' => 'required|array',
         ]);
-        $result = $this->eventPollService->submitAnswers($idcode, $data['email'], $data['answers']);
+        $result = $this->eventPollService->submitAnswers($pollId, $data['email'], $data['answers']);
 
         return response()->json(
             [
@@ -37,33 +39,50 @@ class EventPollController extends Controller
     public function show($idcode)
     {
         $pollId = Crypt::decryptString($idcode);
+        $poll = $this->eventPollService->getPoll((int) $pollId);
 
-        $result = $this->eventPollService->getPollDetail($pollId);
-        if (!$result['status']) {
-            return abort(404);
+        if (!$poll) {
+            Log::warning('Poll not found', ['poll_id' => $pollId]);
+            abort(404, __('poll.validation.invalid_poll'));
         }
 
-        $poll = $result['data'];
+        if (!$poll->is_active) {
+            Log::warning('Poll inactive', ['poll_id' => $poll->id]);
+            abort(403, __('poll.validation.poll_inactive'));
+        }
 
-        $poll->load(['questions.options']);
+        if ($poll->end_time && $poll->end_time < now()) {
+            Log::info('Poll expired', [
+                'poll_id' => $poll->id,
+                'end_time' => $poll->end_time,
+                'now' => now(),
+            ]);
+            abort(403, __('poll.validation.poll_expired'));
+        }
+        if ($poll->event->organizer->status !== \App\Utils\Constants\CommonStatus::ACTIVE->value) {
+            Log::warning('Organizer inactive', [
+                'organizer_id' => $poll->event->organizer->id,
+                'status' => $poll->event->organizer->status
+            ]);
+            abort(403, __('poll.validation.organizer_inactive'));
+        }
 
         return Inertia::render('TakeSurvey', [
             'poll' => [
-                'id' => $poll->id,
+                'id' => $idcode,
                 'title' => $poll->title,
                 'questions' => $poll->questions->map(function ($q) {
                     return [
-                        'id' => $q->id,
+                        'id' => (string) $q->id,
                         'type' => $q->type,
                         'question' => $q->question,
                         'options' => $q->options->map(fn($opt) => [
-                            'id' => $opt->id,
+                            'id' => (string) $opt->id,
                             'label' => $opt->label,
                         ]),
                     ];
                 }),
             ],
-            // Nếu có user đăng nhập thì có thể prefill
             'user' => auth()->user()
                 ? [
                     'email' => auth()->user()->email,

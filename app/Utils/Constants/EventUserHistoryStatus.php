@@ -12,7 +12,7 @@ enum EventUserHistoryStatus: int
     public function label(): string
     {
         return match ($this) {
-            self::SEENED => 'Đã xem',
+            self::SEENED => 'Đã xem ~ Chưa thanh toán',
             self::BOOKED => 'Đã đặt vé',
             self::PARTICIPATED => 'Đã tham gia',
             self::CANCELLED => 'Đã hủy',

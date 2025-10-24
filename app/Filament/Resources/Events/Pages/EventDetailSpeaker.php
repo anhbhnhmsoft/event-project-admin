@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Events\Pages;
 
 use App\Filament\Resources\Events\EventResource;
+use App\Filament\Traits\CheckPlanBeforeAccess;
 use App\Utils\Helper;
 use Carbon\Carbon;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
@@ -10,7 +11,7 @@ use Filament\Resources\Pages\Page;
 
 class EventDetailSpeaker extends Page
 {
-    use InteractsWithRecord;
+    use InteractsWithRecord, CheckPlanBeforeAccess;
 
     protected static string $resource = EventResource::class;
 

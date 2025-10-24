@@ -29,7 +29,7 @@ class MembershipsTable
         }
         return $table
             ->query(fn() => Membership::query()
-                ->when($type, fn($q) => $q->where('type', $type)))
+                ->when($type, fn($q) => $q->where('type', $type)->where('organizer_id', $user->organizer_id)))
             ->columns([
                 TextColumn::make('name')
                     ->label('Tên gói'),
