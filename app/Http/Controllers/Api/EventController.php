@@ -26,6 +26,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use App\Utils\Constants\EventUserHistoryStatus;
+use App\Utils\Helper;
 use Illuminate\Support\Facades\Storage;
 
 class EventController extends Controller
@@ -297,7 +298,11 @@ class EventController extends Controller
                 'message' => __('common.common_error.permission_error'),
             ], 403);
         }
-
+        if (Helper::containsProfanity($validated['content'])) {
+            return response()->json([
+                'message' => __('common.common_error.inappropriate_language'),
+            ], 422);
+        }
         $newComment = [
             'user_id'  => $user->id,
             'event_id' => $validated['event_id'],

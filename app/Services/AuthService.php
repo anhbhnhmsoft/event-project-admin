@@ -442,7 +442,7 @@ class AuthService
             ]);
 
             $user = \App\Models\User::create([
-                'name' => $data['name'],
+                'name' => empty($data['user_name']) ? $data['name'] : $data['user_name'],
                 'email' => $data['email'],
                 'password' => Hash::make($data['password']),
                 'role' => RoleUser::ADMIN,
@@ -491,12 +491,12 @@ class AuthService
                 $user->sendEmailVerificationNotification();
             } catch (\Throwable $e) {
                 Log::error('Failed to send verification email: ' . $e->getMessage());
-                throw $e;
             }
 
             return [
                 'status' => true,
                 'user' => $user,
+                'organizer' => $organizer,
             ];
         } catch (\Throwable $e) {
             DB::rollBack();

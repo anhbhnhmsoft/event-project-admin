@@ -7,7 +7,7 @@ use App\Filament\Traits\CheckPlanBeforeAccess;
 use App\Models\EventPoll;
 use App\Models\EventPollQuestion;
 use App\Models\EventPollQuestionOption;
-use App\Models\User;
+use App\Models\EventPollVote;
 use App\Utils\Constants\CommonStatus;
 use App\Utils\Constants\UnitDurationType;
 use App\Utils\Constants\QuestionType;
@@ -20,6 +20,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
 use Filament\Resources\Pages\Page;
@@ -232,7 +233,136 @@ class EventVotes extends Page implements HasTable
                     ->label('Lấy link khảo sát')
                     ->url(function ($record): string {
                         return route('event.poll.show', ['idcode' => Crypt::encryptString((string) $record->id)]);
+                    }),
+                Action::make('view-results')
+                    ->label('Xem kết quả')
+                    ->icon('heroicon-o-chart-bar')
+                    ->color('primary')
+                    ->modalWidth('7xl')
+                    ->modalHeading(fn(EventPoll $record) => 'Kết quả khảo sát: ' . $record->title)
+                    ->infolist(function (EventPoll $record) {
+                        $questions = $record->questions()
+                            ->with(['options'])
+                            ->orderBy('order')
+                            ->get();
+
+                        // Đếm tổng số người tham gia
+                        $totalResponses = EventPollVote::query()
+                            ->whereIn('event_poll_question_id', $questions->pluck('id'))
+                            ->distinct('user_id')
+                            ->count('user_id');
+
+                        $sections = [];
+
+                        // Section tổng quan
+                        $sections[] = Section::make('Tổng quan')
+                            ->schema([
+                                TextEntry::make('total_responses')
+                                    ->label('Tổng số người tham gia')
+                                    ->default($totalResponses)
+                                    ->badge()
+                                    ->color('success'),
+                                TextEntry::make('total_questions')
+                                    ->label('Tổng số câu hỏi')
+                                    ->default($questions->count())
+                                    ->badge()
+                                    ->color('info'),
+                            ])
+                            ->columns(2);
+
+                        // Section cho từng câu hỏi
+                        foreach ($questions as $index => $question) {
+                            $questionSchema = [
+                                TextEntry::make('question_type_' . $question->id)
+                                    ->label('Loại câu hỏi')
+                                    ->default(QuestionType::label($question->type))
+                                    ->badge()
+                                    ->color('gray'),
+                            ];
+
+                            if ($question->type == QuestionType::MULTIPLE->value) {
+                                // Câu hỏi trắc nghiệm - hiển thị biểu đồ
+                                foreach ($question->options as $option) {
+                                    $answerCount = EventPollVote::query()
+                                        ->where('event_poll_question_id', $question->id)
+                                        ->where('event_poll_question_option_id', $option->id)
+                                        ->count();
+
+                                    $percentage = $totalResponses > 0
+                                        ? round(($answerCount / $totalResponses) * 100, 1)
+                                        : 0;
+
+                                    $questionSchema[] = TextEntry::make('option_' . $option->id)
+                                        ->label($option->label)
+                                        ->default(function () use ($answerCount, $percentage, $totalResponses) {
+                                            $barWidth = $totalResponses > 0 ? $percentage : 0;
+                                            return new \Illuminate\Support\HtmlString(
+                                                '<div class="flex items-center gap-3">
+                                    <div class="flex-1 bg-gray-200 rounded-full h-6 dark:bg-gray-700">
+                                        <div class="bg-primary-600 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold" style="width: ' . $barWidth . '%">
+                                            ' . ($barWidth > 10 ? $percentage . '%' : '') . '
+                                        </div>
+                                    </div>
+                                    <span class="text-sm font-medium min-w-[80px] text-right">' . $answerCount . ' phiếu' . ($barWidth <= 10 ? ' (' . $percentage . '%)' : '') . '</span>
+                                </div>'
+                                            );
+                                        })
+                                        ->columnSpanFull();
+                                }
+                            } elseif ($question->type == QuestionType::OPEN_ENDED->value) {
+                                $answers = EventPollVote::query()
+                                    ->where('event_poll_question_id', $question->id)
+                                    ->whereNotNull('answer_content')
+                                    ->select('answer_content', 'created_at')
+                                    ->orderBy('created_at', 'desc')
+                                    ->limit(10)
+                                    ->get();
+
+                                $answerCount = EventPollVote::query()
+                                    ->where('event_poll_question_id', $question->id)
+                                    ->whereNotNull('answer_content')
+                                    ->count();
+
+                                $questionSchema[] = TextEntry::make('answer_count_' . $question->id)
+                                    ->label('Số câu trả lời')
+                                    ->default($answerCount . ' câu trả lời')
+                                    ->badge()
+                                    ->color('success');
+
+                                if ($answers->isNotEmpty()) {
+                                    $answerList = $answers->map(function ($answer) {
+                                        return '• ' . $answer->answer_content;
+                                    })->join("\n");
+
+                                    $questionSchema[] = TextEntry::make('answers_' . $question->id)
+                                        ->label('Một số câu trả lời (tối đa 10 câu gần nhất)')
+                                        ->default($answerList)
+                                        ->columnSpanFull()
+                                        ->prose();
+                                }
+                            }
+
+                            $sections[] = Section::make('Câu ' . ($index + 1) . ': ' . $question->question)
+                                ->schema($questionSchema)
+                                ->collapsible()
+                                ->collapsed(false);
+                        }
+
+                        return $sections;
                     })
+                    ->modalCloseButton(true)
+                    // ->modalFooterActions([
+                    //     Action::make('export')
+                    //         ->label('Xuất báo cáo')
+                    //         ->icon('heroicon-o-arrow-down-tray')
+                    //         ->color('success')
+                    //         ->action(function (EventPoll $record) {
+                    //             Notification::make()
+                    //                 ->title('Tính năng đang phát triển')
+                    //                 ->info()
+                    //                 ->send();
+                    //         }),
+                    // ]),
 
             ])])
             ->defaultSort('start_time', 'desc');

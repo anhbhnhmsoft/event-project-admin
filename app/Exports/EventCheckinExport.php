@@ -27,7 +27,7 @@ class EventCheckinExport implements FromCollection, WithHeadings, WithMapping
         Log::debug(EventUserHistory::with([
             'user:id,name,email,phone',
             'seat:id,seat_code,event_area_id',
-            'seat.area:id,name,vip',
+            'seat.area:id,name,vip,price',
         ])
             ->where('event_id', $this->eventId)
             ->orderBy('created_at')
@@ -35,7 +35,7 @@ class EventCheckinExport implements FromCollection, WithHeadings, WithMapping
         return EventUserHistory::with([
             'user:id,name,email,phone',
             'seat:id,seat_code,event_area_id',
-            'seat.area:id,name,vip',
+            'seat.area:id,name,vip,price',
         ])
             ->where('event_id', $this->eventId)
             ->orderBy('created_at')
@@ -48,6 +48,7 @@ class EventCheckinExport implements FromCollection, WithHeadings, WithMapping
             'Tên',
             'Email',
             'Số điện thoại',
+            'Giá vé',
             'Mã vé',
             'Mã ghế',
             'Khu vực',
@@ -63,6 +64,9 @@ class EventCheckinExport implements FromCollection, WithHeadings, WithMapping
             data_get($history, 'user.name', '—'),
             data_get($history, 'user.email', '—'),
             data_get($history, 'user.phone', '—'),
+            data_get($history, 'seat.area.price')
+                ? number_format(data_get($history, 'seat.area.price'), 0, ',', '.') . '₫'
+                : 'Miễn phí',
             data_get($history, 'ticket_code', '—'),
             data_get($history, 'seat.seat_code', '—'),
             data_get($history, 'seat.area.name', '—'),

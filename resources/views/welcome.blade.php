@@ -27,9 +27,9 @@
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link rel="icon" href="/images/logo-michec-icon.png" sizes="32x32">
-    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800" rel="stylesheet" />
     <style>
-        /* GIỮ NGUYÊN CSS CỦA BẠN */
+        /* CSS CƠ BẢN VÀ THAY ĐỔI */
         * {
             margin: 0;
             padding: 0;
@@ -40,32 +40,99 @@
             font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+            padding-top: 80px;
+            /* Thêm padding để nội dung không bị header cố định che mất */
+        }
+
+        .main-content {
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
         }
 
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(118, 75, 162, 0.95);
+            /* Màu nền tím đậm của gradient */
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 15px 20px;
+            z-index: 1000;
+        }
+
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            color: white;
+            letter-spacing: -1px;
+            cursor: pointer;
+        }
+
+        .logo span {
+            color: #fbbf24;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-nav {
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 15px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-login {
+            background: none;
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .btn-login:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: white;
+        }
+
+        .btn-signup {
+            background: #fbbf24;
+            color: #764ba2;
+            box-shadow: 0 4px 10px rgba(251, 191, 36, 0.3);
+        }
+
+        .btn-signup:hover {
+            background: #f59e0b;
+            transform: translateY(-1px);
+        }
+
+        /* PHẦN BODY CONTENT CŨ */
+
         .container {
             max-width: 1200px;
             width: 100%;
         }
 
-        .header {
+        .hero-header {
             text-align: center;
             margin-bottom: 50px;
-        }
-
-        .logo {
-            font-size: 32px;
-            font-weight: 700;
-            color: white;
-            margin-bottom: 10px;
-            letter-spacing: -1px;
-        }
-
-        .logo span {
-            color: #fbbf24;
         }
 
         .tagline {
@@ -235,6 +302,10 @@
         }
 
         @media (max-width: 768px) {
+            .navbar-content {
+                padding-right: 10px;
+            }
+
             .content {
                 grid-template-columns: 1fr;
                 gap: 40px;
@@ -257,71 +328,90 @@
 </head>
 
 <body>
-    <div class="container">
-        <div class="header">
+    <!-- Thanh điều hướng cố định (Fixed Header) -->
+    <header class="navbar">
+        <div class="navbar-content">
+            <!-- Logo -->
             <div class="logo">MI<span>CHEC</span></div>
-            <div class="tagline">Hệ thống Tổ chức & Quản lý Sự kiện Toàn diện</div>
+
+            <!-- Nút Đăng nhập và Đăng ký -->
+            <div class="nav-buttons">
+                <a href="/admin/login" class="btn-nav btn-login">Đăng nhập</a>
+                <a href="{{ route('signup') }}" class="btn-nav btn-signup">Đăng ký</a>
+            </div>
         </div>
+    </header>
 
-        <div class="content">
-            <div class="left-section">
-                <h1>Tối ưu hóa mọi sự kiện, từ A đến Z, với MICHEC</h1>
-                <p>MICHEC là nền tảng quản lý sự kiện chuyên nghiệp, giúp doanh nghiệp và tổ chức số hóa toàn bộ quy
-                    trình: từ lập kế hoạch, đăng ký, check-in, đến tương tác và đo lường hiệu quả sau sự kiện. Tăng
-                    cường trải nghiệm khách mời và tiết kiệm tối đa chi phí tổ chức.</p>
-
-                <div class="features">
-                    <div class="feature">
-                        <div class="feature-icon">✓</div>
-                        <div class="feature-text">
-                            **Quản lý Đăng ký & Bán vé:** Tạo Landing Page và cổng đăng ký, bán vé tự động.
-                        </div>
-                    </div>
-                    <div class="feature">
-                        <div class="feature-icon">✓</div>
-                        <div class="feature-text">
-                            **Check-in Nhanh chóng:** Hệ thống QR Code, Face Recognition hoặc NFC cho tốc độ check-in
-                            tức thì.
-                        </div>
-                    </div>
-                    <div class="feature">
-                        <div class="feature-icon">✓</div>
-                        <div class="feature-text">
-                            **Tương tác Trực tiếp:** Tính năng Q&A, Poll/Vote và Mini Game để kết nối khán giả.
-                        </div>
-                    </div>
-                    <div class="feature">
-                        <div class="feature-icon">✓</div>
-                        <div class="feature-text">
-                            **Phân tích & Báo cáo Chuyên sâu:** Đo lường hành vi, hiệu quả ROI và dữ liệu khách mời theo
-                            thời gian thực.
-                        </div>
-                    </div>
-                </div>
-
-                <div class="cta-buttons">
-                    <a href="#demo" class="btn btn-primary">Yêu cầu Demo ngay</a>
-                    <a href="#pricing" class="btn btn-secondary">Xem Bảng giá</a>
-                </div>
+    <!-- Nội dung chính (Main Content) -->
+    <div class="main-content">
+        <div class="container">
+            <div class="hero-header">
+                <!-- Giữ lại tagline ở đây để làm phần mở đầu nổi bật -->
+                <div class="tagline">Hệ thống Tổ chức & Quản lý Sự kiện Toàn diện</div>
             </div>
 
-            <div class="right-section">
-                <div class="card-showcase">
-                    <h3>Giải pháp tối ưu cho mọi loại hình sự kiện</h3>
-                    <p>Hệ thống MICHEC đã được kiểm chứng và tin dùng để tổ chức các sự kiện quy mô lớn và nhỏ.</p>
+            <div class="content">
+                <div class="left-section">
+                    <h1>Tối ưu hóa mọi sự kiện, từ A đến Z, với MICHEC</h1>
+                    <p>MICHEC là nền tảng quản lý sự kiện chuyên nghiệp, giúp doanh nghiệp và tổ chức số hóa toàn bộ quy
+                        trình: từ lập kế hoạch, đăng ký, check-in, đến tương tác và đo lường hiệu quả sau sự kiện. Tăng
+                        cường trải nghiệm khách mời và tiết kiệm tối đa chi phí tổ chức.</p>
 
-                    <div class="stats">
-                        <div class="stat">
-                            <div class="stat-number">500+</div>
-                            <div class="stat-label">Sự kiện đã tổ chức</div>
+                    <div class="features">
+                        <div class="feature">
+                            <div class="feature-icon">✓</div>
+                            <div class="feature-text">
+                                **Quản lý Đăng ký & Bán vé:** Tạo Landing Page và cổng đăng ký, bán vé tự động.
+                            </div>
                         </div>
-                        <div class="stat">
-                            <div class="stat-number">200K+</div>
-                            <div class="stat-label">Khách mời đã phục vụ</div>
+                        <div class="feature">
+                            <div class="feature-icon">✓</div>
+                            <div class="feature-text">
+                                **Check-in Nhanh chóng:** Hệ thống QR Code, Face Recognition hoặc NFC cho tốc độ
+                                check-in
+                                tức thì.
+                            </div>
+                        </div>
+                        <div class="feature">
+                            <div class="feature-icon">✓</div>
+                            <div class="feature-text">
+                                **Tương tác Trực tiếp:** Tính năng Q&A, Poll/Vote và Mini Game để kết nối khán giả.
+                            </div>
+                        </div>
+                        <div class="feature">
+                            <div class="feature-icon">✓</div>
+                            <div class="feature-text">
+                                **Phân tích & Báo cáo Chuyên sâu:** Đo lường hành vi, hiệu quả ROI và dữ liệu khách mời
+                                theo
+                                thời gian thực.
+                            </div>
                         </div>
                     </div>
 
-                    <div class="badge">Nền tảng sự kiện số 1 Việt Nam</div>
+                    <div class="cta-buttons">
+                        <a href="#demo" class="btn btn-primary">Yêu cầu Demo ngay</a>
+                        <a href="#pricing" class="btn btn-secondary">Xem Bảng giá</a>
+                    </div>
+                </div>
+
+                <div class="right-section">
+                    <div class="card-showcase">
+                        <h3>Giải pháp tối ưu cho mọi loại hình sự kiện</h3>
+                        <p>Hệ thống MICHEC đã được kiểm chứng và tin dùng để tổ chức các sự kiện quy mô lớn và nhỏ.</p>
+
+                        <div class="stats">
+                            <div class="stat">
+                                <div class="stat-number">500+</div>
+                                <div class="stat-label">Sự kiện đã tổ chức</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-number">200K+</div>
+                                <div class="stat-label">Khách mời đã phục vụ</div>
+                            </div>
+                        </div>
+
+                        <div class="badge">Nền tảng sự kiện số 1 Việt Nam</div>
+                    </div>
                 </div>
             </div>
         </div>

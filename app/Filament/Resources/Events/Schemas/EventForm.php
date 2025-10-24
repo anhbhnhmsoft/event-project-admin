@@ -507,6 +507,7 @@ class EventForm
                                             ->storeFiles(false)
                                             ->directory(StoragePath::EVENT_PATH->value)
                                             ->maxSize(51200)
+                                            ->panelLayout('grid')
                                             ->reorderable()
                                             ->appendFiles()
                                             ->live()
