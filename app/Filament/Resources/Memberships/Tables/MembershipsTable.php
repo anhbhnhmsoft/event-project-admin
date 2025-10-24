@@ -12,6 +12,7 @@ use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
 class MembershipsTable
@@ -19,17 +20,16 @@ class MembershipsTable
     public static function configure(Table $table): Table
     {
         $user = Auth::user();
+        $query = Membership::query();
 
         if ($user->role === RoleUser::SUPER_ADMIN->value) {
-            $type = MembershipType::FOR_ORGANIZER->value;
-        } else if ($user->role === RoleUser::ADMIN->value) {
-            $type = MembershipType::FOR_CUSTOMER->value;
-        } else {
-            $type = null;
+            $query->where('organizer_id', $user->organizer_id);
+        } elseif ($user->role === RoleUser::ADMIN->value) {
+            $query->where('organizer_id', $user->organizer_id)
+                ->where('type', MembershipType::FOR_CUSTOMER->value);
         }
         return $table
-            ->query(fn() => Membership::query()
-                ->when($type, fn($q) => $q->where('type', $type)->where('organizer_id', $user->organizer_id)))
+            ->query(fn() => $query)
             ->columns([
                 TextColumn::make('name')
                     ->label('Tên gói'),
