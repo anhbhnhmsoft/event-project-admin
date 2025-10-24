@@ -156,11 +156,11 @@ class EventSeatService
     {
         $transId = Helper::getTimestampAsId();
         $orderCode = (int)(microtime(true) * 1000);
-        
+
         DB::beginTransaction();
         try {
             $user = Auth::user();
-            
+
             if ($event->free_to_join) {
                 return [
                     'status' => false,
@@ -177,7 +177,7 @@ class EventSeatService
 
             $descBank = "Ghế {$seat->seat_code} - " . substr($event->id, -8);
             $expiredAt = now()->addMinutes(15);
-            
+
             $payload = [
                 'amount' => (int)$area->price,
                 'cancelUrl' => route('home'),
@@ -187,11 +187,11 @@ class EventSeatService
             ];
 
             $response = $this->cassoService->registerPaymentRequest(
-                $payload, 
-                $expiredAt, 
+                $payload,
+                $expiredAt,
                 TransactionType::EVENT_SEAT->value
             );
-            
+
 
             if ($response['code'] !== '00') {
                 DB::rollBack();
@@ -234,10 +234,10 @@ class EventSeatService
                 'status' => true,
                 'data' => $transaction
             ];
-            
+
         } catch (Exception $e) {
             DB::rollBack();
-            
+
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),
@@ -249,7 +249,7 @@ class EventSeatService
     {
         try {
             $transaction = $this->transactionService->findByTransactionId($transactionId);
-            
+
             if (!$transaction || $transaction->type !== TransactionType::EVENT_SEAT->value) {
                 return [
                     'status' => false,
@@ -259,7 +259,7 @@ class EventSeatService
 
             $metadata = json_decode($transaction->metadata, true);
             $seat = EventSeat::find($metadata['seat_id']);
-            
+
             if (!$seat) {
                 return [
                     'status' => false,
@@ -268,7 +268,7 @@ class EventSeatService
             }
 
             DB::beginTransaction();
-            
+
             $seat->update([
                 'status' => EventSeatStatus::BOOKED->value,
                 'user_id' => $transaction->user_id,
@@ -280,16 +280,16 @@ class EventSeatService
             ]);
 
             DB::commit();
-            
+
             return [
                 'status' => true,
                 'message' => 'Thanh toán thành công! Ghế đã được đặt.',
                 'seat' => $seat,
             ];
-            
+
         } catch (Exception $e) {
             DB::rollBack();
-            
+
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),
@@ -321,7 +321,7 @@ class EventSeatService
             }
 
             // Lấy thông tin seat và area
-            $seat = EventSeat::find($seatId);
+            $seat = EventSeat::query()->find($seatId);
             if (!$seat) {
                 return [
                     'status' => false,
@@ -329,11 +329,18 @@ class EventSeatService
                 ];
             }
 
-            $area = EventArea::find($seat->event_area_id);
+            $area = EventArea::query()->find($seat->event_area_id);
             if (!$area) {
                 return [
                     'status' => false,
                     'message' => 'Khu vực không tồn tại',
+                ];
+            }
+
+            if ($area->price === 0) {
+                return [
+                    'status' => true,
+                    'payment_required' => false,
                 ];
             }
 
@@ -347,7 +354,7 @@ class EventSeatService
 
             // Tạo payment
             $paymentResult = $this->registerSeatPayment($event, $area, $seat);
-            
+
             if (!$paymentResult['status']) {
                 return $paymentResult;
             }

@@ -105,12 +105,6 @@ class EventController extends Controller
                 'message' => __('common.common_error.permission_error'),
             ], 403);
         }
-        // nếu check ko có membership
-        if (!$user->activeMembership->first() || !$user->activeMembership->first()->config[ConfigMembership::ALLOW_CHOOSE_SEAT->value]) {
-            return response()->json([
-                'message' => __('common.common_error.permission_error'),
-            ], 403);
-        }
         $area = $this->eventService->getEventArea($id);
         return response()->json([
             'message' => __('common.common_success.get_success'),
@@ -222,25 +216,33 @@ class EventController extends Controller
         $user = $request->user();
         $data = $validator->getData();
 
-        if ($data['status'] === EventUserHistoryStatus::BOOKED->value && isset($data['event_seat_id'])) {
-            $eventSeatService = app(EventSeatService::class);
-            $paymentResult = $eventSeatService->checkAndCreatePayment($data['event_id'], $data['event_seat_id']);
+        // kiểm tra xem có quyền membership chọn chỗ ngồi không
+        $checkPermission = $this->membershipService->getMembershipUser($user->id);
+        if (!$checkPermission['status'] || !$checkPermission['membershipUser'] ||
+            !$checkPermission['membershipUser']?->config[ConfigMembership::ALLOW_CHOOSE_SEAT->value]) {
+            // nếu là đặt chỗ thì kiểm tra thanh toán
+            if ($data['status'] === EventUserHistoryStatus::BOOKED->value && isset($data['event_seat_id'])) {
+                $eventSeatService = app(EventSeatService::class);
+                $paymentResult = $eventSeatService->checkAndCreatePayment($data['event_id'], $data['event_seat_id']);
 
-            if ($paymentResult['status'] && $paymentResult['payment_required']) {
-                $transaction = $paymentResult['data'];
-                return response()->json([
-                    'message' => 'Vui lòng thanh toán để đặt ghế',
-                    'data' => new EventSeatTransactionResource($transaction),
-                    'payment_required' => true,
-                ], 200);
-            }
+                if ($paymentResult['status'] && $paymentResult['payment_required']) {
+                    $transaction = $paymentResult['data'];
+                    return response()->json([
+                        'message' => __('event.error.payment_seat_required'),
+                        'data' => new EventSeatTransactionResource($transaction),
+                        'payment_required' => true,
+                    ], 200);
+                }
 
-            if (!$paymentResult['status']) {
-                return response()->json([
-                    'message' => $paymentResult['message'],
-                ], 400);
+                if (!$paymentResult['status']) {
+                    return response()->json([
+                        'message' => $paymentResult['message'],
+                    ], 400);
+                }
             }
         }
+        // nếu có membership thì ko cần check thanh toán
+
 
         $result = $this->eventUserHistoryService->createEventHistory($data, $user->id, $user->organizer_id);
 
@@ -283,10 +285,14 @@ class EventController extends Controller
             ], 422);
         }
 
-        $validated = $validator->validated();
+        $validated = $validator->getData();
         $user = $request->user();
+        if (Helper::containsProfanity($validated['content'])) {
+            return response()->json([
+                'message' => __('common.common_error.inappropriate_language'),
+            ], 422);
+        }
         $event = $this->eventService->getEventDetail($validated['event_id']);
-
         if (!$event['status']) {
             return response()->json([
                 'message' => $event['message'],
@@ -298,11 +304,7 @@ class EventController extends Controller
                 'message' => __('common.common_error.permission_error'),
             ], 403);
         }
-        if (Helper::containsProfanity($validated['content'])) {
-            return response()->json([
-                'message' => __('common.common_error.inappropriate_language'),
-            ], 422);
-        }
+
         $newComment = [
             'user_id'  => $user->id,
             'event_id' => $validated['event_id'],
@@ -317,17 +319,6 @@ class EventController extends Controller
                     'message' => __('common.common_error.permission_error'),
                 ], 403);
             }
-
-            $result = $this->eventCommentService->eventCommentInsert($newComment);
-
-            if (!$result['status']) {
-                return response()->json([
-                    'message' => $result['message'],
-                ], 500);
-            }
-            return response()->json([
-                'message' => $result['message'],
-            ], 200);
         }
 
         $result = $this->eventCommentService->eventCommentInsert($newComment);
@@ -431,15 +422,20 @@ class EventController extends Controller
                 'message' => __('common.common_error.permission_error'),
             ], 403);
         }
-        // nếu check ko có membership
-        if (!$user->activeMembership->first() || !$user->activeMembership->first()->config[ConfigMembership::ALLOW_DOCUMENTARY->value]) {
-            // thì kiêểm tra xem document này có user chưa
-            if (!$document['document']->users()->where('user_id', $user->id)->exists()) {
-                return response()->json([
-                    'message' => __('common.common_error.permission_error'),
-                ], 403);
+        // nếu ko phải tài liệu miễn phí
+        if ($document['document']->price > 0) {
+            // nếu check ko có membership
+            if (!$user->activeMembership->first() ||
+                !$user->activeMembership->first()->config[ConfigMembership::ALLOW_DOCUMENTARY->value]) {
+                // thì kiêểm tra xem document này có user chưa
+                if (!$document['document']->users()->where('user_id', $user->id)->exists()) {
+                    return response()->json([
+                        'message' => __('common.common_error.permission_error'),
+                    ], 403);
+                }
             }
         }
+
 
         $data = [
             'user_id' => $user->id,

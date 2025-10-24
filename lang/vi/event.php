@@ -16,6 +16,7 @@ return [
         'get_failed' => 'Lấy dữ liệu thất bại: :error',
         'filter_failed' => 'Lọc thất bại',
         'Event_not_to_organizer' => 'Sự kiện không thuộc về nhà tổ chức của bạn',
+        'payment_seat_required' => 'Vui lòng thanh toán để đặt ghế',
     ],
     'validation' => [
         'event_id_required' => 'ID sự kiện là bắt buộc',

@@ -153,9 +153,9 @@ export default function TakeSurvey({ poll, user }) {
         const baseClasses =
             "fixed top-4 left-1/2 transform -translate-x-1/2 z-50 p-4 sm:p-5 rounded-xl text-center font-medium shadow-2xl transition-all duration-500 ease-in-out max-w-sm w-full";
         const successClasses =
-            "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border-2 border-green-300 dark:border-green-700";
+            "bg-green-100 text-green-800 border-2 border-green-300";
         const errorClasses =
-            "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 border-2 border-red-300 dark:border-red-700";
+            "bg-red-100 text-red-800 border-2 border-red-300";
 
         return (
             <div
@@ -190,21 +190,21 @@ export default function TakeSurvey({ poll, user }) {
             <NotificationToast />
 
             <div className="text-center mb-6 sm:mb-8 lg:mb-12">
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-3 px-2">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900  mb-2 sm:mb-3 px-2">
                     {poll.title}
                 </h1>
                 {poll.description && (
-                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-2 px-2">
+                    <p className="text-sm sm:text-base text-gray-600 mt-2 px-2">
                         {poll.description}
                     </p>
                 )}
 
-                <div className="mt-4 sm:mt-6 bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 shadow-md inline-block">
+                <div className="mt-4 sm:mt-6 bg-white  rounded-xl p-3 sm:p-4 shadow-md inline-block">
                     <div className="flex items-center gap-2 text-sm sm:text-base">
-                        <span className="font-semibold text-gray-900 dark:text-white">
+                        <span className="font-semibold text-gray-900 ">
                             {getAnsweredCount()} / {poll.questions.length}
                         </span>
-                        <span className="text-gray-600 dark:text-gray-400">
+                        <span className="text-gray-600 ">
                             câu đã trả lời
                         </span>
                     </div>
@@ -215,11 +215,11 @@ export default function TakeSurvey({ poll, user }) {
 
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                 {/* Card thông tin người dùng */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 border border-gray-200 dark:border-gray-700">
-                    <h2 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 dark:text-white mb-4 sm:mb-6 flex items-center">
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center mr-2 sm:mr-3">
+                <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 border border-gray-200 ">
+                    <h2 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 mb-4 sm:mb-6 flex items-center">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-2 sm:mr-3">
                             {/* Thay thế SVG bằng icon lucide-react */}
-                            <User className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
+                            <User className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 " />
                         </div>
                         Thông tin của bạn
                     </h2>
@@ -230,15 +230,15 @@ export default function TakeSurvey({ poll, user }) {
                                 errors.email && showErrors ? "error-field" : ""
                             }
                         >
-                            <label className="block text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            <label className="block text-sm sm:text-base font-semibold text-gray-700 mb-2">
                                 Email <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="email"
-                                className={`w-full border-2 rounded-lg sm:rounded-xl p-3 sm:p-3.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all text-sm sm:text-base ${
+                                className={`w-full border-2 rounded-lg sm:rounded-xl p-3 sm:p-3.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 transition-all text-sm sm:text-base ${
                                     errors.email && showErrors
-                                        ? "border-red-500 dark:border-red-500 bg-red-50 dark:bg-red-900/20"
-                                        : "border-gray-300 dark:border-gray-600"
+                                        ? "border-red-500 bg-red-50 "
+                                        : "border-gray-300"
                                 }`}
                                 placeholder="your.email@example.com"
                                 value={data.email}
@@ -252,7 +252,7 @@ export default function TakeSurvey({ poll, user }) {
                                 }}
                             />
                             {errors.email && showErrors && (
-                                <p className="text-red-600 dark:text-red-400 text-xs sm:text-sm mt-2 flex items-center font-medium">
+                                <p className="text-red-600  text-xs sm:text-sm mt-2 flex items-center font-medium">
                                     <XCircle className="w-4 h-4 mr-1 flex-shrink-0" />
                                     {errors.email}
                                 </p>
@@ -260,7 +260,7 @@ export default function TakeSurvey({ poll, user }) {
                         </div>
 
                         <div>
-                            <label className="block text-sm sm:text-base font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            <label className="block text-sm sm:text-base font-semibold text-gray-700 mb-2">
                                 Số điện thoại
                                 <span className="text-gray-400 text-xs sm:text-sm ml-1 font-normal">
                                     (không bắt buộc)
@@ -268,7 +268,7 @@ export default function TakeSurvey({ poll, user }) {
                             </label>
                             <input
                                 type="tel"
-                                className="w-full border-2 border-gray-300 dark:border-gray-600 rounded-lg sm:rounded-xl p-3 sm:p-3.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all text-sm sm:text-base"
+                                className="w-full border-2 border-gray-300 rounded-lg sm:rounded-xl p-3 sm:p-3.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 transition-all text-sm sm:text-base"
                                 placeholder="0123 456 789"
                                 value={data.phone}
                                 onChange={(e) =>
@@ -280,11 +280,11 @@ export default function TakeSurvey({ poll, user }) {
                 </div>
 
                 {/* Card câu hỏi */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 border border-gray-200 dark:border-gray-700">
-                    <h2 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 dark:text-white mb-4 sm:mb-6 flex items-center">
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center mr-2 sm:mr-3">
+                <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 border border-gray-200">
+                    <h2 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 mb-4 sm:mb-6 flex items-center">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-2 sm:mr-3">
                             {/* Thay thế SVG bằng icon lucide-react */}
-                            <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 dark:text-purple-400" />
+                            <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 " />
                         </div>
                         Câu hỏi khảo sát
                     </h2>
@@ -293,7 +293,7 @@ export default function TakeSurvey({ poll, user }) {
                         {poll.questions.map((q, i) => (
                             <div
                                 key={q.id}
-                                className={`pb-5 sm:pb-6 lg:pb-8 border-b border-gray-200 dark:border-gray-700 last:border-b-0 last:pb-0 ${
+                                className={`pb-5 sm:pb-6 lg:pb-8 border-b border-gray-200 last:border-b-0 last:pb-0 ${
                                     errors[`answer_${q.id}`] && showErrors
                                         ? "error-field"
                                         : ""
@@ -304,7 +304,7 @@ export default function TakeSurvey({ poll, user }) {
                                         {i + 1}
                                     </span>
                                     <div className="flex-1 min-w-0">
-                                        <h3 className="font-semibold text-sm sm:text-base lg:text-lg text-gray-900 dark:text-white break-words">
+                                        <h3 className="font-semibold text-sm sm:text-base lg:text-lg text-gray-900 break-words">
                                             {q.question}
                                             <span className="text-red-500 ml-1">
                                                 *
@@ -322,12 +322,12 @@ export default function TakeSurvey({ poll, user }) {
                                                     className={`flex items-start sm:items-center gap-3 p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 cursor-pointer transition-all group ${
                                                         data.answers[q.id] ===
                                                         opt.id
-                                                            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                                                            ? "border-blue-500 bg-blue-50"
                                                             : errors[
                                                                   `answer_${q.id}`
                                                               ] && showErrors
-                                                            ? "border-red-300 dark:border-red-700 hover:border-red-400"
-                                                            : "border-gray-200 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-gray-700"
+                                                            ? "border-red-300 hover:border-red-400"
+                                                            : "border-gray-200 hover:border-blue-400 hover:bg-blue-50"
                                                     }`}
                                                 >
                                                     <input
@@ -348,7 +348,7 @@ export default function TakeSurvey({ poll, user }) {
                                                         }
                                                         className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 focus:ring-2 focus:ring-blue-500 flex-shrink-0 mt-0.5 sm:mt-0"
                                                     />
-                                                    <span className="text-sm sm:text-base text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white flex-1 break-words">
+                                                    <span className="text-sm sm:text-base text-gray-700 group-hover:text-gray-900 flex-1 break-words">
                                                         {opt.label}
                                                     </span>
                                                 </label>
@@ -357,11 +357,11 @@ export default function TakeSurvey({ poll, user }) {
                                     ) : (
                                         <textarea
                                             rows={4}
-                                            className={`w-full border-2 rounded-lg sm:rounded-xl p-3 sm:p-4 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none transition-all text-sm sm:text-base ${
+                                            className={`w-full border-2 rounded-lg sm:rounded-xl p-3 sm:p-4 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all text-sm sm:text-base ${
                                                 errors[`answer_${q.id}`] &&
                                                 showErrors
-                                                    ? "border-red-500 dark:border-red-500 bg-red-50 dark:bg-red-900/20"
-                                                    : "border-gray-300 dark:border-gray-600"
+                                                    ? "border-red-500 hover:border-red-400 bg-red-50"
+                                                    : "border-gray-300 hover:border-gray-400"
                                             }`}
                                             placeholder="Nhập câu trả lời của bạn..."
                                             value={
@@ -378,7 +378,7 @@ export default function TakeSurvey({ poll, user }) {
                                     )}
 
                                     {errors[`answer_${q.id}`] && showErrors && (
-                                        <p className="text-red-600 dark:text-red-400 text-xs sm:text-sm mt-2 flex items-center font-medium">
+                                        <p className="text-red-600 text-xs sm:text-sm mt-2 flex items-center font-medium">
                                             <XCircle className="w-4 h-4 mr-1 flex-shrink-0" />
                                             {errors[`answer_${q.id}`]}
                                         </p>
@@ -390,8 +390,8 @@ export default function TakeSurvey({ poll, user }) {
                 </div>
 
                 {/* Submit button - Fixed on mobile */}
-                <div className="sticky bottom-0 left-0 right-0 bg-gradient-to-t from-white via-white to-transparent dark:from-gray-900 dark:via-gray-900 pt-4 pb-2 sm:pb-4 -mx-3 px-3 sm:mx-0 sm:px-0 sm:static sm:bg-none">
-                    <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700">
+                <div className="sticky bottom-0 left-0 right-0 bg-gradient-to-t from-white via-white to-transparent pt-4 pb-2 sm:pb-4 -mx-3 px-3 sm:mx-0 sm:px-0 sm:static sm:bg-none">
+                    <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-4 sm:p-6 border border-gray-200">
                         <button
                             type="submit"
                             disabled={processing}
@@ -410,7 +410,7 @@ export default function TakeSurvey({ poll, user }) {
                             )}
                         </button>
 
-                        <p className="text-xs sm:text-sm text-center text-gray-500 dark:text-gray-400 mt-3 sm:mt-4">
+                        <p className="text-xs sm:text-sm text-center text-gray-500  mt-3 sm:mt-4">
                             Vui lòng kiểm tra kỹ thông tin trước khi gửi
                         </p>
                     </div>

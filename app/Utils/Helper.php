@@ -192,6 +192,8 @@ final class Helper
         $badWords = [
             'địt',
             'lồn',
+            'loz',
+            'lol',
             'cặc',
             'buồi',
             'chịch',
