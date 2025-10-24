@@ -206,11 +206,6 @@ class EventForm
                             ->validationMessages([
                                 'required' => 'Vui lòng tích chọn',
                             ]),
-                        TextInput::make('price_comment')
-                            ->label('Giá bình luận private')
-                            ->default(0)
-                            ->numeric()
-                            ->helperText('Nếu giá trị = 0 không phân loại bình luận'),
                     ]),
                 Tab::make('participants')
                     ->label('Người tham gia')

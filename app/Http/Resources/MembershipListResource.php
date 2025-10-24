@@ -27,6 +27,8 @@ class MembershipListResource extends JsonResource
             'badge_color_text' => $this->badge_color_text,
             'config' => $this->config,
             'status' => $this->status,
+            'type'   => $this->type,
+            'organizer_id' => $this->organizer_id
         ];
     }
 }
