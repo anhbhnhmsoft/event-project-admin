@@ -88,7 +88,21 @@ return [
         'general' => [
             'create_event' => 'Tạo sự kiện'
         ],
+        'validation' => [
+            'free_to_join' => 'Sự kiện miễn phí.',
+        ],
         'form' => [
+            'free_to_join_success' => 'Đặt ghế thành công (sự kiện miễn phí).',
+            'free_to_join_area_success' => 'Đặt ghế thành công (khu vực miễn phí).',
+            'payment_required' => 'Vui lòng thanh toán để đặt ghế',
+            'seat_already_booked' => 'Ghế này đã được đặt.',
+            'seat_not_belong_to_event' => 'Ghế không thuộc sự kiện này.',
+            'cannot_assign_seat' => 'Không thể gán ghế.',
+            'cannot_cancel_seat' => 'Không thể huỷ ghế.',
+            'seat_not_found' => 'Ghế không tồn tại.',
+            'area_not_found' => 'Khu vực không tồn tại.',
+            'payment_success' => 'Thanh toán thành công! Ghế đã được đặt.',
+            'cannot_create_ticket' => 'Không thể tạo vé.',
             'free_to_join' => 'Miễn phí tham gia',
             'manager_area' => 'Quản lý khu vực và ghế ngồi',
             'add_area' => 'Thêm khu vực',
@@ -99,6 +113,7 @@ return [
             'seat' => 'Ghế',
             'ticket_price' => 'Giá vé',
             'seat_comment' => "Nếu để 0 thì sẽ miễn phí giá vé",
+            'free' => 'Miễn phí',
             'quantity_seat' => 'Số lượng chỗ ngồi',
             'type_area' => 'Loại khu vực',
             'normal' => 'Thường',
@@ -403,6 +418,45 @@ return [
             'recipients' => 'Danh sách người nhận',
             'from_date' => 'Từ ngày',
             'to_date' => 'Đến ngày'
+        ]
+    ],
+    'game' => [
+        'error' => [
+            'game_not_found' => 'Không tìm thấy game.',
+            'cannot_load_players' => 'Không thể tải danh sách người chơi.',
+            'cannot_spin' => 'Không thể quay thưởng.',
+            'no_players_configured' => 'Chưa có người chơi được cấu hình tỉ lệ.',
+            'no_valid_players' => 'Không có người chơi hợp lệ trong cấu hình.',
+            'gift_not_found' => 'Không tìm thấy quà.',
+            'gift_out_of_stock' => 'Quà đã hết.',
+            'no_valid_gifts' => 'Không còn phần quà hợp lệ.',
+            'cannot_select_gift' => 'Không chọn được phần quà.'
+        ],
+        'success' => [
+            'gift_history_saved' => 'Lưu lịch sử quà tặng thành công.'
+        ]
+    ],
+    'organizer' => [
+        'error' => [
+            'init_failed' => 'Lỗi trong quá trình khởi tạo tổ chức và cấu hình.',
+            'register_failed' => 'Có lỗi xảy ra khi đăng ký. Vui lòng thử lại sau.'
+        ],
+        'success' => [
+            'register_success' => 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.'
+        ]
+    ],
+    'casso' => [
+        'error' => [
+            'organizer_not_found' => 'Không xác định được tổ chức để tạo giao dịch thanh toán.'
+        ]
+    ],
+    'transaction' => [
+        'validation' => [
+            'invalid_transaction' => 'Transaction không hợp lệ.',
+            'cannot_cancel_completed' => 'Không thể hủy giao dịch đã hoàn thành hoặc đã hủy',
+            'invalid_type' => 'Loại giao dịch không hợp lệ',
+            'cancel_success' => 'Hủy giao dịch thành công',
+            'seat_info_not_found' => 'Không tìm thấy thông tin ghế trong giao dịch'
         ]
     ],
     'navigation' => [

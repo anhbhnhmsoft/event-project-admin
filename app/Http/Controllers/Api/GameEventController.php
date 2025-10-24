@@ -76,7 +76,7 @@ class GameEventController extends Controller
         if (!$result['status']) {
             return response()->json([
                 'status'  => false,
-                'message' => $result['message'] ?? 'Không tìm thấy game.',
+                'message' => $result['message'] ?? __('game.error.game_not_found'),
             ], 404);
         }
 
@@ -95,7 +95,7 @@ class GameEventController extends Controller
         if (!$result['status']) {
             return response()->json([
                 'status'  => false,
-                'message' => $result['message'] ?? 'Không tìm thấy trò chơi.',
+                'message' => $result['message'] ?? __('game.error.game_not_found'),
             ], 404);
         }
 
@@ -120,7 +120,7 @@ class GameEventController extends Controller
         if (!$result['status']) {
             return response()->json([
                 'status'  => false,
-                'message' => $result['message'] ?? 'Không tìm thấy game.',
+                'message' => $result['message'] ?? __('game.error.game_not_found'),
             ], 404);
         }
 
@@ -129,7 +129,7 @@ class GameEventController extends Controller
         if (!$this->eventGameService->checkGameAccess($game, $user)) {
             return response()->json([
                 'status'  => false,
-                'message' => 'Không có quyền truy cập.',
+                'message' => __('common.common_error.permission_error'),
             ], 403);
         }
 
@@ -139,7 +139,7 @@ class GameEventController extends Controller
         if (!$usersResult['status']) {
             return response()->json([
                 'status'  => false,
-                'message' => $usersResult['message'] ?? 'Không thể tải danh sách người chơi.',
+                'message' => $usersResult['message'] ?? __('game.error.cannot_load_players'),
             ], 500);
         }
 
@@ -175,7 +175,7 @@ class GameEventController extends Controller
         if (!$result['status']) {
             return response()->json([
                 'status'  => false,
-                'message' => $result['message'] ?? 'Không thể quay thưởng.',
+                'message' => $result['message'] ?? __('game.error.cannot_spin'),
             ], 500);
         }
 

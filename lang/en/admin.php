@@ -79,7 +79,21 @@ return [
         'general' => [
             'create_event' => 'Create Event'
         ],
+        'validation' => [
+            'free_to_join' => 'Event is free to join.',
+        ],
         'form' => [
+            'free_to_join_success' => 'Seat booked successfully (free event).',
+            'free_to_join_area_success' => 'Seat booked successfully (free area).',
+            'payment_required' => 'Please make payment to book seat',
+            'seat_already_booked' => 'This seat has already been booked.',
+            'seat_not_belong_to_event' => 'Seat does not belong to this event.',
+            'cannot_assign_seat' => 'Cannot assign seat.',
+            'cannot_cancel_seat' => 'Cannot cancel seat.',
+            'seat_not_found' => 'Seat not found.',
+            'area_not_found' => 'Area not found.',
+            'payment_success' => 'Payment successful! Seat has been booked.',
+            'cannot_create_ticket' => 'Cannot create ticket.',
             'free_to_join' => 'Free to join',
             'manager_area' => 'Manage areas and seats',
             'add_area' => 'Add area',
@@ -90,6 +104,7 @@ return [
             'seat' => 'Seat',
             'ticket_price' => 'Ticket price',
             'seat_comment' => "If set to 0, ticket will be free",
+            'free' => 'Free',
             'quantity_seat' => 'Number of seats',
             'type_area' => 'Area type',
             'normal' => 'Normal',
@@ -398,6 +413,45 @@ return [
             'recipients' => 'Recipients',
             'from_date' => 'From Date',
             'to_date' => 'To Date'
+        ]
+    ],
+    'game' => [
+        'error' => [
+            'game_not_found' => 'Game not found.',
+            'cannot_load_players' => 'Cannot load players list.',
+            'cannot_spin' => 'Cannot spin reward.',
+            'no_players_configured' => 'No players configured with rates.',
+            'no_valid_players' => 'No valid players in configuration.',
+            'gift_not_found' => 'Gift not found.',
+            'gift_out_of_stock' => 'Gift out of stock.',
+            'no_valid_gifts' => 'No valid gifts remaining.',
+            'cannot_select_gift' => 'Cannot select gift.'
+        ],
+        'success' => [
+            'gift_history_saved' => 'Gift history saved successfully.'
+        ]
+    ],
+    'organizer' => [
+        'error' => [
+            'init_failed' => 'Error during organizer and configuration initialization.',
+            'register_failed' => 'An error occurred during registration. Please try again later.'
+        ],
+        'success' => [
+            'register_success' => 'Registration successful! Please check your email to verify your account.'
+        ]
+    ],
+    'casso' => [
+        'error' => [
+            'organizer_not_found' => 'Cannot determine organizer to create payment transaction.'
+        ]
+    ],
+    'transaction' => [
+        'validation' => [
+            'invalid_transaction' => 'Invalid transaction.',
+            'cannot_cancel_completed' => 'Cannot cancel completed or already cancelled transaction',
+            'invalid_type' => 'Invalid transaction type',
+            'cancel_success' => 'Transaction cancelled successfully',
+            'seat_info_not_found' => 'Seat information not found in transaction'
         ]
     ],
     'navigation' => [

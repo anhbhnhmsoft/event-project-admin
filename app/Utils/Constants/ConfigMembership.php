@@ -18,9 +18,9 @@ enum ConfigMembership: string
     public function labelAdmin(): string
     {
         return match ($this) {
-            self::ALLOW_COMMENT     => 'Cho phép bình luận',
-            self::ALLOW_CHOOSE_SEAT => 'Cho phép chọn chỗ ngồi',
-            self::ALLOW_DOCUMENTARY => 'Cho phép xem tải hay xem tài liệu trong sự kiện',
+            self::ALLOW_COMMENT     => __('constants.config_membership.allow_comment'),
+            self::ALLOW_CHOOSE_SEAT => __('constants.config_membership.allow_choose_seat'),
+            self::ALLOW_DOCUMENTARY => __('constants.config_membership.allow_documentary'),
         };
     }
 
@@ -37,11 +37,11 @@ enum ConfigMembership: string
     public function labelSuperAdmin(): string
     {
         return match ($this) {
-            self::LIMIT_EVENT     => 'Giới hạn số sự kiện',
-            self::LIMIT_MEMBER    => 'Giới hạn thành viên tham gia sự kiện',
-            self::FEATURE_POLL    => 'Tính năng nhận xét/ khảo sát sau hoặc trước sự kiện',
-            self::FEATURE_GAME    => 'Tính năng trò chơi trong sự kiện',
-            self::FEATURE_COMMENT => 'Tính năng bình luận trong sự kiện',
+            self::LIMIT_EVENT     => __('constants.config_membership.limit_event'),
+            self::LIMIT_MEMBER    => __('constants.config_membership.limit_member'),
+            self::FEATURE_POLL    => __('constants.config_membership.feature_poll'),
+            self::FEATURE_GAME    => __('constants.config_membership.feature_game'),
+            self::FEATURE_COMMENT => __('constants.config_membership.feature_comment'),
         };
     }
 

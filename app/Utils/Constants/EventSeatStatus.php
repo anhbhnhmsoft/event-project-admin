@@ -10,8 +10,8 @@ enum EventSeatStatus: int
     public function label(): string
     {
         return match ($this) {
-            self::AVAILABLE => 'Trống',
-            self::BOOKED => 'Đã đặt',
+            self::AVAILABLE => __('constants.event_seat_status.available'),
+            self::BOOKED => __('constants.event_seat_status.booked'),
         };
     }
 }

@@ -22,9 +22,9 @@ enum EventDocumentUserStatus: int
     public function label(): string
     {
         return match ($this) {
-            self::INACTIVE => 'Đã xem',
-            self::PAYMENT_PENDING => 'Chờ thanh toán',
-            self::ACTIVE => 'Đã thanh toán & sở hữu',
+            self::INACTIVE => __('constants.event_document_user_status.inactive'),
+            self::PAYMENT_PENDING => __('constants.event_document_user_status.payment_pending'),
+            self::ACTIVE => __('constants.event_document_user_status.active'),
         };
     }
 }

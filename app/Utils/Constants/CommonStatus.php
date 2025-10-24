@@ -10,8 +10,8 @@ enum CommonStatus: int
     public static function getOptions(): array
     {
         return [
-            self::ACTIVE->value => 'Hoạt động',
-            self::INACTIVE->value => 'Không hoạt động',
+            self::ACTIVE->value => __('constants.common_status.active'),
+            self::INACTIVE->value => __('constants.common_status.inactive'),
         ];
     }
 

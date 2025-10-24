@@ -115,7 +115,7 @@ class EventGameService
             if (empty($customRates)) {
                 return [
                     'status' => false,
-                    'message' => 'Chưa có người chơi được cấu hình tỉ lệ.',
+                    'message' => __('game.error.no_players_configured'),
                 ];
             }
 
@@ -128,7 +128,7 @@ class EventGameService
             if ($userIds->isEmpty()) {
                 return [
                     'status' => false,
-                    'message' => 'Không có người chơi hợp lệ trong cấu hình.',
+                    'message' => __('game.error.no_valid_players'),
                 ];
             }
 
@@ -157,14 +157,14 @@ class EventGameService
             if (!$gift) {
                 return [
                     'status'  => false,
-                    'message' => 'Không tìm thấy quà.',
+                    'message' => __('game.error.gift_not_found'),
                 ];
             }
 
             if ($gift->quantity <= 0) {
                 return [
                     'status'  => false,
-                    'message' => 'Quà đã hết.',
+                    'message' => __('game.error.gift_out_of_stock'),
                 ];
             }
 
@@ -184,7 +184,7 @@ class EventGameService
 
             return [
                 'status'  => true,
-                'message' => 'Lưu lịch sử quà tặng thành công.',
+                'message' => __('game.success.gift_history_saved'),
                 'data'    => $history,
             ];
         } catch (\Throwable $e) {
@@ -216,7 +216,7 @@ class EventGameService
         $game = EventGame::with('gifts')->find($gameId);
 
         if (!$game) {
-            return ['status' => false, 'message' => 'Game không tồn tại.'];
+            return ['status' => false, 'message' => __('game.error.game_not_found')];
         }
 
         $customRates = collect($game->config_game['custom_user_rates'] ?? []);
@@ -238,7 +238,7 @@ class EventGameService
         }
 
         if ($gifts->isEmpty()) {
-            return ['status' => false, 'message' => 'Không còn phần quà hợp lệ.'];
+            return ['status' => false, 'message' => __('game.error.no_valid_gifts')];
         }
 
         $totalRate = $gifts->sum('rate');
@@ -282,7 +282,7 @@ class EventGameService
             }
         }
 
-        return ['status' => false, 'message' => 'Không chọn được phần quà.'];
+        return ['status' => false, 'message' => __('game.error.cannot_select_gift')];
     }
 
     public function updateGameEvent(EventGame $record, $data)

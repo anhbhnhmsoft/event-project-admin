@@ -12,10 +12,10 @@ enum UserNotificationStatus: int
     public function label(): string
     {
         return match ($this) {
-            self::PENDING => 'Chờ gửi',
-            self::SENT => 'Đã gửi',
-            self::READ => 'Đã đọc',
-            self::FAILED => 'Gửi thất bại',
+            self::PENDING => __('constants.user_notification_status.pending'),
+            self::SENT => __('constants.user_notification_status.sent'),
+            self::READ => __('constants.user_notification_status.read'),
+            self::FAILED => __('constants.user_notification_status.failed'),
         };
     }
 

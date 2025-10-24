@@ -15,11 +15,11 @@ enum TransactionType: int
     public static function label(int $type): string
     {
         return match ($type) {
-            self::MEMBERSHIP->value   => 'Mua gói thành viên',
-            self::PLAN_SERVICE->value => 'Mua gói dịch vụ',
-            self::BUY_DOCUMENT->value => 'Mua tài liệu sự kiện',
-            self::BUY_COMMENT->value  => 'Mua quyền bình luận ',
-            self::EVENT_SEAT->value   => 'Thanh toán ghế sự kiện',
+            self::MEMBERSHIP->value   => __('constants.transaction_type.membership'),
+            self::PLAN_SERVICE->value => __('constants.transaction_type.plan_service'),
+            self::BUY_DOCUMENT->value => __('constants.transaction_type.buy_document'),
+            self::BUY_COMMENT->value  => __('constants.transaction_type.buy_comment'),
+            self::EVENT_SEAT->value   => __('constants.transaction_type.event_seat'),
         };
     }
 

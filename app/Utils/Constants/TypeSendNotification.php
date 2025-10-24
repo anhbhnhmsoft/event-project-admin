@@ -10,8 +10,8 @@ enum TypeSendNotification: int
     public static function label(int $type): string
     {
         return match ($type) {
-            self::SOME_USERS->value => 'Chọn người dùng',
-            self::ALL_USERS->value  => 'Broadcast (toàn bộ người dùng)',
+            self::SOME_USERS->value => __('constants.type_send_notification.some_users'),
+            self::ALL_USERS->value  => __('constants.type_send_notification.all_users'),
         };
     }
 
