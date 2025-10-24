@@ -94,7 +94,7 @@ class TransactionController extends Controller
 
             if (!empty($result['document'])) {
                 return response()->json([
-                    'message' => __('common.common_success.add_success'),
+                    'message' => __('common.common_success.get_success'),
                     'document' => new EventScheduleDocumentResource($result['document']),
                 ], 200);
             }
