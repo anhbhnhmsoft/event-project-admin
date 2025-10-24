@@ -26,7 +26,6 @@
         </div>
 
         <div class="bg-indigo-600 text-white text-center py-6">
-
             <div class="flex items-center justify-center space-x-2">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -37,7 +36,7 @@
         </div>
 
         <div class="p-8">
-            @if (empty($areas))
+            @if ($this->paginatedAreas->isEmpty())
                 <div class="text-center py-16">
                     <svg class="w-24 h-24 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor"
                         viewBox="0 0 24 24">
@@ -49,9 +48,10 @@
                 </div>
             @else
                 <div class="flex justify-center flex-wrap gap-8">
-                    @foreach ($areas as $area)
+                    @foreach ($this->paginatedAreas as $area)
                         <div class="group relative">
-                            <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl border-2 border-gray-200 hover:border-indigo-300 transition-all duration-300 overflow-hidden shadow-sm hover:shadow-xl transform hover:-translate-y-1">
+                            <div
+                                class="bg-gradient-to-br from-white to-gray-50 rounded-xl border-2 border-gray-200 hover:border-indigo-300 transition-all duration-300 overflow-hidden shadow-sm hover:shadow-xl transform hover:-translate-y-1">
                                 <div class="{{ $area['vip'] ? 'bg-[#EFAA0A]' : 'bg-[#3d3aff]' }} text-white p-4">
                                     <div class="flex justify-between items-center">
                                         <div>
@@ -67,7 +67,8 @@
                                             <p class="text-indigo-100">{{ $area['capacity'] }} ghế</p>
                                             @if (!$event->free_to_join)
                                                 <p class="text-white/90 mt-1">
-                                                    Giá vé: {{ isset($area['price']) && $area['price'] !== null && $area['price'] !== '' ? number_format((float) $area['price']) . ' đ' : '—' }}
+                                                    Giá vé:
+                                                    {{ isset($area['price']) && $area['price'] !== null && $area['price'] !== '' ? number_format((float) $area['price']) . ' đ' : '—' }}
                                                 </p>
                                             @endif
                                         </div>
@@ -99,7 +100,7 @@
                                     <div class="grid gap-1 max-h-48 overflow-hidden"
                                         style="grid-template-columns: repeat({{ max(1, 30) }}, minmax(0, 1fr));">
                                         @php
-                                            $seatsToShow = array_slice($area['seats'] ?? [], 0, 50);
+                                            $seatsToShow = array_slice($area['seats']->toArray() ?? [], 0, 50);
                                         @endphp
                                         @foreach ($seatsToShow as $seat)
                                             <div
@@ -116,9 +117,16 @@
                         </div>
                     @endforeach
                 </div>
+
+                {{-- Phân trang cho areas --}}
+                <div class="mt-6">
+                    {{ $this->paginatedAreas->links() }}
+                </div>
             @endif
         </div>
     </div>
+
+    {{-- Modal Tạo Khu Vực --}}
     <div x-data="{ showAreaModal: @entangle('showAreaModal') }">
         <div x-show="showAreaModal" x-transition.opacity
             class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
@@ -129,7 +137,8 @@
                 <div class="p-6">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-2xl font-bold text-gray-900">Tạo Khu Vực Mới</h2>
-                        <button wire:click="$set('showAreaModal', false)" class="text-gray-400 hover:text-gray-600">✕</button>
+                        <button wire:click="$set('showAreaModal', false)"
+                            class="text-gray-400 hover:text-gray-600">✕</button>
                     </div>
 
                     <form wire:submit="createArea" class="space-y-6">
@@ -148,21 +157,25 @@
                             </div>
                         </div>
 
-                            <div class="space-y-2">
+                        <div class="space-y-2">
                             <label class="block text-sm font-medium text-gray-700 mb-2">
                                 Loại khu vực
                             </label>
-                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+                            <div
+                                class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
                                 <div class="flex items-center space-x-3">
                                     <span class="text-sm font-medium text-gray-700">Thường</span>
                                     <label class="relative inline-flex items-center cursor-pointer">
                                         <input type="checkbox" wire:model.live="areaVip" class="sr-only peer">
-                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                        <div
+                                            class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                                        </div>
                                         <span class="ml-3 text-sm font-medium text-gray-700">VIP</span>
                                     </label>
                                 </div>
                                 <div class="text-right">
-                                    <span class="text-sm font-semibold {{ $areaVip ? 'text-yellow-600' : 'text-gray-600' }}">
+                                    <span
+                                        class="text-sm font-semibold {{ $areaVip ? 'text-yellow-600' : 'text-gray-600' }}">
                                         {{ $areaVip ? 'Khu vực VIP' : 'Khu vực Thường' }}
                                     </span>
                                     <p class="text-xs text-gray-500 mt-1">
@@ -178,7 +191,8 @@
                                     Giá vé khu vực
                                 </label>
                                 <x-filament::input.wrapper>
-                                    <x-filament::input type="number" step="0.01" min="0" wire:model="areaPrice" placeholder="Nhập giá vé" />
+                                    <x-filament::input type="number" step="0.01" min="0"
+                                        wire:model="areaPrice" placeholder="Nhập giá vé" />
                                 </x-filament::input.wrapper>
                                 @error('areaPrice')
                                     <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
@@ -186,7 +200,6 @@
                             </div>
                         @endif
 
-                        <!-- Thông tin bổ sung nếu là VIP -->
                         @if ($areaVip)
                             <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                                 <div class="flex items-center space-x-2">
@@ -203,16 +216,17 @@
                         @endif
 
                         <div class="flex justify-end items-center space-x-3 pt-6 border-t border-gray-200">
-                            <x-filament::button type="button" wire:click="$set('showAreaModal', false)" color="gray"
-                                size="md">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+                            <x-filament::button type="button" wire:click="$set('showAreaModal', false)"
+                                color="gray" size="md">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke-width="1.5" stroke="currentColor" class="size-5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                                 </svg>
                                 Hủy bỏ
                             </x-filament::button>
 
-                            <x-filament::button type="submit" wire:loading.attr="disabled" wire:target="createArea" class="bg-indigo-600"
-                                size="md">
+                            <x-filament::button type="submit" wire:loading.attr="disabled" wire:target="createArea"
+                                class="bg-indigo-600" size="md">
                                 <svg wire:loading.remove wire:target="createArea" class="w-4 h-4 mr-1" fill="none"
                                     stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -228,8 +242,7 @@
         </div>
     </div>
 
-
-    <!-- Edit Seats Modal -->
+    {{-- Modal Chỉnh sửa Khu vực --}}
     <div x-data="{ showSeatModal: @entangle('showSeatModal') }">
         <div x-show="showSeatModal" x-transition.opacity
             class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-40"
@@ -288,21 +301,26 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">
                                 Loại khu vực
                             </label>
-                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+                            <div
+                                class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
                                 <div class="flex items-center space-x-3">
                                     <span class="text-sm font-medium text-gray-700">Thường</span>
                                     <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" wire:model.live="selectedArea.vip" class="sr-only peer">
-                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                        <input type="checkbox" wire:model.live="selectedArea.vip"
+                                            class="sr-only peer">
+                                        <div
+                                            class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                                        </div>
                                         <span class="ml-3 text-sm font-medium text-gray-700">VIP</span>
                                     </label>
                                 </div>
                                 <div class="text-right">
-                                    <span class="text-sm font-semibold {{ $selectedArea['vip'] ?? false ? 'text-yellow-600' : 'text-gray-600' }}">
-                                        {{ ($selectedArea['vip'] ?? false) ? 'Khu vực VIP' : 'Khu vực Thường' }}
+                                    <span
+                                        class="text-sm font-semibold {{ $selectedArea['vip'] ?? false ? 'text-yellow-600' : 'text-gray-600' }}">
+                                        {{ $selectedArea['vip'] ?? false ? 'Khu vực VIP' : 'Khu vực Thường' }}
                                     </span>
                                     <p class="text-xs text-gray-500 mt-1">
-                                        {{ ($selectedArea['vip'] ?? false) ? 'Ghế VIP với giá cao hơn' : 'Ghế thường với giá cơ bản' }}
+                                        {{ $selectedArea['vip'] ?? false ? 'Ghế VIP với giá cao hơn' : 'Ghế thường với giá cơ bản' }}
                                     </p>
                                 </div>
                             </div>
@@ -313,7 +331,8 @@
                                     Giá vé khu vực
                                 </label>
                                 <x-filament::input.wrapper>
-                                    <x-filament::input type="number" step="0.01" min="0" wire:model.live="selectedArea.price" placeholder="Nhập giá vé" />
+                                    <x-filament::input type="number" step="0.01" min="0"
+                                        wire:model.live="selectedArea.price" placeholder="Nhập giá vé" />
                                 </x-filament::input.wrapper>
                             </div>
                         @endif
@@ -321,8 +340,8 @@
                     </div>
 
                     <div class="flex justify-between mb-4">
-                        <button wire:click="updateArea"
-                            class="px-4 py-2 bg-indigo-600 text-white rounded-lg">Lưu thay đổi</button>
+                        <button wire:click="updateArea" class="px-4 py-2 bg-indigo-600 text-white rounded-lg">Lưu thay
+                            đổi</button>
                         <div class="flex gap-2">
                             <button wire:click="closeModalEdit()"
                                 class="fi-btn fi-size-md fi-ac-btn-action">Đóng</button>
@@ -331,13 +350,13 @@
 
                     <div class="flex gap-2 mb-4">
                         <button wire:click="$set('seatFilter', 'all')"
-                            class="px-3 py-1 rounded-lg text-sm 
+                            class="px-3 py-1 rounded-lg text-sm
             {{ $seatFilter === 'all' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700' }}">
                             Tất cả
                         </button>
                         <button
                             wire:click="$set('seatFilter', {{ \App\Utils\Constants\EventSeatStatus::AVAILABLE->value }})"
-                            class="px-3 py-1 rounded-lg text-sm 
+                            class="px-3 py-1 rounded-lg text-sm
             {{ $seatFilter === \App\Utils\Constants\EventSeatStatus::AVAILABLE->value
                 ? 'bg-green-600 text-white'
                 : 'bg-gray-200 text-gray-700' }}">
@@ -345,7 +364,7 @@
                         </button>
                         <button
                             wire:click="$set('seatFilter', {{ \App\Utils\Constants\EventSeatStatus::BOOKED->value }})"
-                            class="px-3 py-1 rounded-lg text-sm 
+                            class="px-3 py-1 rounded-lg text-sm
             {{ $seatFilter === \App\Utils\Constants\EventSeatStatus::BOOKED->value
                 ? 'bg-red-600 text-white'
                 : 'bg-gray-200 text-gray-700' }}">
@@ -368,13 +387,15 @@
                             {{ $this->paginatedEditingSeats->links() }}
                         </div>
                     </div>
+
+                    {{-- Modal Chi tiết Ghế --}}
                     <div x-data="{ hiddenDetailSeat: @entangle('hiddenDetailSeat') }">
                         <div x-show="hiddenDetailSeat" x-transition.opacity
                             class="fixed inset-0 bg-black/30 flex items-center justify-center z-50"
                             style="display: none;">
 
                             <div x-show="hiddenDetailSeat" x-transition.scale
-                                class="bg-white rounded-xl p-6 w-full max-w-2xl shadow-xl">
+                                class="bg-white rounded-xl min-w-2xl p-6 w-full max-w-5xl shadow-xl">
 
                                 <h2 class="text-xl font-bold mb-4">Thông tin ghế</h2>
 
@@ -510,5 +531,4 @@
             </div>
         </div>
     </div>
-
 </div>

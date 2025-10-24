@@ -45,7 +45,7 @@ class EventDetailSpeaker extends Page
             ->toArray();
 
         // Load participants
-        $this->participants = $event->users()
+        $this->participants = $event->participants()
             ->with('user')
             ->get()
             ->map(function ($eventUser) {
