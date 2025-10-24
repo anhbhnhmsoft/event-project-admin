@@ -396,10 +396,6 @@ class EventController extends Controller
             ], 422);
         }
         $user = $request->user();
-        $allowDocument = true;
-        if (!$user->activeMembership->first() || !$user->activeMembership->first()->config[ConfigMembership::ALLOW_DOCUMENTARY->value]) {
-            $allowDocument = false;
-        }
 
 
         if ($schedule['schedule']->event->organizer_id != $user->organizer_id) {
@@ -409,9 +405,8 @@ class EventController extends Controller
         }
 
         return response()->json([
-            'message' => __('common.common_success.success'),
-            'data' => (new EventScheduleDetailResource($schedule['schedule']))
-                ->additional(['allowDocument' => $allowDocument]),
+            'message' => __('common.common_success.get_success'),
+            'data' => new EventScheduleDetailResource($schedule['schedule']),
         ]);
     }
 
@@ -459,7 +454,7 @@ class EventController extends Controller
             ], 500);
         }
         return response()->json([
-            'message' => __('common.common_success.success'),
+            'message' => __('common.common_success.get_success'),
             'data' => new EventScheduleDocumentResource($document['document']),
         ]);
     }
