@@ -52,7 +52,7 @@
                         <div class="group relative">
                             <div
                                 class="bg-gradient-to-br from-white to-gray-50 rounded-xl border-2 border-gray-200 hover:border-indigo-300 transition-all duration-300 overflow-hidden shadow-sm hover:shadow-xl transform hover:-translate-y-1">
-                                <div class="{{ $area['vip'] ? 'bg-[#EFAA0A]' : 'bg-[#3d3aff]' }} text-white p-4">
+                                <div class="{{ $area['vip'] ? 'bg-[#EFAA0A]' : 'bg-[#3d3aff]' }} p-4">
                                     <div class="flex justify-between items-center">
                                         <div>
                                             <h3 class="font-bold text-lg flex items-center gap-2">
@@ -64,7 +64,7 @@
                                                     </span>
                                                 @endif
                                             </h3>
-                                            <p class="text-indigo-100">{{ $area['capacity'] }} ghế</p>
+                                            <p >{{ $area['capacity'] }} ghế</p>
                                             @if (!$event->free_to_join)
                                                 <p class="text-white/90 mt-1">
                                                     Giá vé:
@@ -132,7 +132,7 @@
             class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"
             style="display: none;">
             <div x-show="showAreaModal" x-transition.scale.origin.center
-                class="bg-white rounded-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+                class="bg-white rounded-2xl max-w-2xl mx-4 max-h-[90vh] overflow-y-auto shadow-2xl">
 
                 <div class="p-6">
                     <div class="flex justify-between items-center mb-6">
@@ -395,7 +395,7 @@
                             style="display: none;">
 
                             <div x-show="hiddenDetailSeat" x-transition.scale
-                                class="bg-white rounded-xl min-w-2xl p-6 w-full max-w-5xl shadow-xl">
+                                class="bg-white rounded-xl min-w-2xl p-6 max-w-5xl shadow-xl">
 
                                 <h2 class="text-xl font-bold mb-4">Thông tin ghế</h2>
 
