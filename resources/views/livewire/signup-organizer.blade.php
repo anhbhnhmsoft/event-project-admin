@@ -21,7 +21,7 @@
                             </div>
                             <div class="ml-3 hidden sm:block">
                                 <p
-                                    class="text-sm font-medium {{ $currentStage >= 1 ? 'text-primary-600' : 'text-gray-500' }}">
+                                    class="text-sm font-medium {{ $currentStage >= 1 ? 'text-primary-600' : 'text-white' }}">
                                     Chọn gói
                                 </p>
                             </div>
@@ -106,13 +106,13 @@
                         <h2 class="text-4xl font-bold text-gray-900 dark:text-blue-600 mb-4">
                             Chọn Gói Dịch Vụ
                         </h2>
-                        <p class="text-lg text-gray-600 dark:text-gray-400">
+                        <p class="text-lg text-gray-600 dark:text-white">
                             Lựa chọn gói dịch vụ phù hợp để bắt đầu hành trình của bạn.
                         </p>
                     </div>
 
                     @if (empty($planList))
-                        <div class="text-center text-gray-500 dark:text-gray-400 p-8">
+                        <div class="text-center text-gray-500 dark:text-white p-8">
                             <p class="text-lg font-semibold">Hiện chưa có gói dịch vụ nào.</p>
                             <p class="mt-2 text-sm">Vui lòng quay lại sau.</p>
                         </div>
@@ -149,8 +149,8 @@
                                                     {{ number_format($plan->price, 0, ',', '.') }}
                                                 </span>
                                             </div>
-                                            <p class="text-gray-600 dark:text-gray-400 mt-1">VND</p>
-                                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                                            <p class="text-gray-600 dark:text-white mt-1">VND</p>
+                                            <p class="text-sm text-gray-500 dark:text-white mt-2">
                                                 Thời hạn: **{{ $plan->duration }} tháng**
                                             </p>
                                         </div>
@@ -168,7 +168,7 @@
                                                                 <x-heroicon-s-check-circle
                                                                     class="w-5 h-5 text-blue-600 dark:text-blue-400" />
                                                             </div>
-                                                            <span class="text-sm text-gray-700 dark:text-gray-300">
+                                                            <span class="text-sm text-gray-700 dark:text-white">
                                                                 {{ trim($feature) }}
                                                             </span>
                                                         </div>
@@ -231,7 +231,7 @@
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div class="md:col-span-2">
                                             <x-filament::input.wrapper>
-                                                <x-filament::input type="text" class="outline-none w-full"
+                                                <x-filament::input type="text" class="outline-none w-full dark:text-white"
                                                     wire:model="organizerName" placeholder="Tên tổ chức *" />
                                             </x-filament::input.wrapper>
                                             @error('organizerName')
@@ -250,7 +250,7 @@
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div class="md:col-span-2">
                                             <x-filament::input.wrapper>
-                                                <x-filament::input type="text" class="outline-none w-full"
+                                                <x-filament::input type="text" class="outline-none w-full dark:text-white"
                                                     wire:model.live="userName" placeholder="Họ và tên *" />
                                             </x-filament::input.wrapper>
                                             @error('userName')
@@ -260,7 +260,7 @@
 
                                         <div>
                                             <x-filament::input.wrapper>
-                                                <x-filament::input type="email" class="outline-none w-full"
+                                                <x-filament::input type="email" class="outline-none w-full dark:text-white"
                                                     wire:model.live="userEmail" wire:model.debounce.1000ms="userEmail"
                                                     placeholder="Email *" />
                                             </x-filament::input.wrapper>
@@ -271,7 +271,7 @@
 
                                         <div>
                                             <x-filament::input.wrapper>
-                                                <x-filament::input type="text" class="outline-none w-full"
+                                                <x-filament::input type="text" class="outline-none w-full dark:text-white"
                                                     wire:model.live="userPhone" placeholder="Số điện thoại *" />
                                             </x-filament::input.wrapper>
                                             @error('userPhone')
@@ -281,7 +281,7 @@
 
                                         <div>
                                             <x-filament::input.wrapper>
-                                                <x-filament::input type="password" class="outline-none w-full"
+                                                <x-filament::input type="password" class="outline-none w-full dark:text-white"
                                                     wire:model.live="password" placeholder="Mật khẩu *" />
                                             </x-filament::input.wrapper>
                                             @error('password')
@@ -291,7 +291,7 @@
 
                                         <div>
                                             <x-filament::input.wrapper>
-                                                <x-filament::input type="password" class="outline-none w-full"
+                                                <x-filament::input type="password" class="outline-none w-full dark:text-white"
                                                     wire:model.live="password_confirmation"
                                                     placeholder="Xác nhận mật khẩu *" />
                                             </x-filament::input.wrapper>
@@ -305,14 +305,14 @@
                                 <div class="flex gap-3 pt-4 justify-center">
                                     {{-- Nút Trở lại --}}
                                     <x-filament::button type="button" color="gray" icon="heroicon-m-arrow-left"
-                                        wire:click="backToPlans" class="flex-1 sm:max-w-22 max-w-18 sm:text-base text-sm cursor-pointer">
+                                        wire:click="backToPlans" class="flex-1 sm:max-w-22 max-w-18 sm:text-base text-sm cursor-pointer dark:text-white">
                                         Trở lại
                                     </x-filament::button>
 
                                     {{-- Nút Submit (Thanh Toán) --}}
                                     <x-filament::button type="submit" wire:loading.attr="disabled"
                                         wire:target="submitRegistration" color="primary"
-                                        icon="heroicon-m-arrow-right" class="flex-1 sm:max-w-22 max-w-18 sm:text-base text-sm cursor-pointer">
+                                        icon="heroicon-m-arrow-right" class="flex-1 sm:max-w-22 max-w-18 sm:text-base text-sm cursor-pointer dark:text-white">
                                         <span wire:loading.remove wire:target="submitRegistration">
                                             Thanh Toán
                                         </span>
@@ -339,7 +339,7 @@
                                                 : 'background-color: #ccc';
                                         @endphp
                                         <x-filament::badge size="sm" style="{{ $badgeStyle }}">
-                                            <p class="text-gray-900 dark:text-gray-100">{{ $selectedPlan->badge }}</p>
+                                            <p class="text-gray-900 dark:text-white">{{ $selectedPlan->badge }}</p>
                                         </x-filament::badge>
                                     @endif
 
@@ -354,12 +354,12 @@
                                         <span class="text-sm text-gray-500">VND</span>
                                     </div>
 
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                                    <p class="text-sm text-gray-600 dark:text-white">
                                         Thời hạn: {{ $selectedPlan->duration }} tháng
                                     </p>
 
                                     <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
-                                        <p class="text-sm text-gray-700 dark:text-gray-300">
+                                        <p class="text-sm text-gray-700 dark:text-white">
                                             {{ $selectedPlan->description }}
                                         </p>
                                     </div>
@@ -407,17 +407,17 @@
                                                 <span class="text-3xl font-bold text-blue-600 dark:text-blue-400">
                                                     {{ number_format($selectedPlan->price, 0, ',', '.') }}
                                                 </span>
-                                                <span class="text-sm text-gray-600 dark:text-gray-400">VND</span>
+                                                <span class="text-sm text-gray-600 dark:text-white">VND</span>
                                             </div>
 
-                                            <p class="text-sm text-gray-700 dark:text-gray-300">
+                                            <p class="text-sm text-gray-700 dark:text-white">
                                                 Thời hạn: <span class="font-semibold">{{ $selectedPlan->duration }}
                                                     tháng</span>
                                             </p>
 
                                             @if (!empty($selectedPlan->description))
                                                 <div class="mt-4 pt-4 border-t border-blue-200 dark:border-blue-700">
-                                                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                                                    <p class="text-sm text-gray-600 dark:text-white">
                                                         {{ $selectedPlan->description }}
                                                     </p>
                                                 </div>
@@ -465,9 +465,9 @@
                                                                 {{ number_format($plan->price, 0, ',', '.') }}
                                                             </span>
                                                             <span
-                                                                class="text-xs text-gray-500 dark:text-gray-400">VND</span>
+                                                                class="text-xs text-gray-500 dark:text-white">VND</span>
                                                             <span
-                                                                class="text-xs text-gray-500 dark:text-gray-400 ml-1">
+                                                                class="text-xs text-gray-500 dark:text-white ml-1">
                                                                 / {{ $plan->duration }} tháng
                                                             </span>
                                                         </div>
@@ -533,7 +533,7 @@
                                         @else
                                             <div
                                                 class="absolute inset-0 flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-                                                <p class="text-gray-500 dark:text-gray-400">Chưa có QR code</p>
+                                                <p class="text-gray-500 dark:text-white">Chưa có QR code</p>
                                             </div>
                                         @endif
                                     </div>
@@ -551,9 +551,9 @@
                                                     Đang chờ thanh toán...
                                                 </span>
                                                 @if ($expiryTime)
-                                                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                                                    <p class="text-xs text-gray-500 dark:text-white">
                                                         Hết hạn lúc:
-                                                        {{ \Carbon\Carbon::createFromTimestamp($expiryTime)->format('H:i:s d/m/Y') }}
+                                                        {{ \Carbon\Carbon::createFromTimestamp($expiryTime)->timezone('Asia/Ho_Chi_Minh')->format('H:i:s d/m/Y') }}
                                                     </p>
                                                 @endif
                                             </div>
@@ -570,7 +570,7 @@
                                                 Giao dịch đã bị hủy
                                             </span>
                                         @else
-                                            <span class="text-gray-500 dark:text-gray-400 font-semibold">
+                                            <span class="text-gray-500 dark:text-white font-semibold">
                                                 Trạng thái: {{ $paymentStatus ?? 'Chưa khởi tạo' }}
                                             </span>
                                         @endif
@@ -615,7 +615,7 @@
                             Đăng Ký Thành Công!
                         </h2>
 
-                        <p class="text-lg text-gray-600 dark:text-gray-400 mb-8">
+                        <p class="text-lg text-gray-600 dark:text-white mb-8">
                             Tài khoản của bạn đã được tạo và gói dịch vụ đã được kích hoạt thành công.
                         </p>
 
@@ -626,23 +626,23 @@
                                 </h3>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
                                     <div>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">Tên gói</p>
+                                        <p class="text-sm text-gray-500 dark:text-white">Tên gói</p>
                                         <p class="text-base font-semibold text-gray-900 dark:text-blue-600">
                                             {{ $selectedPlan->name }}</p>
                                     </div>
                                     <div>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">Giá trị</p>
+                                        <p class="text-sm text-gray-500 dark:text-white">Giá trị</p>
                                         <p class="text-base font-semibold text-gray-900 dark:text-blue-600">
                                             {{ number_format($selectedPlan->price, 0, ',', '.') }} VND
                                         </p>
                                     </div>
                                     <div>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">Thời hạn</p>
+                                        <p class="text-sm text-gray-500 dark:text-white">Thời hạn</p>
                                         <p class="text-base font-semibold text-gray-900 dark:text-blue-600">
                                             {{ $selectedPlan->duration }} tháng</p>
                                     </div>
                                     <div>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">Trạng thái</p>
+                                        <p class="text-sm text-gray-500 dark:text-white">Trạng thái</p>
                                         <p class="text-base font-semibold text-green-600 dark:text-green-400">Đã kích
                                             hoạt</p>
                                     </div>
