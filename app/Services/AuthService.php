@@ -371,11 +371,6 @@ class AuthService
                 ? EventUserHistoryStatus::PARTICIPATED->value
                 : EventUserHistoryStatus::BOOKED->value;
 
-            //  Lấy vé cũ (nếu có)
-            $history = EventUserHistory::query()
-                ->where('event_id', $event->id)
-                ->where('user_id', $user->id)
-                ->first();
 
             if (! $history) {
                 // Tạo ticket code mới
