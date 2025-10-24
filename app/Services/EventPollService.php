@@ -258,7 +258,7 @@ class EventPollService
 
             return [
                 'status' => true,
-                'message' => __('common.common_success.success'),
+                'message' => __('common.common_success.get_success'),
                 'data' => $createdVotes,
             ];
         } catch (Exception $e) {
