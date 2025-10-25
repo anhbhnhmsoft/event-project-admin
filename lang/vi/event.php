@@ -10,7 +10,10 @@ return [
         'notification_desc_mbs_near'   => 'Gói thành viên của bạn sẽ hết hạn trong 7 ngày nữa. Hãy gia hạn để tiếp tục sử dụng dịch vụ!',
         'notification_title_mbs_expired'   => 'Cảnh báo hết hạn!',
         'notification_desc_mbs_expired'   => 'Gói thành viên của bạn sẽ hết hạn trong vòng 24 giờ tới. Vui lòng gia hạn ngay để tránh bị gián đoạn dịch vụ.',
-
+        'notification_title_event_start' => 'Sự kiện :name đã bắt đầu!',
+        'notification_desc_event_start' => 'Sự kiện bạn đã đăng ký đã bắt đầu. Hãy tham gia ngay!',
+        'success' => 'Thành công',
+        'payment_success' => 'Thanh toán thành công',
     ],
     'error' => [
         'get_failed' => 'Lấy dữ liệu thất bại: :error',
@@ -36,7 +39,15 @@ return [
         'already_booked' => 'Bạn đã đặt vé',
         'document_id_required' => 'ID tài liệu là bắt buộc',
         'document_id_exits' => 'Tài liệu không tồn tại',
-
+        'seat_already_booked' => 'Ghế đã được đặt',
+        'seat_not_belong_to_event' => 'Ghế không thuộc sự kiện này',
+        'cannot_assign_seat' => 'Không thể gán ghế',
+        'cannot_cancel_seat' => 'Không thể hủy ghế',
+        'free_to_join' => 'Miễn phí tham gia',
+        'seat_not_found' => 'Không tìm thấy ghế',
+        'area_not_found' => 'Không tìm thấy khu vực',
+        'cannot_create_ticket' => 'Không thể tạo vé',
+        'seat_payment_description' => 'Ghế :seat_code - :event_id',
     ],
     'general' => [
         'event_title' => 'Sự kiện',
@@ -82,5 +93,8 @@ return [
         'add_question_action' => 'Thêm câu hỏi',
         'new_question_label' => 'Câu hỏi mới',
         'questions_label' => 'Câu hỏi',
+    ],
+    'mail' => [
+        'subject_event_start' => 'Sự kiện :name đã bắt đầu!',
     ]
 ];

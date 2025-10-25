@@ -135,7 +135,7 @@
                                     @if ($paymentStatus == \App\Utils\Constants\TransactionStatus::WAITING->value)
                                         <x-filament::button class="w-full" color="danger" icon="heroicon-m-x-circle"
                                             wire:click="cancelTransaction"
-                                            wire:confirm="Bạn có chắc chắn muốn hủy giao dịch này không?">
+                                            wire:confirm="{{ __('admin.service_plan.confirm_cancel_transaction') }}">
                                             {{ __('admin.service_plan.cancel_transaction') }}
                                         </x-filament::button>
                                     @endif
@@ -173,7 +173,7 @@
                                 </template>
 
                                 @if (!empty($dataTransfer['urlBankQrcode']))
-                                    <img src="{{ $dataTransfer['urlBankQrcode'] }}" alt="QR Code Thanh Toán"
+                                    <img src="{{ $dataTransfer['urlBankQrcode'] }}" alt="{{ __('admin.service_plan.qr_code_payment') }}"
                                         class="w-full h-full object-contain rounded-xl shadow-lg border border-gray-200 dark:border-gray-700"
                                         x-bind:class="{ 'opacity-0': loading, 'opacity-100': !loading }"
                                         x-on:load="loading = false" x-on:error="loading = false"
@@ -198,7 +198,7 @@
                                         <div wire:ignore.self wire:key="countdown-{{ $expiryTime ?? 'none' }}"
                                             x-data="{
                                                 expiryTime: {{ $expiryTime ?? 'null' }},
-                                                remaining: 'Đang tải...',
+                                                remaining: '{{ __('admin.service_plan.loading') }}',
                                                 isExpired: false,
                                                 intervalId: null,
 

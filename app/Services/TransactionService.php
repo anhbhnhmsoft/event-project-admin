@@ -532,7 +532,7 @@ class TransactionService
             foreach ($expiredTransactions as $transaction) {
                 $result = $this->cancelTransaction(
                     $transaction->id,
-                    'Giao dịch hết hạn tự động'
+                    __('transaction.validation.auto_expired')
                 );
 
                 if ($result['status']) {

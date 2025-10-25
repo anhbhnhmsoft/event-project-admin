@@ -177,7 +177,7 @@ class EventSeatService
                 ];
             }
 
-            $descBank = "Ghế {$seat->seat_code} - " . substr($event->id, -8);
+            $descBank = __('event.validation.seat_payment_description', ['seat_code' => $seat->seat_code, 'event_id' => substr($event->id, -8)]);
             $expiredAt = now()->addMinutes(15);
 
             $payload = [
