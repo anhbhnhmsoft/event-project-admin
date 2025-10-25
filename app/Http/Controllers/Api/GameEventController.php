@@ -48,7 +48,7 @@ class GameEventController extends Controller
         $result = $this->eventGameService->getDetailGameEvent($id);
 
         if (!$result['status']) {
-            return abort(404, $result['message'] ?? 'Trò chơi không tồn tại');
+            return abort(404, $result['message'] ?? __('game.error.game_not_found'));
         }
 
         $game = $result['game'];
@@ -56,11 +56,11 @@ class GameEventController extends Controller
         $event = $game->event;
 
         if (!$this->eventGameService->checkGameAccess($game, $user)) {
-            return abort(403, 'Bạn không có quyền truy cập trò chơi này');
+            return abort(403, __('common.common_error.permission_error'));
         }
 
         if ($event->status != EventStatus::ACTIVE->value) {
-            return abort(403, 'Sự kiện không khả dụng');
+            return abort(403, __('event.error.Event_not_to_organizer'));
         }
 
         return Inertia::render('GamePlay', [

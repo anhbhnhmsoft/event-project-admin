@@ -267,7 +267,7 @@ class EventGameService
                     $delaySeconds = 5;
                     SendNotifications::dispatch($payload, [$userId])->delay(Carbon::now()->addSeconds($delaySeconds))->onQueue('notifications');
                 } catch (\Throwable $e) {
-                    Log::error('EventGameService::spinPrize - Gửi thông báo thất bại', [
+                    Log::error('EventGameService::spinPrize - ' . __('game.error.notification_send_failed'), [
                         'error' => $e->getMessage(),
                         'user_id' => $userId,
                         'game_id' => $gameId,

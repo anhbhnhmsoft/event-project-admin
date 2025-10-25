@@ -21,7 +21,7 @@
         <div wire:loading wire:target="updateArea, updateSeatName, selectArea, deleteArea "
             class="fixed inset-0 flex items-center justify-center z-50 bg-white/80 backdrop-blur-sm">
             <div class="bg-white rounded-lg shadow-lg p-6 text-center">
-                <p class="text-gray-700 font-semibold">{{ __('common.common_error.processing') }}</p>
+                <p class="text-gray-700 font-semibold">{{ __('common.common_success.processing') }}</p>
             </div>
         </div>
 
@@ -87,7 +87,7 @@
                                                 </svg>
                                             </button>
                                             <button wire:click="deleteArea('{{ $area['id'] }}')"
-                                                wire:confirm="Bạn có chắc chắn muốn xóa khu vực này?"
+                                                wire:confirm="{{ __('admin.events.form.confirm_delete_area') }}"
                                                 class="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition-colors text-white">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
@@ -153,7 +153,7 @@
                                 </label>
                                 <x-filament::input.wrapper>
                                     <x-filament::input type="number" wire:model="areaCapacity"
-                                        placeholder="Nhập số ghế" min="1" max="1000" required />
+                                        placeholder="{{ __('admin.events.form.enter_seat_count') }}" min="1" max="1000" required />
                                 </x-filament::input.wrapper>
                                 @error('areaCapacity')
                                     <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
@@ -180,10 +180,10 @@
                                 <div class="text-right">
                                     <span
                                         class="text-sm font-semibold {{ $areaVip ? 'text-yellow-600' : 'text-gray-600' }}">
-                                        {{ $areaVip ? 'Khu vực VIP' : 'Khu vực Thường' }}
+                                        {{ $areaVip ? __('admin.events.form.area_vip') : __('admin.events.form.area_normal') }}
                                     </span>
                                     <p class="text-xs text-gray-500 mt-1">
-                                        {{ $areaVip ? 'Ghế VIP với giá cao hơn' : 'Ghế thường với giá cơ bản' }}
+                                        {{ $areaVip ? __('admin.events.form.seat_vip_price_comment') : __('admin.events.form.seat_normal_price_comment') }}
                                     </p>
                                 </div>
                             </div>
@@ -196,7 +196,7 @@
                                 </label>
                                 <x-filament::input.wrapper>
                                     <x-filament::input type="number" step="0.01" min="0"
-                                        wire:model="areaPrice" placeholder="Nhập giá vé" />
+                                        wire:model="areaPrice" placeholder="{{ __('admin.events.form.enter_ticket_price') }}" />
                                 </x-filament::input.wrapper>
                                 @error('areaPrice')
                                     <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
@@ -268,7 +268,7 @@
                                 <x-filament::input.wrapper>
                                     <x-filament::input type="text"
                                         wire:model.live.debounce.300ms="selectedArea.name"
-                                        placeholder="VD: Khu vực A, Tầng 1..." required />
+                                        placeholder="{{ __('admin.events.form.area_name_placeholder') }}" required />
                                 </x-filament::input.wrapper>
                                 @error('selectedArea.name')
                                     <p class="text-sm text-red-600">{{ $message }}</p>
@@ -282,7 +282,7 @@
                                 </label>
                                 <x-filament::input.wrapper>
                                     <x-filament::input type="number" wire:model.live="selectedArea.capacity"
-                                        min="1" max="1000" placeholder="Nhập số ghế" required />
+                                        min="1" max="1000" placeholder="{{ __('admin.events.form.enter_seat_count') }}" required />
                                 </x-filament::input.wrapper>
                                 @error('selectedArea.capacity')
                                     <p class="text-sm text-red-600">{{ $message }}</p>
@@ -336,7 +336,7 @@
                                 </label>
                                 <x-filament::input.wrapper>
                                     <x-filament::input type="number" step="0.01" min="0"
-                                        wire:model.live="selectedArea.price" placeholder="Nhập giá vé" />
+                                        wire:model.live="selectedArea.price" placeholder="{{ __('admin.events.form.enter_ticket_price') }}" />
                                 </x-filament::input.wrapper>
                             </div>
                         @endif
@@ -489,7 +489,7 @@
                                                                     wire:click="toggleSelectedUser('{{ $user['id'] }}')"
                                                                     @disabled(($alreadyAssigned && $selectedSeatUser !== $user['id']) || ($selectedSeatUser && $selectedSeatUser !== $user['id']))
                                                                     class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                                                    aria-label="Chọn {{ $user['name'] }}" />
+                                                                    aria-label="{{ __('admin.events.form.select_user', ['name' => $user['name']]) }}" />
 
                                                                 <span class="text-sm">
                                                                     @if ($alreadyAssigned)
@@ -499,7 +499,7 @@
                                                                     @else
                                                                         <span
                                                                             class="{{ $selectedSeatUser === $user['id'] ? 'text-green-600 font-semibold' : 'text-gray-700' }}">
-                                                                            {{ $selectedSeatUser === $user['id'] ? 'Đã chọn' : 'Chọn' }}
+                                                                            {{ $selectedSeatUser === $user['id'] ? __('admin.events.form.selected') : __('admin.events.form.select') }}
                                                                         </span>
                                                                     @endif
                                                                 </span>

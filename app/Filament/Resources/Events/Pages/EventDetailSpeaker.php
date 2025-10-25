@@ -162,7 +162,7 @@ class EventDetailSpeaker extends Page
             return sprintf('%dh %02dm', $hours, $mins);
         }
 
-        return sprintf('%d phút', $mins);
+        return sprintf(__('admin.events.form.duration_minutes'), $mins);
     }
 
     public function getPollingInterval(): string

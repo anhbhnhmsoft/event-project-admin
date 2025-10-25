@@ -57,15 +57,15 @@ class OrganizerController extends Controller
             'phone' => 'required|string|max:20|regex:/^([0-9\s\-\+\(\)]*)$/',
             'password' => 'required|string|min:6|confirmed',
         ], [
-            'name.required' => 'Tên tổ chức là bắt buộc',
-            'email.required' => 'Email là bắt buộc',
-            'email.email' => 'Email không đúng định dạng',
-            'email.unique' => 'Email đã được sử dụng',
-            'phone.required' => 'Số điện thoại là bắt buộc',
-            'phone.regex' => 'Số điện thoại không hợp lệ',
-            'password.required' => 'Mật khẩu là bắt buộc',
-            'password.min' => 'Mật khẩu phải có ít nhất 6 ký tự',
-            'password.confirmed' => 'Xác nhận mật khẩu không khớp',
+            'name.required' => __('auth.validation.name_required'),
+            'email.required' => __('auth.validation.email_required'),
+            'email.email' => __('auth.validation.email_email'),
+            'email.unique' => __('auth.validation.email_unique'),
+            'phone.required' => __('auth.validation.phone_required'),
+            'phone.regex' => __('auth.validation.phone_regex'),
+            'password.required' => __('auth.validation.password_required'),
+            'password.min' => __('auth.validation.password_min'),
+            'password.confirmed' => __('auth.validation.confirm_password_same'),
         ]);
 
         if ($validator->fails()) {
@@ -77,10 +77,10 @@ class OrganizerController extends Controller
 
         if (!$result['status']) {
             return back()
-                ->withErrors(['email' => $result['message'] ?? 'Đăng ký thất bại. Vui lòng thử lại.'])
+                ->withErrors(['email' => $result['message'] ?? __('organizer.error.register_failed')])
                 ->withInput();
         }
 
-        return redirect()->back()->with('success', $result['message'] ?? 'Đăng ký thành công!');
+        return redirect()->back()->with('success', $result['message'] ?? __('organizer.success.register_success'));
     }
 }
