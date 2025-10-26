@@ -25,7 +25,7 @@
                         }
                     }
 
-                    $documentTitle = $document['title'] ?? 'Tài liệu #' . ($documentIndex + 1);
+                    $documentTitle = $document['title'] ?? ('Tài liệu #' . ((int) $documentIndex + 1));
                     $documentPrice = $document['price'] ?? 0;
                     $documentId = $document['id'] ?? $documentIndex;
                 @endphp
