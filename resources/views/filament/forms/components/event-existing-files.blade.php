@@ -8,34 +8,40 @@
     @endphp
 
     @if (!$hasDocuments)
-        <p class="text-gray-500">Chưa có tài liệu nào.</p>
+
+        <p class="text-gray-600">Chưa có file tài liệu nào được tải lên.</p>
     @else
         <div class="space-y-4">
             @foreach ($documentData as $documentIndex => $document)
                 @php
                     $files = collect();
 
-                    if (isset($document['files']) && is_array($document['files'])) {
+                    // Kiểm tra có thể lặp được hay không
+                    if (!empty($document['files']) && is_iterable($document['files'])) {
                         foreach ($document['files'] as $file) {
-                            $files->push([
-                                'file_name' => $file['file_name'] ?? basename($file['file_path'] ?? ''),
-                                'file_path' => $file['file_path'] ?? '',
-                                'file_id' => $file['id'] ?? null,
-                            ]);
+                            if (is_array($file)) {
+                                // File từ DB
+                                $files->push([
+                                    'file_name' => $file['file_name'] ?? basename($file['file_path'] ?? ''),
+                                    'file_path' => $file['file_path'] ?? '',
+                                    'file_id' => $file['id'] ?? null,
+                                ]);
+                            } elseif ($file instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile) {
+                                // File mới upload
+                                $files->push([
+                                    'file_name' => $file->getClientOriginalName(),
+                                    'file_path' => $file->getRealPath(),
+                                    'file_id' => null,
+                                ]);
+                            }
                         }
-                    } elseif ($file instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile) {
-                        // File mới upload
-                        $files->push([
-                            'file_name' => $file->getClientOriginalName(),
-                            'file_path' => $file->getRealPath(), // hoặc chỉ lưu tên nếu cần
-                            'file_id' => null,
-                        ]);
                     }
 
-                    $documentTitle = $document['title'] ?? 'Tài liệu #' . ((int) $documentIndex + 1);
+                    $documentTitle = $document['title'] ?? 'Tài liệu #' . ($documentIndex + 1);
                     $documentPrice = $document['price'] ?? 0;
                     $documentId = $document['id'] ?? $documentIndex;
                 @endphp
+
 
                 @if ($files->isNotEmpty())
                     <div x-data="{ expanded: true }" class="border border-gray-200 rounded-lg overflow-hidden">
