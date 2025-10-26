@@ -2,6 +2,7 @@
 
 return [
     'common_success' => [
+        'name' => 'Name',
         'get_success' => 'Get data successfully',
         'add_success' => 'Add data successfully',
         'update_success' => 'Update data successfully',

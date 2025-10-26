@@ -3,6 +3,7 @@
 return [
     'save' => 'Lưu',
     'common_success' => [
+        'name' => 'Tên',
         'get_success' => 'Lấy dữ liệu thành công',
         'add_success' => 'Thêm dữ liệu thành công',
         'update_success' => 'Cập nhật dữ liệu thành công',

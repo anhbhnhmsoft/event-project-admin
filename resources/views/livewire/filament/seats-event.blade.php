@@ -462,7 +462,7 @@
                                                 <tr>
                                                     <th class="text-left">{{__('common.common_success.name')}}</th>
                                                     <th class="text-left">Email</th>
-                                                    <th class="text-left">Điện thoại</th>
+                                                    <th class="text-left">{{ __('users.table.phone') }}</th>
                                                     <th></th>
                                                 </tr>
                                             </thead>
@@ -518,13 +518,13 @@
                                 <div class="flex justify-end mt-4 space-x-2">
                                     <button type="button" wire:click="closeDetailSeat"
                                         class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">
-                                        Đóng
+                                        {{  __('common.common_success.close')  }}
                                     </button>
 
 
                                     <button wire:click="assignSeatToUser" @disabled(!$selectedSeatUser)
                                         class="px-4 py-2 bg-indigo-600 cursor-pointer text-white rounded-lg hover:bg-indigo-700">
-                                        Gán
+                                        {{ __('admin.events.form.assign_user_to_seat') }}
                                     </button>
                                 </div>
                             </div>
