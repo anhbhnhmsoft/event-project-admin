@@ -32,19 +32,6 @@ class MembershipController extends Controller
         $filters = $request->array('filters', []);
         $page  = $request->integer('page', 1);
         $limit = $request->integer('limit', 10);
-        if (empty($filters)) {
-            return response()->json([
-                'message' => __('common.common_success.get_success'),
-                'data' => [],
-                'pagination' => [
-                    'total' => 0,
-                    'per_page' => $limit,
-                    'current_page' => $page,
-                    'last_page' => 0,
-                ],
-            ], 200);
-        }
-        // Mặc định
         $sortBy = 'order';
         $filters['status'] = true;
         $filters['organizer_id'] = Auth::user()->organizer_id;
