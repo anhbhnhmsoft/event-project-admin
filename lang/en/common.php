@@ -37,6 +37,7 @@ return [
         'project_unauthorized' => 'Your project or VM has authentication issues, please check again later',
         'copy_error' => 'Error when copying',
         'max_content' => 'Content must not exceed :max characters.',
+        'api_error' => 'An error occurred, please try again.',
     ],
     'validation' => [
         'status_integer' => 'Status must be an integer.',

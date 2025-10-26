@@ -36,6 +36,7 @@ return [
         'validation_failed' => 'Dữ liệu không hợp lệ.',
         'max_content' => 'Nội dung không được vượt quá :max ký tự.',
         'inappropriate_language' => 'Nội dung không phù hợp với chính sách của hệ thống.',
+        'api_error' => 'Có lỗi xảy ra vui long thử lại.',
     ],
     'validation' => [
         'status_integer' => 'Trạng thái phải là số nguyên.',
