@@ -11,9 +11,9 @@ enum MembershipUserStatus: int
     public function label(): string
     {
         return match ($this) {
-            self::INACTIVE => 'Chưa kích hoạt',
-            self::ACTIVE => 'Đang hoạt động',
-            self::EXPIRED => 'Hết hạn',
+            self::INACTIVE => __('constants.membership_user_status.inactive'),
+            self::ACTIVE => __('constants.membership_user_status.active'),
+            self::EXPIRED => __('constants.membership_user_status.expired'),
         };
     }
 }

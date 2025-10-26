@@ -12,10 +12,10 @@ enum EventUserHistoryStatus: int
     public function label(): string
     {
         return match ($this) {
-            self::SEENED => 'Đã xem ~ Chưa thanh toán',
-            self::BOOKED => 'Đã đặt vé',
-            self::PARTICIPATED => 'Đã tham gia',
-            self::CANCELLED => 'Đã hủy',
+            self::SEENED => __('constants.event_user_history_status.seened'),
+            self::BOOKED => __('constants.event_user_history_status.booked'),
+            self::PARTICIPATED => __('constants.event_user_history_status.participated'),
+            self::CANCELLED => __('constants.event_user_history_status.cancelled'),
         };
     }
 
@@ -29,10 +29,10 @@ enum EventUserHistoryStatus: int
     public static function getLabel($case) : string
     {
         return match ($case) {
-            self::SEENED->value => 'Đã xem',
-            self::BOOKED->value => 'Đã đặt vé',
-            self::PARTICIPATED->value => 'Đã tham gia',
-            self::CANCELLED->value => 'Đã hủy',
+            self::SEENED->value => __('constants.event_user_history_status.seened_short'),
+            self::BOOKED->value => __('constants.event_user_history_status.booked'),
+            self::PARTICIPATED->value => __('constants.event_user_history_status.participated'),
+            self::CANCELLED->value => __('constants.event_user_history_status.cancelled'),
         };
     }
 }

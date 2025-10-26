@@ -15,13 +15,13 @@ enum UserNotificationType: int
     public function label(): string
     {
         return match ($this) {
-            self::EVENT_REMINDER => 'Nhắc nhở sự kiện sắp diễn ra',
-            self::EVENT_INVITATION => 'Mời tham gia sự kiện',
-            self::EVENT_CANCELLED => 'Sự kiện bị hủy',
-            self::EVENT_UPDATED => 'Sự kiện được cập nhật',
-            self::MEMBERSHIP_APPROVED => 'Duyệt thành viên',
-            self::SYSTEM_ANNOUNCEMENT => 'Thông báo hệ thống',
-            self::MEMBERSHIP_EXPIRE_REMINDER => 'Thông báo hết hạn gói thành viên',
+            self::EVENT_REMINDER => __('constants.user_notification_type.event_reminder'),
+            self::EVENT_INVITATION => __('constants.user_notification_type.event_invitation'),
+            self::EVENT_CANCELLED => __('constants.user_notification_type.event_cancelled'),
+            self::EVENT_UPDATED => __('constants.user_notification_type.event_updated'),
+            self::MEMBERSHIP_APPROVED => __('constants.user_notification_type.membership_approved'),
+            self::SYSTEM_ANNOUNCEMENT => __('constants.user_notification_type.system_announcement'),
+            self::MEMBERSHIP_EXPIRE_REMINDER => __('constants.user_notification_type.membership_expire_reminder'),
         };
     }
 

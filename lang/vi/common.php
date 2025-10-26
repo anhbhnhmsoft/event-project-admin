@@ -34,6 +34,7 @@ return [
         'data_exists' => 'Dữ liệu đã tồn tại, vui lòng thử lại.',
         'validation_failed' => 'Dữ liệu không hợp lệ.',
         'max_content' => 'Nội dung không được vượt quá :max ký tự.',
+        'inappropriate_language' => 'Nội dung không phù hợp với chính sách của hệ thống.',
     ],
     'validation' => [
         'status_integer' => 'Trạng thái phải là số nguyên.',

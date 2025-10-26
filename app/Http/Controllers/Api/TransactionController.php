@@ -68,8 +68,9 @@ class TransactionController extends Controller
                 'message' => $validated->errors()
             ], 422);
         }
+        $dataRequest = $validated->getData();
         $user = $request->user();
-        $document = $this->documentService->getDetailDocument($validated->validated()['document_id']);
+        $document = $this->documentService->getDetailDocument($dataRequest['document_id']);
 
         $membership = $user->activeMembership->first();
 
@@ -110,6 +111,7 @@ class TransactionController extends Controller
             return response()->json([
                 'message' => __('common.common_success.add_success'),
                 'data' => [
+                    'document_id' => (string)($document['document']->id),
                     'trans_id' => (string)($trans->id ?? ''),
                     'expired_at' => $trans->expired_at ?? null,
                     'config_pay' => $trans->config_pay ?? null,
@@ -145,6 +147,7 @@ class TransactionController extends Controller
         return response()->json([
             'message' => __('common.common_success.add_success'),
             'data' => [
+                'document_id' => (string)($document['document']->id),
                 'trans_id' => (string)($trans->id ?? ''),
                 'expired_at' => $trans->expired_at ?? null,
                 'config_pay' => $trans->config_pay ?? null,

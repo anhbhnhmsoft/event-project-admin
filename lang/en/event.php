@@ -10,11 +10,16 @@ return [
         'notification_desc_mbs_near'   => 'Your membership will expire in 7 days. Please renew to continue using the service!',
         'notification_title_mbs_expired'   => 'Expiration Warning!',
         'notification_desc_mbs_expired'   => 'Your membership will expire in the next 24 hours. Please renew now to avoid service interruption.',
+        'notification_title_event_start' => 'Event :name has started!',
+        'notification_desc_event_start' => 'The event you registered for has started. Join now!',
+        'success' => 'Success',
+        'payment_success' => 'Payment successful',
     ],
     'error' => [
         'get_failed' => 'Get data failed: :error',
         'filter_failed' => 'Filter failed',
         'Event_not_to_organizer' => 'Event does not belong to your organizer',
+        'payment_seat_required' => 'Please pay to book a seat',
     ],
     'validation' => [
         'event_id_required' => 'Event ID is required',
@@ -32,5 +37,17 @@ return [
         'status_exists' => 'Status does not exist',
         'history_id_required' => 'History ID is required when booking',
         'already_booked' => 'You have already booked',
+        'seat_already_booked' => 'Seat has already been booked',
+        'seat_not_belong_to_event' => 'Seat does not belong to this event',
+        'cannot_assign_seat' => 'Cannot assign seat',
+        'cannot_cancel_seat' => 'Cannot cancel seat',
+        'free_to_join' => 'Free to join',
+        'seat_not_found' => 'Seat not found',
+        'area_not_found' => 'Area not found',
+        'cannot_create_ticket' => 'Cannot create ticket',
+        'seat_payment_description' => 'Seat :seat_code - :event_id',
     ],
+    'mail' => [
+        'subject_event_start' => 'Event :name has started!',
+    ]
 ];

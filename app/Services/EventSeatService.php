@@ -5,9 +5,11 @@ namespace App\Services;
 use App\Models\Event;
 use App\Models\EventArea;
 use App\Models\EventSeat;
+use App\Models\EventUserHistory;
 use App\Models\User;
 use App\Utils\Constants\EventSeatStatus;
 use App\Utils\Constants\EventStatus;
+use App\Utils\Constants\EventUserHistoryStatus;
 use App\Utils\Constants\TransactionStatus;
 use App\Utils\Constants\TransactionType;
 use App\Utils\Constants\TransactionTypePayment;
@@ -114,12 +116,12 @@ class EventSeatService
             $seat = EventSeat::with('area')->findOrFail($seatId);
 
             if ($seat->status === EventSeatStatus::BOOKED->value) {
-                return ['status' => false, 'message' => 'Ghế đã được đặt.'];
+                return ['status' => false, 'message' => __('event.validation.seat_already_booked')];
             }
 
             // Kiểm tra ghế thuộc sự kiện
             if ($seat->area->event_id !== $event->id) {
-                return ['status' => false, 'message' => 'Ghế không thuộc sự kiện này.'];
+                return ['status' => false, 'message' => __('event.validation.seat_not_belong_to_event')];
             }
 
             $seat->update([
@@ -131,7 +133,7 @@ class EventSeatService
             return ['status' => true, 'data' => $seat];
         } catch (\Exception $e) {
             DB::rollBack();
-            return ['status' => false, 'message' => 'Không thể gán ghế.'];
+            return ['status' => false, 'message' => __('event.validation.cannot_assign_seat')];
         }
     }
 
@@ -148,7 +150,7 @@ class EventSeatService
             return ['status' => true];
         } catch (\Exception $e) {
             DB::rollBack();
-            return ['status' => false, 'message' => 'Không thể huỷ ghế.'];
+            return ['status' => false, 'message' => __('event.validation.cannot_cancel_seat')];
         }
     }
 
@@ -156,28 +158,28 @@ class EventSeatService
     {
         $transId = Helper::getTimestampAsId();
         $orderCode = (int)(microtime(true) * 1000);
-        
+
         DB::beginTransaction();
         try {
             $user = Auth::user();
-            
+
             if ($event->free_to_join) {
                 return [
                     'status' => false,
-                    'message' => 'Sự kiện này miễn phí, không cần thanh toán.',
+                    'message' => __('event.validation.free_to_join'),
                 ];
             }
 
             if ($seat->status !== EventSeatStatus::AVAILABLE->value) {
                 return [
                     'status' => false,
-                    'message' => 'Ghế này đã được đặt.',
+                    'message' => __('event.validation.seat_already_booked'),
                 ];
             }
 
-            $descBank = "Ghế {$seat->seat_code} - " . substr($event->id, -8);
+            $descBank = __('event.validation.seat_payment_description', ['seat_code' => $seat->seat_code, 'event_id' => substr($event->id, -8)]);
             $expiredAt = now()->addMinutes(15);
-            
+
             $payload = [
                 'amount' => (int)$area->price,
                 'cancelUrl' => route('home'),
@@ -187,11 +189,11 @@ class EventSeatService
             ];
 
             $response = $this->cassoService->registerPaymentRequest(
-                $payload, 
-                $expiredAt, 
+                $payload,
+                $expiredAt,
                 TransactionType::EVENT_SEAT->value
             );
-            
+
 
             if ($response['code'] !== '00') {
                 DB::rollBack();
@@ -234,10 +236,10 @@ class EventSeatService
                 'status' => true,
                 'data' => $transaction
             ];
-            
+
         } catch (Exception $e) {
             DB::rollBack();
-            
+
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),
@@ -249,26 +251,26 @@ class EventSeatService
     {
         try {
             $transaction = $this->transactionService->findByTransactionId($transactionId);
-            
+
             if (!$transaction || $transaction->type !== TransactionType::EVENT_SEAT->value) {
                 return [
                     'status' => false,
-                    'message' => 'Transaction không hợp lệ.',
+                    'message' => __('transaction.validation.invalid_transaction'),
                 ];
             }
 
             $metadata = json_decode($transaction->metadata, true);
             $seat = EventSeat::find($metadata['seat_id']);
-            
+
             if (!$seat) {
                 return [
                     'status' => false,
-                    'message' => 'Ghế không tồn tại.',
+                    'message' => __('event.validation.seat_not_found'),
                 ];
             }
 
             DB::beginTransaction();
-            
+
             $seat->update([
                 'status' => EventSeatStatus::BOOKED->value,
                 'user_id' => $transaction->user_id,
@@ -280,16 +282,16 @@ class EventSeatService
             ]);
 
             DB::commit();
-            
+
             return [
                 'status' => true,
-                'message' => 'Thanh toán thành công! Ghế đã được đặt.',
+                'message' => __('event.validation.payment_success'),
                 'seat' => $seat,
             ];
-            
+
         } catch (Exception $e) {
             DB::rollBack();
-            
+
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),
@@ -321,19 +323,26 @@ class EventSeatService
             }
 
             // Lấy thông tin seat và area
-            $seat = EventSeat::find($seatId);
+            $seat = EventSeat::query()->find($seatId);
             if (!$seat) {
                 return [
                     'status' => false,
-                    'message' => 'Ghế không tồn tại',
+                    'message' => __('event.validation.seat_not_found'),
                 ];
             }
 
-            $area = EventArea::find($seat->event_area_id);
+            $area = EventArea::query()->find($seat->event_area_id);
             if (!$area) {
                 return [
                     'status' => false,
-                    'message' => 'Khu vực không tồn tại',
+                    'message' => __('event.validation.area_not_found'),
+                ];
+            }
+
+            if ($area->price === 0) {
+                return [
+                    'status' => true,
+                    'payment_required' => false,
                 ];
             }
 
@@ -341,13 +350,13 @@ class EventSeatService
             if (!$this->canAccessSeat($event, $area, $seat)) {
                 return [
                     'status' => false,
-                    'message' => 'Bạn không có quyền truy cập ghế này',
+                    'message' => __('common.common_error.permission_error'),
                 ];
             }
 
             // Tạo payment
             $paymentResult = $this->registerSeatPayment($event, $area, $seat);
-            
+
             if (!$paymentResult['status']) {
                 return $paymentResult;
             }

@@ -33,7 +33,7 @@ class EventUserHistoryService
             return ['status' => true, 'data' => $ticket];
         } catch (\Exception $e) {
             Log::error("Create ticket failed: " . $e->getMessage());
-            return ['status' => false, 'message' => 'Không thể tạo vé.'];
+            return ['status' => false, 'message' => __('event.validation.cannot_create_ticket')];
         }
     }
 
