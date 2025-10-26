@@ -23,9 +23,16 @@
                                 'file_id' => $file['id'] ?? null,
                             ]);
                         }
+                    } elseif ($file instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile) {
+                        // File mới upload
+                        $files->push([
+                            'file_name' => $file->getClientOriginalName(),
+                            'file_path' => $file->getRealPath(), // hoặc chỉ lưu tên nếu cần
+                            'file_id' => null,
+                        ]);
                     }
 
-                    $documentTitle = $document['title'] ?? ('Tài liệu #' . ((int) $documentIndex + 1));
+                    $documentTitle = $document['title'] ?? 'Tài liệu #' . ((int) $documentIndex + 1);
                     $documentPrice = $document['price'] ?? 0;
                     $documentId = $document['id'] ?? $documentIndex;
                 @endphp
