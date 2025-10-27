@@ -49,6 +49,7 @@ return [
         'area_not_found' => 'Area not found',
         'cannot_create_ticket' => 'Cannot create ticket',
         'seat_payment_description' => 'Seat :seat_code - :event_id',
+        'register_fail_title' => 'Registration failed'
     ],
     // BỔ SUNG: General
     'general' => [
@@ -101,5 +102,16 @@ return [
     ],
     'mail' => [
         'subject_event_start' => 'Event :name has started!',
+    ],
+    'messages' =>
+    [
+        'register_success_title' => 'Successful Registration & Ticket Issuance!',
+        'new_user_new_ticket_message' => 'Welcome! We have successfully created an account and issued a ticket. Your login information (default password is your phone number) and ticket have been sent to your email. Please check your inbox for details.',
+
+        'ticket_granted_title' => 'Successful Ticket Issuance!',
+        'existing_user_new_ticket_message' => 'Your account has been issued a ticket to this event. Please check your email for the ticket code and detailed instructions about the event.',
+
+        'ticket_confirmed_title' => 'Ticket Confirmed!',
+        'existing_user_existing_ticket_message' => 'The system has confirmed that you have an account and a ticket to this event. Detailed information about the event will be sent back to your email. Please check your mailbox.',
     ]
 ];

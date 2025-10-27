@@ -409,7 +409,7 @@ class AuthService
             DB::commit();
 
             $finalHistory = EventUserHistory::query()
-                ->with('eventSeat')
+                ->with('seat')
                 ->where('event_id', $event->id)
                 ->where('user_id', $user->id)
                 ->first();
