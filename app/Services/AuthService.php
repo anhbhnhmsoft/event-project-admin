@@ -355,7 +355,7 @@ class AuthService
                 ->first();
 
             // Xác định trạng thái vé
-            $status = $event->status == EventStatus::ACTIVE->value
+            $status = $event->status === EventStatus::ACTIVE->value
                 ? EventUserHistoryStatus::PARTICIPATED->value
                 : EventUserHistoryStatus::BOOKED->value;
 
