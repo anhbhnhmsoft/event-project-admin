@@ -14,9 +14,11 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('app:check-expire-membership')->dailyAt('01:00');
 
-        $schedule->command('app:check-time-event')->dailyAt('07:00');
+        $schedule->command('app:check-time-event')->everyMinute();
 
         $schedule->command('app:check-expires-at-user')->dailyAt('01:30');
+
+        $schedule->command('app:notification-time-event')->dailyAt('07:00');
     }
 
     /**

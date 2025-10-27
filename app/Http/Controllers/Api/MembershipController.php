@@ -47,6 +47,7 @@ class MembershipController extends Controller
         // Mặc định
         $sortBy = 'order';
         $filters['status'] = true;
+        $filters['tyoe'] = MembershipType::FOR_CUSTOMER->value;
         $filters['organizer_id'] = Auth::user()->organizer_id;
         $memberships  = $this->membershipService->membershipsPaginator($filters, $sortBy, $page, $limit);
 

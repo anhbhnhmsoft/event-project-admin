@@ -128,12 +128,35 @@ class EventService
         try {
             $now = now();
 
-            // ---  Lấy danh sách sự kiện sắp bắt đầu ---
+            // Đóng sự kiện đã kết thúc ---
+            Event::query()
+                ->where('status', EventStatus::ACTIVE->value)
+                ->whereRaw('CONCAT(DATE(day_represent), " ", TIME(end_time)) < ?', [$now])
+                ->update(['status' => EventStatus::CLOSED->value]);
+
+            DB::commit();
+            return [
+                'status' => true,
+                'message' => __('common.common_success.update_success')
+            ];
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error("Error in checkTimeEvent: " . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
+        }
+    }
+
+    public function notificationTimeEvent(): array
+    {
+        try {
+            $now = now();
             $eventsUpcoming = Event::query()
                 ->where('status', EventStatus::UPCOMING->value)
                 ->whereRaw('CONCAT(DATE(day_represent), " ", TIME(start_time)) <= ?', [$now])
                 ->get();
-
             foreach ($eventsUpcoming as $event) {
                 $event->status = EventStatus::ACTIVE->value;
                 $event->save();
@@ -185,20 +208,11 @@ class EventService
                 }
             }
 
-            // Đóng sự kiện đã kết thúc ---
-            Event::query()
-                ->where('status', EventStatus::ACTIVE->value)
-                ->whereRaw('CONCAT(DATE(day_represent), " ", TIME(end_time)) < ?', [$now])
-                ->update(['status' => EventStatus::CLOSED->value]);
-
-            DB::commit();
             return [
                 'status' => true,
                 'message' => __('common.common_success.update_success')
             ];
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error("Error in checkTimeEvent: " . $e->getMessage());
+        } catch (\Throwable $th) {
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),
