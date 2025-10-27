@@ -430,6 +430,7 @@ class AuthService
                 'data' => [
                     'ticket_code' => $ticketCode,
                     'seat_name' => $seatName,
+                    'user_exists' => $userExists,
                 ]
             ];
         } catch (\Throwable $e) {

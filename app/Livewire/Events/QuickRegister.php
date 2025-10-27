@@ -25,6 +25,7 @@ class QuickRegister extends Component
     public $lang = 'vi';
 
     public $isSubmitting = false;
+    public $isUserExist = false;
 
     public $event = [];
     public $organizer = [];
@@ -48,10 +49,11 @@ class QuickRegister extends Component
                 'string',
                 'min:2',
                 'max:100',
+                'regex:/^[\p{L}\s\'-]+$/u',
             ],
             'email' => [
                 'required',
-                'email:rfc,dns',
+                'email:rfc',
                 'max:255',
             ],
             'phone' => [
@@ -77,6 +79,7 @@ class QuickRegister extends Component
                 'name.regex' => 'Họ và tên chỉ được chứa chữ cái và khoảng trắng.',
                 'email.required' => 'Email là bắt buộc.',
                 'email.email' => 'Email không hợp lệ.',
+                'email.unique' => 'Email này đã được sử dụng.',
                 'phone.required' => 'Số điện thoại là bắt buộc.',
                 'phone.min' => 'Số điện thoại phải có ít nhất 10 số.',
                 'phone.max' => 'Số điện thoại không được quá 15 số.',
@@ -92,41 +95,52 @@ class QuickRegister extends Component
             'name.regex' => 'Name may only contain letters and spaces.',
             'email.required' => 'Email is required.',
             'email.email' => 'Please enter a valid email address.',
+            'email.unique' => 'This email is already taken.',
             'phone.required' => 'Phone number is required.',
             'phone.min' => 'Phone number must be at least 10 digits.',
             'phone.max' => 'Phone number may not be greater than 15 digits.',
             'phone.regex' => 'Please enter a valid phone number.',
-            'phone.unique' => 'This phone is already taken.',
+            'phone.unique' => 'This phone number is already taken.',
         ];
     }
 
     public function mount()
     {
-        // Khởi tạo organizer và event rỗng để tránh lỗi truy cập khi token không hợp lệ
-        $this->organizer = ['id' => 0];
-        $this->event = ['id' => 0, 'status' => null];
+        $this->lang = session('locale', config('app.locale', 'vi'));
+
+        $this->organizer = ['id' => 0, 'name' => ''];
+        $this->event = ['id' => 0, 'name' => '', 'status' => null, 'image_represent_path' => ''];
 
         if ($this->token) {
             try {
                 $payload = json_decode(Crypt::decryptString($this->token), true);
 
+                if (!isset($payload['organizer_id']) || !isset($payload['event_id'])) {
+                    throw new Exception('Invalid token payload');
+                }
+
                 $organizerResult = $this->organizerService->getOrganizerDetail($payload['organizer_id']);
                 $eventResult = $this->eventService->getEventDetail($payload['event_id']);
 
                 if (!($organizerResult['status'] && $eventResult['status'])) {
-                    throw new Exception('Not found event organizer!');
+                    throw new Exception('Event or organizer not found!');
                 }
 
                 $this->event = ($eventResult['event'])->toArray();
                 $this->organizer = ($organizerResult['organizer'])->toArray();
 
                 if ($this->event['status'] == EventStatus::CLOSED->value) {
-                    throw new Exception('Sự kiện đã kết thúc');
+                    $message = $this->lang === 'vi'
+                        ? 'Sự kiện đã kết thúc'
+                        : 'Event has ended';
+                    throw new Exception($message);
                 }
             } catch (Exception $e) {
                 abort(419, $e->getMessage());
             }
         }
+
+        $this->toggleLang($this->lang);
     }
 
     public function boot(AuthService $authService, EventService $eventService, OrganizerService $organizerService)
@@ -136,73 +150,122 @@ class QuickRegister extends Component
         $this->organizerService = $organizerService;
     }
 
-    public function toggleLang()
+    public function toggleLang(?string $lang = null)
     {
-        $this->lang = $this->lang === 'en' ? 'vi' : 'en';
-        session(['locale' => $this->lang]);
+        if ($lang && in_array($lang, ['en', 'vi'])) {
+            $targetLang = $lang;
+        } else {
+            $targetLang = $this->lang === 'en' ? 'vi' : 'en';
+        }
 
-        App::setLocale($this->lang);
+        $this->lang = $targetLang;
+        session(['locale' => $targetLang]);
+
+        App::setLocale($targetLang);
+
         $this->resetValidation();
+    }
+
+    public function updated($propertyName)
+    {
+        $this->validateOnly($propertyName, $this->rules(), $this->messages());
+    }
+
+    public function updatedName()
+    {
+        $this->validateOnly('name', $this->rules(), $this->messages());
+    }
+    public function updatedEmail()
+    {
+        try {
+            $this->validateOnly('email', $this->rules(), $this->messages());
+        } catch (\Illuminate\Validation\ValidationException $e) {
+        }
+    }
+
+    public function updatedPhone()
+    {
+        try {
+            $this->validateOnly('phone', $this->rules(), $this->messages());
+        } catch (\Illuminate\Validation\ValidationException $e) {
+        }
     }
 
     public function register()
     {
+
         if ($this->isSubmitting) {
             return;
         }
+
         $this->isSubmitting = true;
 
-        $this->validate($this->rules(), $this->messages());
+        $validatedData = $this->validate($this->rules(), $this->messages());
 
+        // Sanitize và chuẩn bị dữ liệu
         $data = [
-            'name' => $this->name,
-            'email' => $this->email,
-            'phone' => $this->phone,
+            'name' => trim($validatedData['name']),
+            'email' => trim(strtolower($validatedData['email'])),
+            'phone' => preg_replace('/\s+/', '', $validatedData['phone']),
             'lang' => $this->lang,
             'organizer_id' => $this->organizer['id'],
             'event_id' => $this->event['id'],
         ];
 
+        // Gọi service đăng ký
         $result = $this->authService->quickRegister($data);
 
         $this->resultStatus = $result['status'];
 
         if ($result['status']) {
-            $this->getSuccessMessage($result['title'] ?? '', $result['message'] ?? '');
-
-            $this->ticketCode = $result['data']['ticket_code'] ?? null;
-            $this->seatName = $result['data']['seat_name'] ?? null;
+            $this->handleSuccess($result);
         } else {
-            $this->getErrorMessage($result['message']);
+            $this->handleError($result['message'] ?? '');
         }
-        $this->resetForm();
+
         $this->isSubmitting = false;
     }
 
-    public function getSuccessMessage(string $title, string $message)
+    private function handleSuccess(array $result)
     {
-        $this->successTitle = $title;
-        $this->successMessage = $message;
+        $this->successTitle = $result['title'] ?? ($this->lang === 'en'
+            ? 'Registration Successful!'
+            : 'Đăng Ký Thành Công!');
+
+        $this->successMessage = $result['message'] ?? '';
+
+        $this->ticketCode = $result['data']['ticket_code'] ?? null;
+        $this->seatName = $result['data']['seat_name'] ?? null;
+        $this->isUserExist = $result['data']['user_exists'] ?? null;
+        $this->reset(['name', 'phone']);
+        $this->resetValidation();
+
+        $this->dispatch('registration-success', [
+            'ticketCode' => $this->ticketCode,
+            'seatName' => $this->seatName,
+        ]);
+
+        $this->dispatch('scroll-to-top');
     }
 
-    public function getErrorMessage(string $message): string
+    private function handleError(string $message)
+    {
+        $errorMessage = $this->getErrorMessage($message);
+
+        $this->dispatch('registration-error', ['message' => $errorMessage]);
+
+        session()->flash('error', $errorMessage);
+    }
+
+    private function getErrorMessage(string $message): string
     {
         if (!empty($message)) {
             return $message;
         }
 
         return $this->lang === 'vi'
-            ? __('common.messages.server_error')
+            ? 'Đã xảy ra lỗi không xác định. Vui lòng thử lại.'
             : 'An unknown error occurred during registration. Please try again.';
-    }
-
-    private function resetForm()
-    {
-        $this->reset([
-            'phone',
-        ]);
-
-        $this->resetValidation();
     }
 
     public function render()
