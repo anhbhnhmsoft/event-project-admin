@@ -31,6 +31,39 @@ return [
             'create_failed' => 'Failed to create organizer!'
         ]
     ],
+    'general' => [
+        'organizer_id_required' => 'Organizer ID is required',
+        'organizer_id_exists' => 'Organizer does not exist',
+        'organizer_id_integer' => 'Organizer ID must be an integer',
+        'admin' => 'Admin',
+        'super_admin' => 'Super Admin',
+        'save' => 'Save',
+        'cancel' => 'Cancel',
+        'create' => 'Create',
+        'back' => 'Back',
+        'edit' => 'Edit',
+        'delete' => 'Delete',
+        'search' => 'Search',
+        'select_file' => 'Select file',
+        'no_records' => 'No records found',
+        'view_all' => 'View all',
+        'status' => 'Status',
+        'select_status' => 'Select status',
+        'action' => 'Action',
+        'detail' => 'Detail',
+        'upload_file' => 'Upload File',
+        'no_file' => 'No file attached',
+        'preview' => 'Preview',
+        'view_file' => 'View file',
+        'delete_confirm_title' => 'Confirm Deletion',
+        'delete_confirm_text' => 'Are you sure you want to delete this record? This action cannot be undone.',
+        'yes' => 'Yes',
+        'no' => 'No',
+        'upload_image' => 'Upload image',
+        'delete_image_success' => 'Image deleted successfully!',
+        'delete_image_error' => 'Error deleting image!',
+        'open_link' => 'Open link',
+    ],
     'users' => [
         'navigation_label' => 'Users',
         'model_label' => 'User',
@@ -74,6 +107,8 @@ return [
         ]
     ],
     'events' => [
+        'model_label' => 'Event',
+        'navigation_label' => 'Events',
         'model_label' => 'Event',
         'plural_model_label' => 'Events',
         'general' => [
@@ -258,7 +293,10 @@ return [
             'create_title' => 'Create Event',
             'edit_title' => 'Edit Event',
             'comments_title' => 'Event Comments',
-            'games_title' => 'Event Games'
+            'games_title' => 'Event Games',
+            'edit_title' => 'Edit Event',
+            'create_title' => 'Create Event',
+            'list_title' => 'Event List'
         ],
         'table' => [
             'image' => 'Image',
@@ -277,7 +315,12 @@ return [
             'manage_votes' => 'Manage Surveys/Votes',
             'event_screen' => 'Event Screen',
             'force_delete' => 'Force Delete',
-            'restore' => 'Restore'
+            'restore' => 'Restore',
+            'start_date' => 'Start Date',
+            'end_date' => 'End Date',
+            'status' => 'Status',
+            'created_at' => 'Created At',
+            'updated_at' => 'Updated At',
         ],
         'notifications' => [
             'delete_file_success' => 'File deleted successfully!',
@@ -383,6 +426,10 @@ return [
         ]
     ],
     'notifications' => [
+        'title' => 'Notifications',
+        'read_all' => 'Mark all as read',
+        'no_notifications' => 'You have no notifications',
+        'view_all' => 'View all notifications',
         'navigation_label' => 'Notifications',
         'pages' => [
             'list_title' => 'Notifications List',
@@ -462,6 +509,8 @@ return [
         ]
     ],
     'navigation' => [
-        'system' => 'System'
+        'system' => 'System',
+        'user_management' => 'User Management',
+        'event_management' => 'Event Management',
     ]
 ];
