@@ -17,6 +17,8 @@ return [
         'delete' => 'Delete',
         'view' => 'View',
         'create_and_create_another' => 'Create and Create Another',
+        'upload_file_success' => 'Upload file successfully',
+        'delete_file_success' => 'Delete file successfully',
     ],
     'common_error' => [
         'server_error' => 'A server error has occurred, please contact the administrator for support.',
@@ -38,6 +40,12 @@ return [
         'copy_error' => 'Error when copying',
         'max_content' => 'Content must not exceed :max characters.',
         'api_error' => 'An error occurred, please try again.',
+        'delete_file_error' => 'An error occurred while deleting the file',
+        'upload_file_error' => 'An error occurred while uploading the file',
+        'not_found' => 'Not found',
+        'invalid_id' => 'Invalid ID',
+        'file_not_found' => 'File not found',
+        'invalid_date' => 'Invalid date',
     ],
     'validation' => [
         'status_integer' => 'Status must be an integer.',
@@ -75,6 +83,7 @@ return [
                 'organizer_placeholder' => '--- Please select an organizer ---',
                 'chart_type_hour' => 'By Hour (Cumulative)',
                 'chart_type_day' => 'By Day',
+                'to_day' => 'To Day',
             ],
             'chart' => [
                 'heading' => 'Check-in & Registration Statistics',

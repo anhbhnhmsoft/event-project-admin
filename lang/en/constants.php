@@ -20,6 +20,7 @@ return [
         'booked' => 'Booked',
         'participated' => 'Participated',
         'cancelled' => 'Cancelled',
+        'payment_pending' => 'Payment Pending',
     ],
     'transaction_status' => [
         'waiting' => 'Waiting',
@@ -33,6 +34,7 @@ return [
         'buy_document' => 'Buy Event Document',
         'buy_comment' => 'Buy Comment Permission',
         'event_seat' => 'Event Seat Payment',
+        'upgrade_membership' => 'Upgrade Membership Package',
     ],
     'role_user' => [
         'super_admin' => 'Super Admin',
@@ -68,6 +70,9 @@ return [
         'membership_approved' => 'Membership Approved',
         'system_announcement' => 'System Announcement',
         'membership_expire_reminder' => 'Membership Expire Reminder',
+        'member_near_expire' => 'Membership Near Expire',
+        'member_expired' => 'Membership Expired',
+        'event_starting' => 'Event Starting',
     ],
     'config_membership' => [
         'allow_comment' => 'Allow Comments',
