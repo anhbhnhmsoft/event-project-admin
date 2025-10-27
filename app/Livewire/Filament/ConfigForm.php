@@ -61,7 +61,7 @@ class ConfigForm extends Component
 
         if ($result) {
             Notification::make()
-                ->title('Cập nhật config thành công')
+                ->title(__(''))
                 ->success()
                 ->send();
         } else {

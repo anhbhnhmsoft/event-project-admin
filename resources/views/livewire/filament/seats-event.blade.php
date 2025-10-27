@@ -462,7 +462,7 @@
                                                 <tr>
                                                     <th class="text-left">{{__('common.common_success.name')}}</th>
                                                     <th class="text-left">Email</th>
-                                                    <th class="text-left">{{ __('users.table.phone') }}</th>
+                                                    <th class="text-left">{{ __('admin.users.table.phone') }}</th>
                                                     <th></th>
                                                 </tr>
                                             </thead>

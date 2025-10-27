@@ -8,36 +8,51 @@
     @endphp
 
     @if (!$hasDocuments)
-        <p class="text-gray-500">Chưa có tài liệu nào.</p>
+        <p class="text-gray-600">Chưa có file tài liệu nào được tải lên.</p>
     @else
         <div class="space-y-4">
             @foreach ($documentData as $documentIndex => $document)
                 @php
                     $files = collect();
 
-                    if (isset($document['files']) && is_array($document['files'])) {
+                    // ✅ Bảo vệ mọi trường hợp dữ liệu
+                    if (isset($document['files']) && is_iterable($document['files'])) {
                         foreach ($document['files'] as $file) {
-                            $files->push([
-                                'file_name' => $file['file_name'] ?? basename($file['file_path'] ?? ''),
-                                'file_path' => $file['file_path'] ?? '',
-                                'file_id' => $file['id'] ?? null,
-                            ]);
+                            if (is_array($file)) {
+                                // File từ DB
+                                $files->push([
+                                    'file_name' => $file['file_name'] ?? basename($file['file_path'] ?? ''),
+                                    'file_path' => $file['file_path'] ?? '',
+                                    'file_id' => $file['id'] ?? null,
+                                ]);
+                            } elseif ($file instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile) {
+                                // File mới upload qua Livewire
+                                $files->push([
+                                    'file_name' => $file->getClientOriginalName(),
+                                    'file_path' => $file->getRealPath() ?: '',
+                                    'file_id' => null,
+                                ]);
+                            }
                         }
                     }
 
-                    $documentTitle = $document['title'] ?? 'Tài liệu #' . ($documentIndex + 1);
-                    $documentPrice = $document['price'] ?? 0;
+                    // ✅ Ép kiểu chỉ số và giá trị số
+                    $documentIndex = is_numeric($documentIndex) ? (int) $documentIndex : 0;
+                    $documentTitle = !empty($document['title'])
+                        ? $document['title']
+                        : 'Tài liệu #' . ($documentIndex + 1);
+                    $documentPrice = is_numeric($document['price'] ?? null) ? (float) $document['price'] : 0;
                     $documentId = $document['id'] ?? $documentIndex;
                 @endphp
 
                 @if ($files->isNotEmpty())
                     <div x-data="{ expanded: true }" class="border border-gray-200 rounded-lg overflow-hidden">
-                        <!-- Document Header - Clickable -->
+                        <!-- Document Header -->
                         <button type="button" @click="expanded = !expanded"
                             class="w-full bg-gray-100 px-4 py-3 border-b border-gray-200 hover:bg-gray-150 transition-colors">
                             <div class="flex justify-between items-center">
                                 <div class="flex items-center gap-3 text-left">
-                                    <!-- Expand Icon -->
+                                    <!-- Icons -->
                                     <svg x-show="!expanded" class="w-5 h-5 text-gray-600" fill="none"
                                         stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -64,7 +79,7 @@
                             </div>
                         </button>
 
-                        <!-- Files List - Collapsible -->
+                        <!-- Files List -->
                         <div x-show="expanded" x-transition:enter="transition ease-out duration-200"
                             x-transition:enter-start="opacity-0 max-h-0"
                             x-transition:enter-end="opacity-100 max-h-screen"
