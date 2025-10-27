@@ -199,14 +199,11 @@ class QuickRegister extends Component
         }
 
         $this->isSubmitting = true;
-
-        $validatedData = $this->validate($this->rules(), $this->messages());
-
-        // Sanitize và chuẩn bị dữ liệu
+        $this->validate();
         $data = [
-            'name' => trim($validatedData['name']),
-            'email' => trim(strtolower($validatedData['email'])),
-            'phone' => preg_replace('/\s+/', '', $validatedData['phone']),
+            'name' => trim($this->name),
+            'email' => trim(strtolower($this->email)),
+            'phone' => preg_replace('/\s+/', '', $this->phone),
             'lang' => $this->lang,
             'organizer_id' => $this->organizer['id'],
             'event_id' => $this->event['id'],
