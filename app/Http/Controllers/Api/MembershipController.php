@@ -34,7 +34,7 @@ class MembershipController extends Controller
         $limit = $request->integer('limit', 10);
         $sortBy = 'order';
         $filters['status'] = true;
-        $filters['tyoe'] = MembershipType::FOR_CUSTOMER->value;
+        $filters['type'] = MembershipType::FOR_CUSTOMER->value;
         $filters['organizer_id'] = Auth::user()->organizer_id;
         $memberships  = $this->membershipService->membershipsPaginator($filters, $sortBy, $page, $limit);
 
