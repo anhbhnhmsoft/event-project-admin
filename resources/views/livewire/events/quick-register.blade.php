@@ -29,25 +29,88 @@
                 </button>
             </div>
 
-            @if ($actionType === 'created' || $actionType === 'updated')
-                <div class="mt-4 pt-4 w-full border-t border-green-200 dark:border-green-700">
-                    <p class="text-sm text-green-700 dark:text-green-300 mb-2">
-                        {{ $lang === 'en' ? 'Your login details:' : 'Thông tin đăng nhập của bạn:' }}
-                    </p>
-                    <div class="text-left bg-green-100 dark:bg-green-800 p-3 rounded-lg">
-                        <p class="text-sm font-medium text-green-900 dark:text-green-100">
-                            Email: <span class="font-bold">{{ $email }}</span>
-                        </p>
-                        <p class="text-sm font-medium text-green-900 dark:text-green-100 mt-1">
-                            {{ $lang === 'en' ? 'Password: Your phone number.' : 'Mật khẩu: Số điện thoại của bạn' }}
-                        </p>
-                        <p class="text-sm font-medium text-green-900 dark:text-green-100">
-                            {{ $lang === 'en' ? 'Organizer name' : 'Tên tổ chức' }}: <span
-                                class="font-bold">{{ $organizer['name'] }}</span>
-                        </p>
+            {{-- Hiển thị thông tin thành công và vé khi $resultStatus là TRUE --}}
+            @if ($resultStatus)
+                <div class="space-y-6">
+                    {{-- Thông báo thành công --}}
+                    <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-lg shadow-sm">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-lg leading-6 font-medium text-green-800">
+                                    {{ $successTitle ?: ($lang === 'en' ? 'Registration Successful!' : 'Đăng Ký Thành Công!') }}
+                                </h3>
+                                <div class="mt-2 text-sm text-green-700">
+                                    <p>{{ $successMessage }}</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
+                    {{-- Khu vực thông tin Vé --}}
+                    @if ($ticketCode || $seatName)
+                        <div class="p-5 border border-indigo-200 bg-indigo-50 rounded-xl shadow-md">
+                            <h4 class="text-lg font-bold text-indigo-700 mb-3 border-b pb-2 border-indigo-200">
+                                {{ $lang === 'en' ? 'Your Ticket Details' : 'Thông Tin Vé Của Bạn' }}
+                            </h4>
+                            <dl class="space-y-3 text-sm text-gray-700">
+                                @if ($ticketCode)
+                                    <div class="flex justify-between items-center">
+                                        <dt class="font-medium text-indigo-800">
+                                            {{ $lang === 'en' ? 'Ticket Code' : 'Mã Vé' }}:
+                                        </dt>
+                                        <dd
+                                            class="font-extrabold text-indigo-900 text-lg tracking-wider bg-indigo-200 px-3 py-1 rounded-full">
+                                            {{ $ticketCode }}
+                                        </dd>
+                                    </div>
+                                @endif
+                                @if ($seatName)
+                                    <div class="flex justify-between items-center">
+                                        <dt class="font-medium text-indigo-800">
+                                            {{ $lang === 'en' ? 'Seat/Area' : 'Vị Trí/Khu Vực' }}:
+                                        </dt>
+                                        <dd class="font-semibold text-indigo-900 text-base">{{ $seatName }}</dd>
+                                    </div>
+                                @endif
+                            </dl>
+                        </div>
+                    @endif
+
+                    {{-- Thông tin đăng nhập --}}
+                    <div class="pt-4 w-full border-t border-gray-200">
+                        <p class="text-sm text-gray-700 mb-2 font-semibold">
+                            {{ $lang === 'en' ? 'Your temporary login details:' : 'Thông tin đăng nhập tạm thời:' }}
+                        </p>
+                        <div class="text-left bg-gray-100 p-3 rounded-lg border border-gray-200">
+                            <p class="text-sm font-medium text-gray-900">
+                                Email: <span class="font-bold">{{ $email }}</span>
+                            </p>
+                            <p class="text-sm font-medium text-gray-900 mt-1">
+                                {{ $lang === 'en' ? 'Password: Your phone number.' : 'Mật khẩu: Số điện thoại của bạn' }}
+                            </p>
+                            <p class="text-sm font-medium text-gray-900">
+                                {{ $lang === 'en' ? 'Organizer' : 'Tên tổ chức' }}: <span
+                                    class="font-bold">{{ $organizer['name'] }}</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    {{-- Nút tiếp tục (có thể dẫn đến trang đăng nhập/chi tiết sự kiện) --}}
+                    <a href="#"
+                        class="w-full flex justify-center items-center py-3 sm:py-4 px-4 sm:px-6 border border-transparent rounded-lg shadow-lg text-sm sm:text-base font-semibold text-white bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transform transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]">
+                        {{ $lang === 'en' ? 'Continue to Event Page' : 'Tiếp tục đến Trang Sự Kiện' }}
+                    </a>
                 </div>
+                {{-- Kết thúc Hiển thị thông tin thành công và vé --}}
             @else
+                {{-- Form đăng ký ban đầu --}}
                 <form wire:submit.prevent="register" class="space-y-4 sm:space-y-5 lg:space-y-6">
                     <div class="space-y-2">
                         <label class="block text-sm font-medium text-gray-700">
@@ -120,7 +183,7 @@
                                 <svg class="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z">
+                                        d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 2 01-2 2h-1C9.716 21 3 14.284 3 6V5z">
                                     </path>
                                 </svg>
                             </div>

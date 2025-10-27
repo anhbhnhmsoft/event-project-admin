@@ -318,101 +318,119 @@ class AuthService
         DB::beginTransaction();
 
         try {
-            // Tạo hoặc cập nhật user
+            $userExists = true;
+            $seatWasUpdated = false;
+
             $user = User::query()
                 ->where('email', $data['email'])
                 ->where('organizer_id', $data['organizer_id'])
                 ->first();
 
             if (! $user) {
+                // TẠO MỚI USER
                 $user = User::query()->create([
-                    'name'           => trim($data['name']),
-                    'email'          => $data['email'],
-                    'password'       => Hash::make($data['phone']),
-                    'organizer_id'   => (int) $data['organizer_id'],
-                    'role'           => RoleUser::CUSTOMER->value,
-                    'lang'           => $data['lang'] ?? Language::VI->value,
-                    'phone'          => $data['phone'],
+                    'name'              => trim($data['name']),
+                    'email'             => $data['email'],
+                    'password'          => Hash::make($data['phone']),
+                    'organizer_id'      => (int) $data['organizer_id'],
+                    'role'              => RoleUser::CUSTOMER->value,
+                    'lang'              => $data['lang'] ?? Language::VI->value,
+                    'phone'             => $data['phone'],
                     'email_verified_at' => now(),
                     'phone_verified_at' => now(),
                 ]);
-                $action = 'created';
+                $userExists = false; // Đánh dấu là user mới được tạo
             } elseif (! $user->phone) {
+                // USER TỒN TẠI, CẬP NHẬT PHONE
                 $user->update(['phone' => $data['phone']]);
-                $action = 'updated';
-            } else {
-                $action = 'rebooked';
             }
 
-            // Lấy event & ghế trống
+            // Lấy event
             $event = Event::query()->findOrFail($data['event_id']);
 
-            $seat = EventSeat::query()
-                ->whereHas('area', function (Builder $q) use ($event) {
-                    $q->where('event_id', $event->id)
-                        ->where('vip', false);
-                })
-                ->where('status', EventSeatStatus::AVAILABLE->value)
-                ->whereNull('user_id')
-                ->orderBy('id')
-                ->lockForUpdate()
+            // Lấy vé cũ (history)
+            $history = EventUserHistory::query()
+                ->where('event_id', $event->id)
+                ->where('user_id', $user->id)
                 ->first();
-
-            if (! $seat) {
-                DB::rollBack();
-                return [
-                    'status'  => false,
-                    'message' => __('event.validation.no_available_seat'),
-                ];
-            }
 
             // Xác định trạng thái vé
             $status = $event->status == EventStatus::ACTIVE->value
                 ? EventUserHistoryStatus::PARTICIPATED->value
                 : EventUserHistoryStatus::BOOKED->value;
 
-
             if (! $history) {
+
+                // Tìm ghế trống
+                $seat = EventSeat::query()
+                    ->whereHas('area', function (Builder $q) use ($event) {
+                        $q->where('event_id', $event->id)->where('vip', false);
+                    })
+                    ->where('status', EventSeatStatus::AVAILABLE->value)
+                    ->whereNull('user_id')
+                    ->orderBy('id')
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $seat) {
+                    DB::rollBack();
+                    return [
+                        'status'  => false,
+                        'message' => __('event.validation.no_available_seat'),
+                        'title'   => __('event.validation.register_fail_title'),
+                    ];
+                }
+
                 // Tạo ticket code mới
                 do {
                     $ticketCode = 'TICKET-' . Helper::getTimestampAsId();
                 } while (EventUserHistory::where('ticket_code', $ticketCode)->exists());
-                //Tạo vé mới
+
+                // Tạo vé mới và GÁN GHẾ MỚI
                 EventUserHistory::query()->create([
                     'event_id'      => $event->id,
                     'user_id'       => $user->id,
                     'status'        => $status,
-                    'event_seat_id' => $seat->id,
+                    'event_seat_id' => $seat->id, // Gán ghế mới
                     'ticket_code'   => $ticketCode,
                 ]);
-            } else {
-                //  Cập nhật vé cũ (nếu có)
-                $history->update([
-                    'status'        => $status,
-                    'event_seat_id' => $seat->id,
+
+                $seatWasUpdated = true;
+
+                // Cập nhật ghế
+                $seat->update([
+                    'user_id' => $user->id,
+                    'status'  => EventSeatStatus::BOOKED->value,
                 ]);
-
-                // Giải phóng ghế cũ (nếu có)
-                if ($history && $history->event_seat_id && $history->event_seat_id != $seat->id) {
-                    EventSeat::where('id', $history->event_seat_id)->update([
-                        'user_id' => null,
-                        'status'  => EventSeatStatus::AVAILABLE->value,
-                    ]);
-                }
+            } else {
+                $history->update(['status' => $status]);
             }
-
-            // Cập nhật ghế cho user
-            $seat->update([
-                'user_id' => $user->id,
-                'status'  => EventSeatStatus::BOOKED->value,
-            ]);
 
             DB::commit();
 
+            $finalHistory = EventUserHistory::query()
+                ->with('eventSeat')
+                ->where('event_id', $event->id)
+                ->where('user_id', $user->id)
+                ->first();
+
+            $ticketCode = $finalHistory->ticket_code;
+            $seatName = $finalHistory->eventSeat->name ?? '';
+
+            $finalMessage = $this->generateFinalMessage(
+                !$userExists,
+                !$history, // !history = vé vừa được tạo
+                $seatWasUpdated
+            );
+
             return [
                 'status'  => true,
-                'message' => __('event.validation.success'),
-                'action'  => $action
+                'message' => $finalMessage['message'],
+                'title'   => $finalMessage['title'],
+                'data' => [
+                    'ticket_code' => $ticketCode,
+                    'seat_name' => $seatName,
+                ]
             ];
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -421,9 +439,40 @@ class AuthService
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),
+                'title' => __('event.validation.register_fail_title'),
             ];
         }
     }
+
+    private function generateFinalMessage(bool $isNewUser, bool $isNewTicket, bool $seatWasUpdated): array
+    {
+        if ($isNewUser) {
+            return [
+                'title' => __('event.messages.register_success_title'),
+                'message' => __('event.messages.new_user_new_ticket_message'),
+            ];
+        }
+
+        if ($isNewTicket && $seatWasUpdated) {
+            return [
+                'title' => __('event.messages.ticket_granted_title'),
+                'message' => __('event.messages.existing_user_new_ticket_message'),
+            ];
+        }
+
+        if (!$isNewTicket) {
+            return [
+                'title' => __('event.messages.ticket_confirmed_title'),
+                'message' => __('event.messages.existing_user_existing_ticket_message'),
+            ];
+        }
+
+        return [
+            'title' => __('common.messages.process_complete_title'),
+            'message' => __('common.messages.process_complete_message'),
+        ];
+    }
+
 
 
     public function registerOrganizer(array $data): array

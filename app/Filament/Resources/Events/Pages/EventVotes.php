@@ -232,7 +232,7 @@ class EventVotes extends Page implements HasTable
                 Action::make('get-link')
                     ->label('Lấy link khảo sát')
                     ->url(function ($record): string {
-                        return route('event.poll.show', ['idcode' => Crypt::encryptString((string) $record->id)]);
+                        return route('event.poll.show', ['idcode' => $record->id]);
                     }),
                 Action::make('view-results')
                     ->label('Xem kết quả')

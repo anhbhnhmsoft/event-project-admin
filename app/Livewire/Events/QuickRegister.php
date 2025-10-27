@@ -7,6 +7,7 @@ use App\Services\EventService;
 use App\Services\OrganizerService;
 use App\Utils\Constants\EventStatus;
 use Exception;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Url;
@@ -30,7 +31,11 @@ class QuickRegister extends Component
 
     public $resultStatus = false;
 
-    public $actionType = '';
+    public $successTitle = '';
+    public $successMessage = '';
+
+    public $ticketCode = '';
+    public $seatName = '';
 
     #[Url]
     public $token = '';
@@ -97,18 +102,24 @@ class QuickRegister extends Component
 
     public function mount()
     {
+        // Khởi tạo organizer và event rỗng để tránh lỗi truy cập khi token không hợp lệ
+        $this->organizer = ['id' => 0];
+        $this->event = ['id' => 0, 'status' => null];
 
         if ($this->token) {
             try {
                 $payload = json_decode(Crypt::decryptString($this->token), true);
 
-                $organizerResult =  $this->organizerService->getOrganizerDetail($payload['organizer_id']);
+                $organizerResult = $this->organizerService->getOrganizerDetail($payload['organizer_id']);
                 $eventResult = $this->eventService->getEventDetail($payload['event_id']);
+
                 if (!($organizerResult['status'] && $eventResult['status'])) {
                     throw new Exception('Not found event organizer!');
                 }
+
                 $this->event = ($eventResult['event'])->toArray();
                 $this->organizer = ($organizerResult['organizer'])->toArray();
+
                 if ($this->event['status'] == EventStatus::CLOSED->value) {
                     throw new Exception('Sự kiện đã kết thúc');
                 }
@@ -128,7 +139,9 @@ class QuickRegister extends Component
     public function toggleLang()
     {
         $this->lang = $this->lang === 'en' ? 'vi' : 'en';
+        session(['locale' => $this->lang]);
 
+        App::setLocale($this->lang);
         $this->resetValidation();
     }
 
@@ -137,8 +150,10 @@ class QuickRegister extends Component
         if ($this->isSubmitting) {
             return;
         }
+        $this->isSubmitting = true;
 
-        $this->validate($this->rules(),$this->messages());
+        $this->validate($this->rules(), $this->messages());
+
         $data = [
             'name' => $this->name,
             'email' => $this->email,
@@ -153,8 +168,10 @@ class QuickRegister extends Component
         $this->resultStatus = $result['status'];
 
         if ($result['status']) {
-            $this->actionType = $result['action'] ?? 'rebooked';
-            $this->getSuccessMessage();
+            $this->getSuccessMessage($result['title'] ?? '', $result['message'] ?? '');
+
+            $this->ticketCode = $result['data']['ticket_code'] ?? null;
+            $this->seatName = $result['data']['seat_name'] ?? null;
         } else {
             $this->getErrorMessage($result['message']);
         }
@@ -162,31 +179,21 @@ class QuickRegister extends Component
         $this->isSubmitting = false;
     }
 
-    public function getSuccessMessage()
+    public function getSuccessMessage(string $title, string $message)
     {
-        if ($this->actionType === 'created') {
-            return $this->lang === 'vi'
-                ? 'Tài khoản và vé sự kiện đã được tạo thành công! Vui lòng sử dụng thông tin đăng nhập bên dưới.'
-                : 'Your account and event ticket have been successfully created! Please use the login details below.';
-        }
-
-        if ($this->actionType === 'updated') {
-            return $this->lang === 'vi'
-                ? 'Thông tin và vé của bạn đã được cập nhật! Mật khẩu đăng nhập của bạn đã được đặt lại là SỐ ĐIỆN THOẠI.'
-                : 'Your information and ticket have been updated! Your login password has been reset to your PHONE NUMBER.';
-        }
-
-        // rebooked/mặc định
-        return $this->lang === 'vi'
-            ? 'Bạn đã đăng ký sự kiện thành công! Chi tiết vé của bạn đã được cập nhật.'
-            : 'You have successfully registered for the event! Your ticket details have been updated.';
+        $this->successTitle = $title;
+        $this->successMessage = $message;
     }
 
-    public function getErrorMessage(string $message)
+    public function getErrorMessage(string $message): string
     {
-        return empty($message) ? ($this->lang === 'vi'
-            ? 'Đã xảy ra lỗi trong quá trình đăng ký. Vui lòng thử lại.'
-            : 'An error occurred during registration. Please try again.') : $message;
+        if (!empty($message)) {
+            return $message;
+        }
+
+        return $this->lang === 'vi'
+            ? __('common.messages.server_error')
+            : 'An unknown error occurred during registration. Please try again.';
     }
 
     private function resetForm()
