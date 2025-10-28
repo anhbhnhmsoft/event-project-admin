@@ -57,52 +57,52 @@ class EventGames extends Page implements HasTable
         return $table
             ->query(EventGame::query()->where("event_id", $this->record->id))
             ->columns([
-                TextColumn::make("name")->label("Tên"),
-                TextColumn::make("description")->label("Miêu tả"),
+                TextColumn::make("name")->label(__('admin.events.games.name')),
+                TextColumn::make("description")->label(__('admin.events.games.description')),
                 TextColumn::make("game_type")
-                    ->label("Loại trò chơi")
+                    ->label(__('admin.events.games.game_type'))
                     ->formatStateUsing(
                         fn($state) => EventGameType::tryFrom($state)?->label()
                     ),
             ])
             ->headerActions([
                 Action::make("create-game-event")
-                    ->label("Tạo trò chơi mới")
+                    ->label(__('admin.events.games.create_new_game'))
                     ->model(EventGame::class)
                     ->schema(
                         [
                             Tabs::make("GameTabs")->tabs([
-                                Tab::make("Thông tin cơ bản")->schema([
+                                Tab::make(__('admin.events.games.basic_info'))->schema([
                                     TextInput::make("name")
-                                        ->label("Tên trò chơi")
+                                        ->label(__('admin.events.games.game_name'))
                                         ->required(),
                                     Textarea::make("description")
-                                        ->label("Miêu tả")
+                                        ->label(__('admin.events.games.description'))
                                         ->rows(3),
                                     Select::make("game_type")
-                                        ->label("Loại trò chơi")
+                                        ->label(__('admin.events.games.game_type'))
                                         ->options(
                                             \App\Utils\Constants\EventGameType::getOptions()
                                         )
                                         ->required(),
                                 ]),
-                                Tab::make("Cấu hình")->schema([
+                                Tab::make(__('admin.events.games.configuration'))->schema([
                                     Repeater::make("gifts")
-                                        ->label("Gói quà")
+                                        ->label(__('admin.events.games.gift_pack'))
                                         ->schema([
                                             TextInput::make("name")
-                                                ->label("Tên gói quà")
+                                                ->label(__('admin.events.games.gift_name'))
                                                 ->required(),
                                             TextInput::make("quantity")
                                                 ->numeric()
-                                                ->label("Số lượng")
+                                                ->label(__('admin.events.games.quantity'))
                                                 ->required(),
                                             Textarea::make("description")
-                                                ->label("Miêu tả"),
+                                                ->label(__('admin.events.games.description')),
                                             FileUpload::make("image")
                                                 ->disk("public")
                                                 ->directory("event_gifts")
-                                                ->label("Hình ảnh")
+                                                ->label(__('admin.events.games.image'))
                                                 ->image()
                                                 ->maxSize(51200),
                                         ])
@@ -110,11 +110,11 @@ class EventGames extends Page implements HasTable
                                     Repeater::make(
                                         "config_game.custom_user_rates"
                                     )
-                                        ->label("Tỉ lệ chỉ định cho người chơi")
+                                        ->label(__('admin.events.games.user_rate_label'))
                                         ->default([])
                                         ->schema([
                                             Select::make("user_id")
-                                                ->label("Người chơi")
+                                                ->label(__('admin.events.games.player'))
                                                 ->options(
                                                     function ($record) {
                                                         $event = Event::find($record->event_id);
@@ -124,10 +124,10 @@ class EventGames extends Page implements HasTable
                                                 ->searchable()
                                                 ->required(),
                                             Repeater::make("rates")
-                                                ->label("Tỉ lệ quà")
+                                                ->label(__('admin.events.games.gift_rate'))
                                                 ->schema([
                                                     Select::make("gift_id")
-                                                        ->label("Phần quà")
+                                                        ->label(__('admin.events.games.gift'))
                                                         ->options(
                                                             fn($record) => EventGameGift::where('event_game_id', $record->id)->pluck(
                                                                 "name",
@@ -165,8 +165,8 @@ class EventGames extends Page implements HasTable
 
                         Notification::make()
                             ->success()
-                            ->title("Tạo thành công")
-                            ->body("Trò chơi mới đã được thêm vào sự kiện.")
+                            ->title(__('admin.events.games.create_success'))
+                            ->body(__('admin.events.games.create_success_message'))
                             ->send();
 
                         $this->resetTable();
@@ -175,44 +175,44 @@ class EventGames extends Page implements HasTable
             ->recordActions([
                 ActionGroup::make([
                     ViewAction::make()
-                        ->label("Xem")
+                        ->label(__('admin.events.games.view'))
                         ->schema(
                             fn($record) => [
                                 Tabs::make("GameTabs")->tabs([
-                                    Tab::make("Thông tin cơ bản")->schema([
+                                    Tab::make(__('admin.events.games.basic_info'))->schema([
                                         TextInput::make("name")
-                                            ->label("Tên trò chơi")
+                                            ->label(__('admin.events.games.game_name'))
                                             ->disabled(),
                                         Textarea::make("description")
-                                            ->label("Miêu tả")
+                                            ->label(__('admin.events.games.description'))
                                             ->rows(3)
                                             ->disabled(),
                                         Select::make("game_type")
-                                            ->label("Loại trò chơi")
+                                            ->label(__('admin.events.games.game_type'))
                                             ->options(
                                                 \App\Utils\Constants\EventGameType::getOptions()
                                             )
                                             ->disabled(),
                                     ]),
-                                    Tab::make("Cấu hình")->schema([
+                                    Tab::make(__('admin.events.games.configuration'))->schema([
                                         Repeater::make("gifts")
                                             ->relationship("gifts")
-                                            ->label("Gói quà")
+                                            ->label(__('admin.events.games.gift_pack'))
                                             ->schema([
                                                 TextInput::make("name")
-                                                    ->label("Tên gói quà")
+                                                    ->label(__('admin.events.games.gift_name'))
                                                     ->disabled(),
                                                 TextInput::make("quantity")
                                                     ->numeric()
-                                                    ->label("Số lượng")
+                                                    ->label(__('admin.events.games.quantity'))
                                                     ->disabled(),
                                                 Textarea::make("description")
-                                                    ->label("Miêu tả")
+                                                    ->label(__('admin.events.games.description'))
                                                     ->disabled(),
                                                 FileUpload::make("image")
                                                     ->disk("public")
                                                     ->directory("event_gifts")
-                                                    ->label("Hình ảnh")
+                                                    ->label(__('admin.events.games.image'))
                                                     ->image()
                                                     ->maxSize(51200),
                                             ])
@@ -221,11 +221,11 @@ class EventGames extends Page implements HasTable
                                             "config_game.custom_user_rates"
                                         )
                                             ->label(
-                                                "Tỉ lệ chỉ định cho người chơi"
+                                                __('admin.events.games.user_rate_label')
                                             )
                                             ->schema([
                                                 Select::make("user_id")
-                                                    ->label("Người chơi")
+                                                    ->label(__('admin.events.games.player'))
                                                     ->options(
                                                         function ($record) {
                                                             $event = Event::find($record->event_id);
@@ -235,10 +235,10 @@ class EventGames extends Page implements HasTable
                                                     ->searchable()
                                                     ->required(),
                                                 Repeater::make("rates")
-                                                    ->label("Tỉ lệ quà")
+                                                    ->label(__('admin.events.games.gift_rate'))
                                                     ->schema([
                                                         Select::make("gift_id")
-                                                            ->label("Phần quà")
+                                                            ->label(__('admin.events.games.gift'))
                                                             ->options(
                                                                 fn($record) => EventGameGift::where('event_game_id', $record->id)->pluck(
                                                                     "name",
@@ -281,52 +281,52 @@ class EventGames extends Page implements HasTable
                             }
                         ),
                     DeleteAction::make()
-                        ->recordTitle("trò chơi")
-                        ->label("Xóa")
+                        ->recordTitle(__('admin.events.games.game'))
+                        ->label(__('admin.events.games.delete'))
                         ->successRedirectUrl(false)
                         ->action(function ($record) {
                             $record->delete();
                         })
-                        ->successNotificationTitle("Đã xóa trò chơi!")
+                        ->successNotificationTitle(__('admin.events.games.delete_success'))
                         ->after(fn() => $this->resetTable()),
                     Action::make("edit")
-                        ->label("Sửa")
+                        ->label(__('admin.events.games.edit'))
                         ->icon("heroicon-o-pencil-square")
                         ->schema(
                             fn($record) => [
                                 Tabs::make("GameTabs")->tabs([
-                                    Tab::make("Thông tin cơ bản")->schema([
+                                    Tab::make(__('admin.events.games.basic_info'))->schema([
                                         TextInput::make("name")
-                                            ->label("Tên trò chơi")
+                                            ->label(__('admin.events.games.game_name'))
                                             ->required(),
                                         Textarea::make("description")
-                                            ->label("Miêu tả")
+                                            ->label(__('admin.events.games.description'))
                                             ->rows(3),
                                         Select::make("game_type")
-                                            ->label("Loại trò chơi")
+                                            ->label(__('admin.events.games.game_type'))
                                             ->options(
                                                 \App\Utils\Constants\EventGameType::getOptions()
                                             )
                                             ->required(),
                                     ]),
-                                    Tab::make("Cấu hình")->schema([
+                                    Tab::make(__('admin.events.games.configuration'))->schema([
                                         Repeater::make("gifts")
                                             ->relationship("gifts")
-                                            ->label("Gói quà")
+                                            ->label(__('admin.events.games.gift_pack'))
                                             ->schema([
                                                 TextInput::make("name")
-                                                    ->label("Tên gói quà")
+                                                    ->label(__('admin.events.games.gift_name'))
                                                     ->required(),
                                                 TextInput::make("quantity")
                                                     ->numeric()
-                                                    ->label("Số lượng")
+                                                    ->label(__('admin.events.games.quantity'))
                                                     ->required(),
                                                 Textarea::make("description")
-                                                    ->label("Miêu tả"),
+                                                    ->label(__('admin.events.games.description')),
                                                 FileUpload::make("image")
                                                     ->disk("public")
                                                     ->directory("event_gifts")
-                                                    ->label("Hình ảnh")
+                                                    ->label(__('admin.events.games.image'))
                                                     ->image()
                                                     ->maxSize(51200),
                                             ])
@@ -335,11 +335,11 @@ class EventGames extends Page implements HasTable
                                             "config_game.custom_user_rates"
                                         )
                                             ->label(
-                                                "Tỉ lệ chỉ định cho người chơi"
+                                                __('admin.events.games.user_rate_label')
                                             )
                                             ->schema([
                                                 Select::make("user_id")
-                                                    ->label("Người chơi")
+                                                    ->label(__('admin.events.games.player'))
                                                     ->options(
                                                         function ($record) {
                                                             $event = Event::find($record->event_id);
@@ -349,10 +349,10 @@ class EventGames extends Page implements HasTable
                                                     ->searchable()
                                                     ->required(),
                                                 Repeater::make("rates")
-                                                    ->label("Tỉ lệ quà")
+                                                    ->label(__('admin.events.games.gift_rate'))
                                                     ->schema([
                                                         Select::make("gift_id")
-                                                            ->label("Phần quà")
+                                                            ->label(__('admin.events.games.gift'))
                                                             ->options(
                                                                 fn($record) => EventGameGift::where('event_game_id', $record->id)->pluck(
                                                                     "name",
@@ -400,19 +400,19 @@ class EventGames extends Page implements HasTable
                             if ($result['status']) {
                                 Notification::make()
                                     ->success()
-                                    ->title("Cập nhật thành công")
+                                    ->title(__('admin.events.games.update_success'))
                                     ->send();
                             } else {
                                 Notification::make()
                                     ->danger()
-                                    ->title("Cập nhật thất bại")
+                                    ->title(__('admin.events.games.update_failed'))
                                     ->send();
                             }
 
                             $this->resetTable();
                         }),
                     Action::make("link")
-                        ->label("Mở trang")
+                        ->label(__('admin.events.games.open_page'))
                         ->icon("heroicon-o-link")
                         ->color("primary")
                         ->url(

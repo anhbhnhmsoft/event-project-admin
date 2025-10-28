@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>KAMNEX - Hệ thống thiết bị phòng họp trực tuyến</title>
+    <title>{{ __('app.guest.title') }}</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link rel="icon"
         href="https://kamnex.com/wp-content/uploads/2024/05/cropped-f8cb1fdf-4b62-4037-ac5b-8d7474a36c41-32x32.png"

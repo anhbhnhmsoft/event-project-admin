@@ -1,6 +1,6 @@
 <x-filament::section>
     <x-slot name="heading">
-        Danh sách file tài liệu
+        {{ __('admin.events.files.document_list') }}
     </x-slot>
 
     @php
@@ -8,7 +8,7 @@
     @endphp
 
     @if (!$hasDocuments)
-        <p class="text-gray-600">Chưa có file tài liệu nào được tải lên.</p>
+        <p class="text-gray-500">{{ __('admin.events.files.no_documents') }}</p>
     @else
         <div class="space-y-4">
             @foreach ($documentData as $documentIndex => $document)
@@ -36,12 +36,8 @@
                         }
                     }
 
-                    // ✅ Ép kiểu chỉ số và giá trị số
-                    $documentIndex = is_numeric($documentIndex) ? (int) $documentIndex : 0;
-                    $documentTitle = !empty($document['title'])
-                        ? $document['title']
-                        : 'Tài liệu #' . ($documentIndex + 1);
-                    $documentPrice = is_numeric($document['price'] ?? null) ? (float) $document['price'] : 0;
+                    $documentTitle = $document['title'] ?? __('admin.events.files.document_number', ['number' => $documentIndex + 1]);
+                    $documentPrice = $document['price'] ?? 0;
                     $documentId = $document['id'] ?? $documentIndex;
                 @endphp
 
@@ -68,14 +64,14 @@
                                         <h3 class="font-semibold text-gray-900">{{ $documentTitle }}</h3>
                                         @if ($documentPrice > 0)
                                             <p class="text-sm text-gray-600 mt-0.5">
-                                                Giá: {{ number_format($documentPrice, 0, ',', '.') }} VNĐ
+                                                {{ __('admin.events.files.price') }}: {{ number_format($documentPrice, 0, ',', '.') }} {{ __('admin.events.detail.vnd') }}
                                             </p>
                                         @else
-                                            <p class="text-sm text-green-600 mt-0.5">Miễn phí</p>
+                                            <p class="text-sm text-green-600 mt-0.5">{{ __('admin.events.form.free') }}</p>
                                         @endif
                                     </div>
                                 </div>
-                                <span class="text-sm text-gray-500">{{ $files->count() }} file</span>
+                                <span class="text-sm text-gray-500">{{ $files->count() }} {{ __('admin.events.files.file') }}</span>
                             </div>
                         </button>
 
@@ -109,12 +105,12 @@
                                     <div class="flex gap-3 ml-4 flex-shrink-0">
                                         <a href="{{ route('file_document', $item['file_path']) }}" target="_blank"
                                             class="text-blue-600 hover:text-blue-800 underline text-sm">
-                                            Xem / Tải
+                                            {{ __('admin.events.files.view_download') }}
                                         </a>
                                         <button type="button"
                                             wire:click="markFileForDeletion('{{ $item['file_path'] }}')"
                                             class="text-red-600 hover:text-red-800 underline text-sm">
-                                            Xóa
+                                            {{ __('admin.events.files.delete') }}
                                         </button>
                                     </div>
                                 </div>

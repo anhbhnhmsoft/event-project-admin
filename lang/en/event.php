@@ -113,5 +113,28 @@ return [
 
         'ticket_confirmed_title' => 'Ticket Confirmed!',
         'existing_user_existing_ticket_message' => 'The system has confirmed that you have an account and a ticket to this event. Detailed information about the event will be sent back to your email. Please check your mailbox.',
-    ]
+    ],
+    'comments' => [
+        'model_label' => 'Comment',
+        'plural_model_label' => 'Comments',
+        'user_column' => 'User',
+        'content_column' => 'Content',
+        'time_column' => 'Comment Time',
+        'view_action' => 'View',
+        'delete_action' => 'Delete',
+        'record_title' => 'comment',
+        'delete_success' => 'Comment deleted!',
+    ],
+    'votes' => [
+        'options_label' => 'Options / Answers',
+        'option_content_label' => 'Option content',
+        'option_order_label' => 'Order',
+        'option_is_correct_label' => 'Correct answer (for quiz)',
+        'option_is_correct_helper' => 'Mark if this is the correct answer',
+        'add_option_action' => 'Add option',
+        'options_helper_text' => 'Minimum 2 options for multiple choice question',
+        'add_question_action' => 'Add question',
+        'new_question_label' => 'New question',
+        'questions_label' => 'Questions',
+    ],
 ];

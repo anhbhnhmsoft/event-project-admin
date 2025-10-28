@@ -440,7 +440,7 @@
                                         <span>{{ $seatUser['email'] ?? '-' }}</span>
                                     </div>
                                     <div class="flex justify-between">
-                                        <span>SĐT:</span>
+                                        <span>{{ __('admin.events.form.phone') }}:</span>
                                         <span>{{ $seatUser['phone'] ?? '-' }}</span>
                                     </div>
 
@@ -462,7 +462,7 @@
                                                 <tr>
                                                     <th class="text-left">{{__('common.common_success.name')}}</th>
                                                     <th class="text-left">Email</th>
-                                                    <th class="text-left">{{ __('admin.users.table.phone') }}</th>
+                                                    <th class="text-left">{{ __('admin.events.form.phone') }}</th>
                                                     <th></th>
                                                 </tr>
                                             </thead>
@@ -494,8 +494,7 @@
                                                                 <span class="text-sm">
                                                                     @if ($alreadyAssigned)
                                                                         <span
-                                                                            class="text-xs text-red-600 font-medium">Đã
-                                                                            có ghế</span>
+                                                                            class="text-xs text-red-600 font-medium">{{ __('admin.events.form.already_has_seat') }}</span>
                                                                     @else
                                                                         <span
                                                                             class="{{ $selectedSeatUser === $user['id'] ? 'text-green-600 font-semibold' : 'text-gray-700' }}">
@@ -518,13 +517,13 @@
                                 <div class="flex justify-end mt-4 space-x-2">
                                     <button type="button" wire:click="closeDetailSeat"
                                         class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">
-                                        {{  __('common.common_success.close')  }}
+                                        {{ __('admin.events.form.close') }}
                                     </button>
 
 
                                     <button wire:click="assignSeatToUser" @disabled(!$selectedSeatUser)
                                         class="px-4 py-2 bg-indigo-600 cursor-pointer text-white rounded-lg hover:bg-indigo-700">
-                                        {{ __('admin.events.form.assign_user_to_seat') }}
+                                        {{ __('admin.events.form.assign') }}
                                     </button>
                                 </div>
                             </div>

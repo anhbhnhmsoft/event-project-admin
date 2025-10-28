@@ -4,7 +4,7 @@
 @endphp
 
 <div class="">
-    <p style="word-break: break-all;">Link tham dự: <x-filament::link href="{{$url}}" target="_blank">{{$url}}</x-filament::link></p>
+    <p style="word-break: break-all;">{{ __('admin.events.qr.participation_link') }}: <x-filament::link href="{{$url}}" target="_blank">{{$url}}</x-filament::link></p>
     <img src="{{ $qrUrl }}" style="margin: 0 auto;" alt="QR Code" class="mx-auto">
 </div>
 
@@ -24,7 +24,7 @@
 
                     URL.revokeObjectURL(blobUrl);
                 })
-                .catch(error => console.error('Lỗi khi tải xuống:', error));
+                .catch(error => console.error('{{ __('admin.events.qr.download_error') }}:', error));
         ">
-    Tải xuống Mã QR
+    {{ __('admin.events.qr.download_qr') }}
 </x-filament::link>
