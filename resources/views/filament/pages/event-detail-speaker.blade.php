@@ -119,7 +119,7 @@
                                             <div class="flex-1">
                                                 <div class="font-medium">{{ $doc['title'] }}</div>
                                                 @if ($doc['price'] > 0)
-                                                    <div class="text-sm">{{ number_format($doc['price']) }} VNĐ</div>
+                                                    <div class="text-sm">{{ number_format($doc['price']) }} {{ __('admin.events.detail.vnd') }}</div>
                                                 @else
                                                     <div class="text-sm">{{ __('admin.events.detail.free') }}</div>
                                                 @endif

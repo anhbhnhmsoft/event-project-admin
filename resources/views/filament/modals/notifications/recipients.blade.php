@@ -2,9 +2,9 @@
     <table class="w-full text-sm">
         <thead>
             <tr class="text-left border-b">
-                <th class="py-2 pr-2">User</th>
-                <th class="py-2 pr-2">Trạng thái</th>
-                <th class="py-2 pr-2">Thời gian</th>
+                <th class="py-2 pr-2">{{ __('admin.notifications.user') }}</th>
+                <th class="py-2 pr-2">{{ __('admin.notifications.status') }}</th>
+                <th class="py-2 pr-2">{{ __('admin.notifications.time') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -19,7 +19,7 @@
                 </tr>
             @else
                 <tr>
-                    <td colspan="3" class="text-center text-gray-500">Chưa có người nhận</td>
+                    <td colspan="3" class="text-center text-gray-500">{{ __('admin.notifications.no_recipients') }}</td>
                 </tr>
             @endif
         </tbody>

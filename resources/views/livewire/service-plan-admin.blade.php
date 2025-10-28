@@ -88,7 +88,7 @@
                 <x-slot name="heading">{{ __('admin.service_plan.payment') }}</x-slot>
 
                 <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                    {{-- Thông tin gói --}}
+                    {{-- {{ __('admin.service_plan.package_info') }} --}}
                     <div class="order-1 xl:order-2">
                         <div
                             class="w-full bg-white border border-gray-200 rounded-xl shadow-lg dark:bg-gray-800 dark:border-gray-700 h-fit">
@@ -117,7 +117,7 @@
                                             {{ number_format($membership->price, 0, ',', '.') }} VND
                                         </h6>
                                         <span class="text-sm sm:text-base text-gray-500 dark:text-gray-400">
-                                            / {{ $membership->duration }} tháng
+                                            / {{ $membership->duration }} {{ __('admin.service_plan.months') }}
                                         </span>
                                     </div>
 
@@ -144,7 +144,7 @@
                         </div>
                     </div>
 
-                    {{-- QR Code thanh toán --}}
+                    {{-- {{ __('admin.service_plan.qr_code_payment') }} --}}
                     <div class="order-2 xl:order-1">
                         <div x-data="{ loading: true }"
                             x-on:payment-success.window="setTimeout(() => { $wire.redirectAfterSuccess() }, 1000)"
@@ -182,7 +182,7 @@
                             @endif
                         </div>
 
-                        {{-- Trạng thái thanh toán --}}
+                        {{-- {{ __('admin.service_plan.payment_status') }} --}}
                         <div class="mt-6 bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700"
                             wire:poll.2s="refreshOrder">
                             <div class="text-center">

@@ -22,7 +22,7 @@
                             <div class="ml-3 hidden sm:block">
                                 <p
                                     class="text-sm font-medium {{ $currentStage >= 1 ? 'text-primary-600' : 'text-white' }}">
-                                    Chọn gói
+                                    {{ __('admin.signup.step_choose_plan') }}
                                 </p>
                             </div>
                         </div>
@@ -46,7 +46,7 @@
                             <div class="ml-3 hidden sm:block">
                                 <p
                                     class="text-sm font-medium {{ $currentStage >= 2 ? 'text-primary-600' : 'text-gray-500' }}">
-                                    Đăng ký
+                                    {{ __('admin.signup.step_register') }}
                                 </p>
                             </div>
                         </div>
@@ -70,7 +70,7 @@
                             <div class="ml-3 hidden sm:block">
                                 <p
                                     class="text-sm font-medium {{ $currentStage >= 3 ? 'text-primary-600' : 'text-gray-500' }}">
-                                    Thanh toán
+                                    {{ __('admin.signup.step_payment') }}
                                 </p>
                             </div>
                         </div>
@@ -90,7 +90,7 @@
                             <div class="ml-3 hidden sm:block">
                                 <p
                                     class="text-sm font-medium {{ $currentStage >= 4 ? 'text-primary-600' : 'text-gray-500' }}">
-                                    Hoàn tất
+                                    {{ __('admin.signup.step_complete') }}
                                 </p>
                             </div>
                         </div>
@@ -104,17 +104,17 @@
                     {{-- Header --}}
                     <div class="text-center mb-12">
                         <h2 class="text-4xl font-bold text-gray-900 dark:text-blue-600 mb-4">
-                            Chọn Gói Dịch Vụ
+                            {{ __('admin.signup.choose_service_plan') }}
                         </h2>
                         <p class="text-lg text-gray-600 dark:text-white">
-                            Lựa chọn gói dịch vụ phù hợp để bắt đầu hành trình của bạn.
+                            {{ __('admin.signup.choose_service_plan_description') }}
                         </p>
                     </div>
 
                     @if (empty($planList))
                         <div class="text-center text-gray-500 dark:text-white p-8">
-                            <p class="text-lg font-semibold">Hiện chưa có gói dịch vụ nào.</p>
-                            <p class="mt-2 text-sm">Vui lòng quay lại sau.</p>
+                            <p class="text-lg font-semibold">{{ __('admin.signup.no_service_plans') }}</p>
+                            <p class="mt-2 text-sm">{{ __('admin.signup.please_come_back_later') }}</p>
                         </div>
                     @else
                         {{-- Plans Grid --}}
@@ -149,9 +149,9 @@
                                                     {{ number_format($plan->price, 0, ',', '.') }}
                                                 </span>
                                             </div>
-                                            <p class="text-gray-600 dark:text-white mt-1">VND</p>
+                                            <p class="text-gray-600 dark:text-white mt-1">{{ __('admin.signup.vnd') }}</p>
                                             <p class="text-sm text-gray-500 dark:text-white mt-2">
-                                                Thời hạn: **{{ $plan->duration }} tháng**
+                                                {{ __('admin.signup.duration') }}: **{{ $plan->duration }} {{ __('admin.signup.months') }}**
                                             </p>
                                         </div>
 
@@ -181,13 +181,13 @@
                                         @if ($selectedPlan && $selectedPlan->id == $plan->id)
                                             <button type="button" disabled
                                                 class="w-full py-3.5 px-6 rounded-xl font-bold text-blue-600 bg-blue-600 border-2 border-blue-600 cursor-not-allowed opacity-75">
-                                                Đã Chọn
+                                                {{ __('admin.signup.selected') }}
                                             </button>
                                         @else
                                             <button type="button" wire:click="selectPlan('{{ $plan->id }}')"
                                                 class="w-full py-3.5 px-6 rounded-xl font-bold transition-all duration-200 cursor-pointer
                                                 text-blue-600 bg-white border-2 border-blue-600 hover:bg-blue-50 dark:bg-gray-800 dark:text-blue-400 dark:border-blue-400 dark:hover:bg-gray-700">
-                                                Chọn Gói Này
+                                                {{ __('admin.signup.choose_this_plan') }}
                                             </button>
                                         @endif
                                     </div>
@@ -200,7 +200,7 @@
                             <div class="text-center">
                                 <button type="button" wire:click="$set('currentStage', 2)"
                                     class="inline-flex items-center gap-2 px-8 py-4 bg-blue-600 hover:bg-blue-700 text-blue-600 font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">
-                                    Tiếp Tục Đăng Ký
+                                    {{ __('admin.signup.continue_registration') }}
                                     <x-heroicon-m-arrow-right class="w-5 h-5" />
                                 </button>
                             </div>
