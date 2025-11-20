@@ -31,6 +31,11 @@ class CreateUser extends CreateRecord
         parent::mount();
         $this->ensurePlanAccessible();
     }
+
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
+    }
     protected function getCreateFormAction(): Action
     {
         return parent::getCreateFormAction()

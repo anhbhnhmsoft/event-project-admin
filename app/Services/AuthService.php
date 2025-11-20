@@ -344,40 +344,73 @@ class AuthService
                 $action = 'rebooked';
             }
 
-            // Lấy event & ghế trống
+            // Lấy event
             $event = Event::query()->findOrFail($data['event_id']);
 
-            $seat = EventSeat::query()
-                ->whereHas('area', function (Builder $q) use ($event) {
-                    $q->where('event_id', $event->id)
-                        ->where('vip', false);
-                })
-                ->where('status', EventSeatStatus::AVAILABLE->value)
-                ->whereNull('user_id')
-                ->orderBy('id')
-                ->lockForUpdate()
+            // Kiểm tra lịch sử tham gia
+            $history = EventUserHistory::query()
+                ->where('user_id', $user->id)
+                ->where('event_id', $event->id)
                 ->first();
-
-            if (! $seat) {
-                DB::rollBack();
-                return [
-                    'status'  => false,
-                    'message' => __('event.validation.no_available_seat'),
-                ];
-            }
 
             // Xác định trạng thái vé
             $status = $event->status == EventStatus::ACTIVE->value
                 ? EventUserHistoryStatus::PARTICIPATED->value
                 : EventUserHistoryStatus::BOOKED->value;
 
+            if ($history) {
+                // Nếu đã có vé
+                $history->update([
+                    'status' => $status,
+                ]);
 
-            if (! $history) {
+                // Nếu vé chưa có ghế, mới tìm ghế gán vào
+                if (!$history->event_seat_id) {
+                    $seat = EventSeat::query()
+                        ->whereHas('area', function (Builder $q) use ($event) {
+                            $q->where('event_id', $event->id)
+                                ->where('vip', false);
+                        })
+                        ->where('status', EventSeatStatus::AVAILABLE->value)
+                        ->whereNull('user_id')
+                        ->orderBy('id')
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($seat) {
+                        $history->update(['event_seat_id' => $seat->id]);
+                        $seat->update([
+                            'user_id' => $user->id,
+                            'status'  => EventSeatStatus::BOOKED->value,
+                        ]);
+                    }
+                }
+            } else {
+                // Chưa có vé -> Tìm ghế trống và tạo vé mới
+                $seat = EventSeat::query()
+                    ->whereHas('area', function (Builder $q) use ($event) {
+                        $q->where('event_id', $event->id)
+                            ->where('vip', false);
+                    })
+                    ->where('status', EventSeatStatus::AVAILABLE->value)
+                    ->whereNull('user_id')
+                    ->orderBy('id')
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$seat) {
+                    DB::rollBack();
+                    return [
+                        'status'  => false,
+                        'message' => __('event.validation.no_available_seat'),
+                    ];
+                }
+
                 // Tạo ticket code mới
                 do {
                     $ticketCode = 'TICKET-' . Helper::getTimestampAsId();
                 } while (EventUserHistory::where('ticket_code', $ticketCode)->exists());
-                //Tạo vé mới
+
                 EventUserHistory::query()->create([
                     'event_id'      => $event->id,
                     'user_id'       => $user->id,
@@ -385,27 +418,13 @@ class AuthService
                     'event_seat_id' => $seat->id,
                     'ticket_code'   => $ticketCode,
                 ]);
-            } else {
-                //  Cập nhật vé cũ (nếu có)
-                $history->update([
-                    'status'        => $status,
-                    'event_seat_id' => $seat->id,
+
+                // Cập nhật ghế cho user
+                $seat->update([
+                    'user_id' => $user->id,
+                    'status'  => EventSeatStatus::BOOKED->value,
                 ]);
-
-                // Giải phóng ghế cũ (nếu có)
-                if ($history && $history->event_seat_id && $history->event_seat_id != $seat->id) {
-                    EventSeat::where('id', $history->event_seat_id)->update([
-                        'user_id' => null,
-                        'status'  => EventSeatStatus::AVAILABLE->value,
-                    ]);
-                }
             }
-
-            // Cập nhật ghế cho user
-            $seat->update([
-                'user_id' => $user->id,
-                'status'  => EventSeatStatus::BOOKED->value,
-            ]);
 
             DB::commit();
 

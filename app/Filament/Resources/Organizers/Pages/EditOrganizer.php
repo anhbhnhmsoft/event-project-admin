@@ -84,7 +84,7 @@ class EditOrganizer extends Page implements HasSchemas
         if ($record->wasRecentlyCreated) {
             $this->form->record($record)->saveRelationships();
         }
-
+        
         Notification::make()
             ->success()
             ->title(__('common.common_success.update_success'))

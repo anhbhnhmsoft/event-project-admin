@@ -26,6 +26,11 @@ class CreateOrganizerAdmin extends CreateRecord
         ];
     }
 
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
+    }
+
     protected function getCreateFormAction(): Action
     {
         return parent::getCreateFormAction()->label(__('common.common_success.create'));

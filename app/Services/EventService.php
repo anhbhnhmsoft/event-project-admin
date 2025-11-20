@@ -131,6 +131,7 @@ class EventService
             // Đóng sự kiện đã kết thúc ---
             Event::query()
                 ->where('status', EventStatus::ACTIVE->value)
+                ->orWhere('status', EventStatus::UPCOMING->value)
                 ->whereRaw('CONCAT(DATE(day_represent), " ", TIME(end_time)) < ?', [$now])
                 ->update(['status' => EventStatus::CLOSED->value]);
 
@@ -198,7 +199,7 @@ class EventService
                             'start_time' => $event->start_time,
                             'short_description' => $event->short_description,
                             'address' => $event->address,
-                            'organizer_name' => $event->organizer->name ?? 'Đơn vị tổ chức',
+                            'organizer_name' => $event->organizer->name ?? __('organizer.label.name'),
                             'latitude' => $event->latitude,
                             'longitude' => $event->longitude,
                             'map_link'  => "https://www.google.com/maps?q={$event->latitude},{$event->longitude}",

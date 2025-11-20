@@ -34,6 +34,11 @@ class EditEvent extends EditRecord
         parent::mount($record);
         $this->ensurePlanAccessible();
     }
+
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
+    }
     public array $filesMarkedForDeletion = [];
 
     protected function mutateFormDataBeforeFill(array $data): array

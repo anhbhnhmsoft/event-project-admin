@@ -206,11 +206,6 @@ class EventForm
                             ->validationMessages([
                                 'required' => __('admin.events.form.validation.status_required'),
                             ]),
-                        TextInput::make('price_comment')
-                            ->label(__('admin.events.form.private_comment_price'))
-                            ->default(0)
-                            ->numeric()
-                            ->helperText(__('admin.events.form.private_comment_help')),
                     ]),
                 Tab::make('participants')
                     ->label(__('admin.events.form.participants'))
@@ -490,7 +485,7 @@ class EventForm
                                     ->schema([
                                         Hidden::make('id')
                                             ->label(__('admin.events.form.document_id')),
-                                            Hidden::make('files_metadata')
+                                        Hidden::make('files_metadata')
                                             ->dehydrated(false),
                                         TextInput::make('title')
                                             ->label(__('admin.events.form.document_title'))
