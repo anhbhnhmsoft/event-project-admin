@@ -21,13 +21,12 @@ class EventPollController extends Controller
 
     public function submit(Request $request, $idcode)
     {
-        $pollId = Crypt::decryptString($idcode);
         $data = $request->validate([
             'email' => 'required|email',
             'phone' => 'nullable|string',
             'answers' => 'required|array',
         ]);
-        $result = $this->eventPollService->submitAnswers($pollId, $data['email'], $data['answers']);
+        $result = $this->eventPollService->submitAnswers($idcode, $data['email'], $data['answers']);
 
         return response()->json(
             [
@@ -38,11 +37,10 @@ class EventPollController extends Controller
 
     public function show($idcode)
     {
-        $pollId = Crypt::decryptString($idcode);
-        $poll = $this->eventPollService->getPoll((int) $pollId);
+        $poll = $this->eventPollService->getPoll((int) $idcode);
 
         if (!$poll) {
-            Log::warning('Poll not found', ['poll_id' => $pollId]);
+            Log::warning('Poll not found', ['poll_id' => $idcode]);
             abort(404, __('poll.validation.invalid_poll'));
         }
 

@@ -48,6 +48,7 @@ return [
         'area_not_found' => 'Không tìm thấy khu vực',
         'cannot_create_ticket' => 'Không thể tạo vé',
         'seat_payment_description' => 'Ghế :seat_code - :event_id',
+        'register_fail_title'   => 'Đăng ký thất bại'
     ],
     'general' => [
         'event_title' => 'Sự kiện',
@@ -96,5 +97,16 @@ return [
     ],
     'mail' => [
         'subject_event_start' => 'Sự kiện :name đã bắt đầu!',
+    ],
+    'messages' =>
+    [
+        'register_success_title' => 'Đăng Ký & Cấp Vé Thành Công!',
+        'new_user_new_ticket_message' => 'Chào mừng bạn! Chúng tôi đã tạo tài khoản và cấp vé thành công. Thông tin đăng nhập (mật khẩu mặc định là SĐT của bạn) và vé tham dự đã được gửi đến email. Vui lòng kiểm tra hộp thư để biết chi tiết.',
+
+        'ticket_granted_title' => 'Cấp Vé Thành Công!',
+        'existing_user_new_ticket_message' => 'Tài khoản của bạn đã được cấp vé tham dự sự kiện này. Vui lòng kiểm tra email để nhận mã vé và các hướng dẫn chi tiết về sự kiện.',
+
+        'ticket_confirmed_title' => 'Đã Xác Nhận Vé!',
+        'existing_user_existing_ticket_message' => 'Hệ thống xác nhận bạn đã có tài khoản và vé tham dự sự kiện này. Thông tin chi tiết về sự kiện sẽ được gửi lại đến email của bạn. Vui lòng kiểm tra hộp thư.',
     ]
 ];

@@ -134,24 +134,25 @@
                                     </div>
                                 </div>
 
-                                @if(isset($doc['files']) && count($doc['files']) > 0)
-                                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-3">
-                                    @foreach($doc['files'] as $file)
-                                    <a href="{{ \Illuminate\Support\Facades\Storage::url($file['file_path']) }}" target="_blank" class="group relative block overflow-hidden rounded-lg border border-white/20 bg-black/20 hover:bg-black/40 transition">
-                                        @php
-                                        $isImage = in_array(strtolower($file['file_extension']), ['jpg', 'jpeg', 'png', 'gif', 'webp']);
-                                        @endphp
-                                        @if($isImage)
-                                        <div class="aspect-video w-full overflow-hidden">
-                                            <img src="{{ \Illuminate\Support\Facades\Storage::url($file['file_path']) }}" alt="{{ $file['file_name'] }}" class="h-full w-full object-cover transition group-hover:scale-105">
-                                        </div>
-                                        @else
-                                        <div class="flex aspect-video w-full items-center justify-center bg-white/5">
-                                            <x-filament::icon icon="heroicon-o-paper-clip" class="w-8 h-8 text-white/50" />
-                                        </div>
-                                        @endif
-                                        <div class="p-2">
-                                            <div class="truncate text-xs font-medium text-white" title="{{ $file['file_name'] }}">{{ $file['file_name'] }}</div>
+                        {{-- Tài liệu --}}
+                        @if (isset($current['documents']) && count($current['documents']) > 0)
+                            <div class="mt-4 bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                                <h3 class="font-semibold mb-3 flex items-center gap-2">
+                                    <x-filament::icon icon="heroicon-o-document-text" class="w-5 h-5" />
+                                    {{ __('admin.events.detail.documents_count', ['count' => count($current['documents'])]) }}
+                                </h3>
+                                <div class="space-y-2">
+                                    @foreach ($current['documents'] as $doc)
+                                        <div class="flex items-center gap-3 p-3 bg-white/10 rounded-lg">
+                                            <x-filament::icon icon="heroicon-o-document" class="w-5 h-5" />
+                                            <div class="flex-1">
+                                                <div class="font-medium">{{ $doc['title'] }}</div>
+                                                @if ($doc['price'] > 0)
+                                                    <div class="text-sm">{{ number_format($doc['price']) }} {{ __('admin.events.detail.vnd') }}</div>
+                                                @else
+                                                    <div class="text-sm">{{ __('admin.events.detail.free') }}</div>
+                                                @endif
+                                            </div>
                                         </div>
                                     </a>
                                     @endforeach

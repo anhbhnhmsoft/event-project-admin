@@ -5,24 +5,24 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>MICHEC: Hệ thống Tổ chức Sự kiện Toàn diện | Đăng ký, Check-in, Tương tác</title>
+    <title>{{ __('app.meta.title') }}</title>
     <meta name="description"
-        content="MICHEC là nền tảng quản lý sự kiện số hóa từ A-Z, giúp tối ưu hóa quy trình lập kế hoạch, đăng ký, check-in QR/Face Recognition và tương tác khách mời. Yêu cầu demo ngay!">
+        content="{{ __('app.meta.description') }}">
     <meta name="keywords"
-        content="hệ thống tổ chức sự kiện, quản lý sự kiện, phần mềm check-in sự kiện, đăng ký sự kiện, event management system, MICHEC">
-    <meta name="author" content="Michec Team">
+        content="{{ __('app.meta.keywords') }}">
+    <meta name="author" content="{{ __('app.meta.author') }}">
 
-    <meta property="og:title" content="MICHEC: Hệ thống Tổ chức Sự kiện Toàn diện | Tối ưu hóa A-Z">
+    <meta property="og:title" content="{{ __('app.meta.og_title') }}">
     <meta property="og:description"
-        content="Số hóa mọi quy trình sự kiện: đăng ký tự động, check-in nhanh chóng, tương tác trực tiếp và phân tích chuyên sâu. Tăng trải nghiệm khách mời, giảm chi phí vận hành.">
+        content="{{ __('app.meta.og_description') }}">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://michec.vn/">
     <meta property="og:image" content="/logo-michec.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="@michec">
-    <meta name="twitter:title" content="MICHEC: Hệ thống Tổ chức Sự kiện Toàn diện | Đăng ký, Check-in, Tương tác">
+    <meta name="twitter:title" content="{{ __('app.meta.twitter_title') }}">
     <meta name="twitter:description"
-        content="Tối ưu hóa lập kế hoạch, đăng ký, check-in QR/Face Recognition, tương tác và báo cáo sự kiện với nền tảng MICHEC.">
+        content="{{ __('app.meta.twitter_description') }}">
     <meta name="twitter:image" content="/logo-michec.png">
 
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -416,8 +416,8 @@
 
             <!-- Nút Đăng nhập và Đăng ký -->
             <div class="nav-buttons">
-                <a href="/admin/login" class="btn-nav btn-login">Đăng nhập</a>
-                <a href="{{ route('signup') }}" class="btn-nav btn-signup">Đăng ký</a>
+                <a href="/admin/login" class="btn-nav btn-login">{{ __('app.nav.login') }}</a>
+                <a href="{{ route('signup') }}" class="btn-nav btn-signup">{{ __('app.nav.register') }}</a>
             </div>
         </div>
     </header>
@@ -427,15 +427,13 @@
         <div class="container">
             <div class="hero-header">
                 <!-- Tagline mới, sử dụng màu xanh -->
-                <div class="tagline">Hệ thống Tổ chức & Quản lý Sự kiện Toàn diện</div>
+                <div class="tagline">{{ __('app.welcome.tagline') }}</div>
             </div>
 
             <div class="content">
                 <div class="left-section">
-                    <h1>Tối ưu hóa mọi sự kiện, từ A đến Z, với MICHEC</h1>
-                    <p>MICHEC là nền tảng quản lý sự kiện chuyên nghiệp, giúp doanh nghiệp và tổ chức số hóa toàn bộ quy
-                        trình: từ lập kế hoạch, đăng ký, check-in, đến tương tác và đo lường hiệu quả sau sự kiện. Tăng
-                        cường trải nghiệm khách mời và tiết kiệm tối đa chi phí tổ chức.</p>
+                    <h1>{{ __('app.welcome.main_title') }}</h1>
+                    <p>{{ __('app.welcome.main_description') }}</p>
 
                     <div class="features">
                         <div class="feature">
@@ -467,8 +465,8 @@
                     </div>
 
                     <div class="cta-buttons">
-                        <a href="#demo" class="btn btn-primary">Yêu cầu Demo ngay</a>
-                        <a href="#pricing" class="btn btn-secondary">Xem Bảng giá</a>
+                        <a href="#demo" class="btn btn-primary">{{ __('app.welcome.request_demo') }}</a>
+                        <a href="#pricing" class="btn btn-secondary">{{ __('app.welcome.view_pricing') }}</a>
                     </div>
                 </div>
 
