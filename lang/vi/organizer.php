@@ -11,4 +11,9 @@ return [
         'get_active_failed' => 'Lấy danh sách nhà tổ chức thất bại',
         'get_options_failed' => 'Lấy tùy chọn nhà tổ chức thất bại',
     ],
+    'label' => [
+        'name' => 'Tên nhà tổ chức',
+        'image' => 'Hình ảnh',
+        'description' => 'Mô tả',
+    ],
 ];

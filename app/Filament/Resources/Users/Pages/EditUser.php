@@ -34,6 +34,11 @@ class EditUser extends EditRecord
         ];
     }
 
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
+    }
+
     protected function mutateFormDataBeforeSave(array $data): array
     {
         if (!empty($data['verify_email'])) {

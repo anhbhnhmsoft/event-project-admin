@@ -20,7 +20,7 @@ class EditOrganizerAdmin extends EditRecord
     {
         return [
             DeleteAction::make()
-            ->label(__('common.common_success.delete')),
+                ->label(__('common.common_success.delete')),
         ];
     }
     public function getBreadcrumbs(): array
@@ -29,6 +29,11 @@ class EditOrganizerAdmin extends EditRecord
             url()->previous() => __('admin.organizers.model_label'),
             '' => __('admin.organizers.pages.edit_title'),
         ];
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
     }
 
     protected function getSaveFormAction(): Action
@@ -41,5 +46,3 @@ class EditOrganizerAdmin extends EditRecord
         return parent::getCancelFormAction()->label(__('common.common_success.cancel'));
     }
 }
-
-

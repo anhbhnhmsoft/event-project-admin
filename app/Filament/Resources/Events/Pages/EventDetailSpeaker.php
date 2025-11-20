@@ -40,7 +40,7 @@ class EventDetailSpeaker extends Page
         // Load schedules và sắp xếp theo thứ tự
         $this->schedules = $event->schedules()
             ->orderBy('sort')
-            ->with('documents')
+            ->with('documents.files')
             ->get()
             ->toArray();
 
