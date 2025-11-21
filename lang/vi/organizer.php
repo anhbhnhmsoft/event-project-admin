@@ -80,6 +80,7 @@ return [
             'phone_required' => 'Số điện thoại người dùng là bắt buộc',
             'password_required' => 'Mật khẩu là bắt buộc',
             'password_confirmed' => 'Xác nhận mật khẩu không khớp',
+            'phone_valid' => 'Số điện thoại không hợp lệ'
         ],
         'notifications' => [
             'load_plan_error' => 'Không thể tải thông tin gói dịch vụ.',

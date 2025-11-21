@@ -11,6 +11,7 @@ use App\Utils\Helper;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
 use Livewire\Component;
+use App\Utils\Constants\CommonStatus;
 use Livewire\Attributes\Session;
 use Illuminate\Validation\Rules\Password;
 
@@ -100,6 +101,7 @@ class SignupOrganizer extends Component
             'userPhone.required' => __('organizer.signup.validation.phone_required'),
             'password.required' => __('organizer.signup.validation.password_required'),
             'password.confirmed' => __('organizer.signup.validation.password_confirmed'),
+            'userPhone.regex' => __('organizer.signup.validation.phone_valid')
         ];
     }
 
@@ -159,7 +161,7 @@ class SignupOrganizer extends Component
             $this->validate();
 
             $result = $this->organizerService->completeSignupFlow(
-                ['name' => $this->organizerName, 'status' => false],
+                ['name' => $this->organizerName, 'status' => CommonStatus::ACTIVE->value],
                 [
                     'name' => $this->userName,
                     'email' => $this->userEmail,

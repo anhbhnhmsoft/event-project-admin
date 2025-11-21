@@ -75,6 +75,7 @@ return [
             'phone_required' => 'Phone number is required',
             'password_required' => 'Password is required',
             'password_confirmed' => 'Password confirmation does not match',
+            'phone_valid' => 'Invalid phone number'
         ],
         'notifications' => [
             'load_plan_error' => 'Cannot load service plan information.',
