@@ -48,9 +48,9 @@ class ServicePlanAdmin extends Component
 
     public function boot(MemberShipService $membershipService, TransactionService $transactionService, OrganizerService $organizerService)
     {
-        $this->membershipService  = $membershipService;
+        $this->membershipService = $membershipService;
         $this->transactionService = $transactionService;
-        $this->organizerService   = $organizerService;
+        $this->organizerService = $organizerService;
     }
 
     public function mount()
@@ -59,7 +59,7 @@ class ServicePlanAdmin extends Component
         if ($this->step || empty($this->list)) {
             $filters = [
                 'status' => true,
-                'type'   => TransactionType::PLAN_SERVICE->value,
+                'type' => TransactionType::PLAN_SERVICE->value,
             ];
 
             $this->list = $this->membershipService->getListMembershipForAdmin($filters, 'sort');
@@ -78,7 +78,7 @@ class ServicePlanAdmin extends Component
             }
         } else {
             Notification::make()
-                ->title('Không thể tải thông tin tổ chức')
+                ->title(__('service_plan.notifications.org_info_error'))
                 ->send();
         }
     }
@@ -91,7 +91,7 @@ class ServicePlanAdmin extends Component
 
         if (!isset($result['status']) || !$result['status']) {
             return Notification::make()
-                ->title('Không thể tải thông tin gói dịch vụ.')
+                ->title(__('service_plan.notifications.plan_info_error'))
                 ->danger()
                 ->send();
         }
@@ -102,7 +102,7 @@ class ServicePlanAdmin extends Component
             TransactionType::PLAN_SERVICE->value
         );
 
-        if (isset($resultRegisterPay['status']) && $resultRegisterPay['status']) {
+        if (isset($result['status']) && $result['status']) {
             $this->step = false;
             $transaction = $resultRegisterPay['data'];
             $this->transactionId = $transaction->id;
@@ -119,7 +119,7 @@ class ServicePlanAdmin extends Component
             $this->expiryTime = now()->addMinutes(15)->timestamp;
         } else {
             Notification::make()
-                ->title('Không thể khởi tạo thanh toán.')
+                ->title(__('service_plan.notifications.init_payment_error'))
                 ->danger()
                 ->send();
         }
@@ -162,14 +162,14 @@ class ServicePlanAdmin extends Component
                     $this->paymentStatus = $status;
                     if ($status == TransactionStatus::SUCCESS->value) {
                         Notification::make()
-                            ->title('Thanh toán thành công')
+                            ->title(__('service_plan.notifications.payment_success'))
                             ->success()
                             ->send();
                         $this->paymentStatus = TransactionStatus::SUCCESS->value;
                         $this->changeMembershipSelected(true);
                     } elseif ($status == TransactionStatus::FAILED->value) {
                         Notification::make()
-                            ->title('Thanh toán thất bại')
+                            ->title(__('service_plan.notifications.payment_failed'))
                             ->danger()
                             ->send();
                         $this->paymentStatus = TransactionStatus::FAILED->value;
@@ -177,7 +177,7 @@ class ServicePlanAdmin extends Component
                     }
                 } else {
                     Notification::make()
-                        ->title('Không thể kiểm tra trạng thái thanh toán.')
+                        ->title(__('service_plan.notifications.check_status_error'))
                         ->danger()
                         ->send();
                     $this->paymentStatus = TransactionStatus::FAILED->value;
@@ -207,7 +207,7 @@ class ServicePlanAdmin extends Component
                 $this->paymentStatus = TransactionStatus::FAILED->value;
 
                 Notification::make()
-                    ->title('Giao dịch đã hết hạn')
+                    ->title(__('service_plan.notifications.transaction_expired'))
                     ->warning()
                     ->send();
 
@@ -225,12 +225,12 @@ class ServicePlanAdmin extends Component
 
             if (isset($result['status']) && $result['status']) {
                 Notification::make()
-                    ->title('Đã hủy giao dịch')
+                    ->title(__('service_plan.notifications.transaction_cancelled'))
                     ->success()
                     ->send();
             } else {
                 Notification::make()
-                    ->title($result['message'] ?? 'Không thể hủy giao dịch')
+                    ->title($result['message'] ?? __('service_plan.notifications.cancel_error'))
                     ->danger()
                     ->send();
             }
