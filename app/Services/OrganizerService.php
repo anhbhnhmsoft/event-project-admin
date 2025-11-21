@@ -215,7 +215,7 @@ class OrganizerService
         try {
             $organizer = Organizer::create([
                 'name' => $organizerData['name'],
-                'status' => $organizerData['status'] ?? false,
+                'status' => $organizerData['status'] ?? CommonStatus::ACTIVE->value ,
             ]);
 
             $user = User::create([
