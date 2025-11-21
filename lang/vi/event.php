@@ -108,5 +108,17 @@ return [
 
         'ticket_confirmed_title' => 'Đã Xác Nhận Vé!',
         'existing_user_existing_ticket_message' => 'Hệ thống xác nhận bạn đã có tài khoản và vé tham dự sự kiện này. Thông tin chi tiết về sự kiện sẽ được gửi lại đến email của bạn. Vui lòng kiểm tra hộp thư.',
+
+        'checkin_success_title' => 'Check-in thành công!',
+        'checkin_success_message' => 'Bạn đã check-in thành công. Chúc bạn có trải nghiệm tuyệt vời!',
+        'account_not_found_title' => 'Không tìm thấy tài khoản',
+        'account_not_found_message' => 'Không tìm thấy tài khoản với thông tin này. Vui lòng kiểm tra lại email và số điện thoại.',
+        'ticket_not_found_title' => 'Không tìm thấy vé',
+        'ticket_not_found_message' => 'Bạn chưa đăng ký tham gia sự kiện này. Vui lòng đăng ký trước khi check-in.',
+        'event_not_started_title' => 'Sự kiện chưa bắt đầu',
+        'event_not_started_message' => 'Sự kiện chưa bắt đầu. Vui lòng quay lại khi sự kiện đã mở.',
+        'checkin_failed_title' => 'Lỗi hệ thống',
+        'checkin_failed_message' => 'Đã xảy ra lỗi trong quá trình check-in. Vui lòng thử lại.',
+        'no_seat_assigned' => 'Chưa có ghế',
     ]
 ];

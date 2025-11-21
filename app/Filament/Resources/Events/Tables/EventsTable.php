@@ -96,6 +96,17 @@ class EventsTable
                         ]))
                         ->modalSubmitAction(false)
                         ->modalCancelAction(fn(Action $action) => $action->label(__('common.common_success.close'))),
+                    Action::make('check-in')
+                        ->label('Check-in QR')
+                        ->icon('heroicon-o-qr-code')
+                        ->color('success')
+                        ->modalHeading('Check-in QR Code')
+                        ->modalContent(fn($record) => view('filament.event.quick-register-qr', [
+                            'event' => $record,
+                            'url' => Helper::quickCheckinUrl($record)
+                        ]))
+                        ->modalSubmitAction(false)
+                        ->modalCancelAction(fn(Action $action) => $action->label(__('common.common_success.close'))),
                     Action::make('comments-manager')
                         ->label(__('admin.events.table.manage_comments'))
                         ->icon('heroicon-o-chat-bubble-bottom-center-text')
@@ -120,6 +131,17 @@ class EventsTable
                         ->url(fn($record) => EventResource::getUrl('speaker-screen', ['record' => $record]))
                         ->openUrlInNewTab()
                         ->color('primary'),
+                    Action::make('check-in')
+                        ->label('Check-in QR')
+                        ->icon('heroicon-o-qr-code')
+                        ->color('success')
+                        ->modalHeading('Check-in QR Code')
+                        ->modalContent(fn($record) => view('filament.event.quick-register-qr', [
+                            'event' => $record,
+                            'url' => Helper::quickCheckinUrl($record)
+                        ]))
+                        ->modalSubmitAction(false)
+                        ->modalCancelAction(fn(Action $action) => $action->label(__('common.common_success.close'))),
                 ])
             ])
             ->toolbarActions([

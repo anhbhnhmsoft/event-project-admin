@@ -111,6 +111,7 @@ class AuthService
     public function editInfoUser(array $data)
     {
         $user = Auth::user();
+        /** @var User $user */
         try {
             $user->name = $data['name'];
             $user->address = $data['address'] ?? null;
@@ -135,6 +136,7 @@ class AuthService
     public function editInfoAvatar($file): array
     {
         $user = Auth::user();
+        /** @var User $user */
         try {
             if (!$file instanceof UploadedFile) {
                 throw new ServiceException(__('auth.validation.avatar_invalid'));
@@ -171,6 +173,7 @@ class AuthService
     public function deleteAvatar(): array
     {
         $user = Auth::user();
+        /** @var User $user */
         try {
             if ($user->avatar_path) {
                 Storage::delete($user->avatar_path);
@@ -553,6 +556,89 @@ class AuthService
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),
+            ];
+        }
+    }
+
+    public function quickCheckin(array $data): array
+    {
+        DB::beginTransaction();
+        try {
+            // Tìm user theo email hoặc phone và organizer
+            $user = User::query()
+                ->where('organizer_id', $data['organizer_id'])
+                ->where(function ($query) use ($data) {
+                    if (!empty($data['email'])) {
+                        $query->where('email', $data['email']);
+                    }
+                    if (!empty($data['phone'])) {
+                        if (!empty($data['email'])) {
+                            $query->orWhere('phone', $data['phone']);
+                        } else {
+                            $query->where('phone', $data['phone']);
+                        }
+                    }
+                })
+                ->first();
+
+            if (!$user) {
+                return [
+                    'status' => false,
+                    'title' => __('event.messages.account_not_found_title'),
+                    'message' => __('event.messages.account_not_found_message'),
+                ];
+            }
+
+            // Tìm vé của user cho sự kiện này
+            $history = EventUserHistory::query()
+                ->where('user_id', $user->id)
+                ->where('event_id', $data['event_id'])
+                ->first();
+
+            if (!$history) {
+                return [
+                    'status' => false,
+                    'title' => __('event.messages.ticket_not_found_title'),
+                    'message' => __('event.messages.ticket_not_found_message'),
+                ];
+            }
+
+            // Kiểm tra trạng thái sự kiện
+            $event = Event::find($data['event_id']);
+            if ($event->status !== EventStatus::ACTIVE->value) {
+                return [
+                    'status' => false,
+                    'title' => __('event.messages.event_not_started_title'),
+                    'message' => __('event.messages.event_not_started_message'),
+                ];
+            }
+
+            // Cập nhật trạng thái check-in
+            $history->update([
+                'status' => EventUserHistoryStatus::PARTICIPATED->value,
+            ]);
+
+            $history->load('eventSeat');
+
+            DB::commit();
+
+            return [
+                'status' => true,
+                'title' => __('event.messages.checkin_success_title'),
+                'message' => __('event.messages.checkin_success_message'),
+                'data' => [
+                    'ticket_code' => $history->ticket_code,
+                    'seat_name' => $history->eventSeat?->name,
+                ]
+            ];
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error("Quick check-in failed: " . $e->getMessage());
+
+            return [
+                'status' => false,
+                'title' => __('event.messages.checkin_failed_title'),
+                'message' => __('event.messages.checkin_failed_message'),
             ];
         }
     }

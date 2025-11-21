@@ -93,6 +93,18 @@ final class Helper
         return route('events.quick-register', ['token' => $token]);
     }
 
+    public static function quickCheckinUrl($event): string
+    {
+        $payload = [
+            'event_id' => $event->id,
+            'organizer_id' => $event->organizer_id,
+        ];
+
+        $token = Crypt::encryptString(json_encode($payload));
+
+        return route('events.quick-checkin', ['token' => $token]);
+    }
+
     public static function generateQRCodeBanking($binBank, $bankNumber, $bankName, $amount, $addInfo = null): string
     {
 

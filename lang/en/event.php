@@ -113,6 +113,18 @@ return [
 
         'ticket_confirmed_title' => 'Ticket Confirmed!',
         'existing_user_existing_ticket_message' => 'The system has confirmed that you have an account and a ticket to this event. Detailed information about the event will be sent back to your email. Please check your mailbox.',
+
+        'checkin_success_title' => 'Check-in Successful!',
+        'checkin_success_message' => 'You have successfully checked in. Have a great experience!',
+        'account_not_found_title' => 'Account Not Found',
+        'account_not_found_message' => 'No account found with this information. Please check your email and phone number.',
+        'ticket_not_found_title' => 'Ticket Not Found',
+        'ticket_not_found_message' => 'You have not registered for this event. Please register before checking in.',
+        'event_not_started_title' => 'Event Not Started',
+        'event_not_started_message' => 'The event has not started yet. Please come back when the event is open.',
+        'checkin_failed_title' => 'System Error',
+        'checkin_failed_message' => 'An error occurred during check-in. Please try again.',
+        'no_seat_assigned' => 'No seat assigned',
     ],
     'comments' => [
         'model_label' => 'Comment',
