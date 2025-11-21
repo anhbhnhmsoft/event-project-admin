@@ -36,7 +36,7 @@
                         }
                     }
 
-                    $documentTitle = $document['title'] ?? __('admin.events.files.document_number', ['number' => $documentIndex + 1]);
+                    $documentTitle = $document['title'] ?? __('admin.events.files.document_number', ['number' => $loop->iteration]);
                     $documentPrice = $document['price'] ?? 0;
                     $documentId = $document['id'] ?? $documentIndex;
                 @endphp
