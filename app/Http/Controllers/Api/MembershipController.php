@@ -7,6 +7,7 @@ use App\Http\Resources\MembershipListResource;
 use App\Http\Resources\MembershipUserResource;
 use App\Services\CassoService;
 use App\Services\MemberShipService;
+use App\Utils\Constants\MembershipType;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -31,10 +32,10 @@ class MembershipController extends Controller
         $filters = $request->array('filters', []);
         $page  = $request->integer('page', 1);
         $limit = $request->integer('limit', 10);
-
-        // Mặc định
         $sortBy = 'order';
         $filters['status'] = true;
+        $filters['type'] = MembershipType::FOR_CUSTOMER->value;
+        $filters['organizer_id'] = Auth::user()->organizer_id;
         $memberships  = $this->membershipService->membershipsPaginator($filters, $sortBy, $page, $limit);
 
         return response()->json([
@@ -98,7 +99,7 @@ class MembershipController extends Controller
             return response()->json(['message' => $membership['message']], 422);
         }
 
-        $result = $this->membershipService->membershipRegister($membership['membership']);
+        $result = $this->membershipService->membershipRegister($membership['data'], MembershipType::FOR_CUSTOMER->value);
         if (!$result['status']) {
             return response()->json([
                 'message' => $result['message']

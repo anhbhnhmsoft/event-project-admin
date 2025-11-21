@@ -3,8 +3,10 @@
 namespace App\Filament\Resources\Events\Pages;
 
 use App\Filament\Resources\Events\EventResource;
+use App\Filament\Traits\CheckPlanBeforeAccess;
 use App\Models\Event;
 use App\Models\EventComment;
+use App\Utils\Constants\EventCommentType;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -22,15 +24,18 @@ use Illuminate\Support\Facades\Vite;
 class EventComments extends Page implements HasTable
 {
     use InteractsWithRecord;
+    use CheckPlanBeforeAccess;
 
     use InteractsWithTable;
-
-    protected static ?string $title = 'Bình luận';
-
-    protected static ?string $modelLabel = 'Bình luận';
-
-    protected static ?string $pluralModelLabel = 'Bình luận';
-
+    // protected static ?string $title =
+    // /** @lang PHP */
+    // __('event.pages.comments_title');
+    // protected static ?string $modelLabel =
+    // /** @lang PHP */
+    // __('event.comments.model_label');
+    // protected static ?string $pluralModelLabel =
+    // /** @lang PHP */
+    // __('event.comments.plural_model_label');
     protected static string $resource = EventResource::class;
 
     protected string $view = 'filament.pages.event-comments';
@@ -44,6 +49,7 @@ class EventComments extends Page implements HasTable
     public function mount(int|string $record): void
     {
         $this->record = $this->resolveRecord($record);
+        $this->ensurePlanAccessible();
     }
 
     public function table(Table $table): Table
@@ -54,39 +60,56 @@ class EventComments extends Page implements HasTable
             )
             ->columns([
                 TextColumn::make('user.name')
-                    ->label('Người dùng')
+                    ->label(
+                        __('event.comments.user_column')
+                    )
                     ->searchable(),
 
                 TextColumn::make('content')
-                    ->label('Nội dung')
+                    ->label(
+                        __('event.comments.content_column')
+                    )
                     ->limit(80)
                     ->searchable(),
+                TextColumn::make('type')
+                    ->label('Loại')
+                    ->formatStateUsing(fn(int $state): string => EventCommentType::label($state)),
 
                 TextColumn::make('created_at')
-                    ->label('Thời điểm bình luận')
+                    ->label(
+                        __('event.comments.time_column')
+                    )
                     ->dateTime('d/m/Y H:i')
                     ->sortable(),
             ])
             ->recordActions([
                 ViewAction::make()
-                    ->label('Xem'),
+                    ->label(
+                        __('event.comments.view_action')
+                    ),
                 DeleteAction::make()
-                    ->recordTitle('bình luận')
-                    ->label('Xóa')
+                    ->recordTitle(
+                        __('event.comments.record_title')
+                    )
+                    ->label(
+                        __('event.comments.delete_action')
+                    )
                     ->successRedirectUrl(false)
                     ->action(function ($record) {
                         $record->delete();
                     })
-                    ->successNotificationTitle('Đã xóa bình luận!')
+                    ->successNotificationTitle(
+                        __('event.comments.delete_success')
+                    )
                     ->after(fn() => $this->resetTable()),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
-                        ->recordTitle('bình luận')
-                        ->label('Xóa')
+                        ->recordTitle(__('event.comments.record_title'))
+                        ->label(__('event.comments.delete_action'))
                         ->successRedirectUrl(false)
-                        ->successNotificationTitle('Đã xóa bình luận!')
+                        ->successNotificationTitle(__('event.comments.delete_success'))
                         ->after(fn() => $this->resetTable()),
                 ]),
             ]);

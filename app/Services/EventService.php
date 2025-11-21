@@ -41,7 +41,7 @@ class EventService
 
         if ($organizerId) {
             $query->where('organizer_id', $organizerId);
-        }else {
+        } else {
             return [];
         }
 
@@ -58,7 +58,7 @@ class EventService
             ->get();
     }
 
-    public function getAreaById($areaId,$eventId)
+    public function getAreaById($areaId, $eventId)
     {
         try {
             $area = EventArea::query()
@@ -87,7 +87,7 @@ class EventService
     public function getSeatsByAreaId($areaId)
     {
         return EventSeat::query()
-            ->where('event_area_id',$areaId)
+            ->where('event_area_id', $areaId)
             ->orderByRaw('CAST(seat_code AS UNSIGNED) ASC')
             ->get();
     }
@@ -128,16 +128,52 @@ class EventService
         try {
             $now = now();
 
-            // ---  Lấy danh sách sự kiện sắp bắt đầu ---
+            // Cập nhật trạng thái sự kiện sắp diễn ra
+            Event::query()
+                ->where('status', EventStatus::UPCOMING->value)
+                // Điều kiện 1: Thời gian bắt đầu phải nhỏ hơn hoặc bằng hiện tại (Đã bắt đầu)
+                ->whereRaw('CONCAT(DATE(day_represent), " ", TIME(start_time)) <= ?', [$now])
+
+                // Điều kiện 2: Thời gian kết thúc phải lớn hơn hoặc bằng hiện tại (Chưa kết thúc)
+                ->whereRaw('CONCAT(DATE(day_represent), " ", TIME(end_time)) >= ?', [$now])
+                ->update(['status' => EventStatus::ACTIVE->value]);
+
+            // Cập nhật trạng thái sự kiện đang diễn ra
+            Event::query()
+                ->where('status', EventStatus::ACTIVE->value)
+                // Điều kiện: Thời gian kết thúc phải nhỏ hơn hoặc bằng hiện tại (Đã kết thúc)
+                ->whereRaw('CONCAT(DATE(day_represent), " ", TIME(end_time)) <= ?', [$now])
+                ->update(['status' => EventStatus::CLOSED->value]);
+
+            DB::commit();
+            return [
+                'status' => true,
+                'message' => __('common.common_success.update_success')
+            ];
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error("Error in checkTimeEvent: " . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
+        }
+    }
+
+    /**
+     * Chạy vào 6h sáng mỗi ngày
+     * @return array
+     */
+    public function notificationTimeEvent(): array
+    {
+        try {
+            $now = now();
+            $today = $now->copy()->format('Y-m-d');
             $eventsUpcoming = Event::query()
                 ->where('status', EventStatus::UPCOMING->value)
-                ->whereRaw('CONCAT(DATE(day_represent), " ", TIME(start_time)) <= ?', [$now])
+                ->whereDate('day_represent', $today)
                 ->get();
-
             foreach ($eventsUpcoming as $event) {
-                $event->status = EventStatus::ACTIVE->value;
-                $event->save();
-
                 // ---  Lấy danh sách user đã đặt vé hoặc xem vé ---
                 $userIds = EventUserHistory::query()
                     ->where('event_id', $event->id)
@@ -171,29 +207,25 @@ class EventService
                         $emails,
                         __('event.mail.subject_event_start', ['name' => $event->title]),
                         [
-                            'event_id'  => $event->id,
-                            'latitude'  => $event->latitude,
+                            'event_name' => $event->title,
+                            'start_time' => $event->start_time,
+                            'short_description' => $event->short_description,
+                            'address' => $event->address,
+                            'organizer_name' => $event->organizer->name ?? __('organizer.label.name'),
+                            'latitude' => $event->latitude,
                             'longitude' => $event->longitude,
                             'map_link'  => "https://www.google.com/maps?q={$event->latitude},{$event->longitude}",
+                            'event_id'  => $event->id,
                         ]
                     )->onQueue('emails');
                 }
             }
 
-            // Đóng sự kiện đã kết thúc ---
-            Event::query()
-                ->where('status', EventStatus::ACTIVE->value)
-                ->whereRaw('CONCAT(DATE(day_represent), " ", TIME(end_time)) < ?', [$now])
-                ->update(['status' => EventStatus::CLOSED->value]);
-
-            DB::commit();
             return [
                 'status' => true,
                 'message' => __('common.common_success.update_success')
             ];
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error("Error in checkTimeEvent: " . $e->getMessage());
+        } catch (\Throwable $th) {
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),

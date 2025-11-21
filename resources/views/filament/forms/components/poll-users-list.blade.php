@@ -1,6 +1,6 @@
 <div>
     @if($users->isEmpty())
-        <p class="text-sm text-gray-500">Chưa có người tham gia nào</p>
+        <p class="text-sm text-gray-500">{{ __('admin.events.poll.no_participants') }}</p>
     @else
         <div class="space-y-2">
             @foreach($users as $user)
@@ -10,6 +10,6 @@
                 </div>
             @endforeach
         </div>
-        <p class="mt-3 text-xs text-gray-600">Tổng: {{ $users->count() }} người</p>
+        <p class="mt-3 text-xs text-gray-600">{{ __('admin.events.poll.total') }}: {{ $users->count() }} {{ __('admin.events.poll.people') }}</p>
     @endif
 </div>

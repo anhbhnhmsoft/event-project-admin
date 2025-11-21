@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Utils\Constants\EventCommentType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,6 +17,7 @@ class EventComment extends Model
         'event_id',
         'user_id',
         'content',
+        'type'
     ];
 
     public function scopeFilter(Builder $query, array $filters = [])
@@ -26,6 +28,13 @@ class EventComment extends Model
         if (!empty($filters['event_id'])) {
             $query->where('event_id', $filters['event_id']);
         }
+
+        if (!empty($filters['type'])) {
+            $query->where('type', $filters['type']);
+        }else {
+            $query->where('type', EventCommentType::PUBLIC->value);
+        }
+
 
         if (!empty($filters['keyword'])) {
             $keyword = trim($filters['keyword']);

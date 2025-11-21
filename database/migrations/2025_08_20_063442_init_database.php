@@ -68,14 +68,40 @@ return new class extends Migration
             $table->string('badge_color_text')->nullable()->comment("Màu chữ huy hiệu hiển thị trên trang chủ");
             $table->json('config')->comment('Cấu hình của gói membership, lưu trữ các tùy chọn như quyền truy cập, tính năng, v.v.');
             $table->boolean('status')->default(true)->comment('Trạng thái của gói membership, true nếu hoạt động, false nếu không hoạt động');
+            $table->tinyInteger('type')
+                ->default(1)
+                ->comment('Loại gói membership, Lưu trong enum MembershipType');
+            $table->foreignId('organizer_id')
+                ->constrained('organizers')
+                ->onDelete('cascade')
+                ->comment('Khóa ngoại tới bảng organizer');
             $table->softDeletes();
             $table->timestamps();
         });
+
+
 
         Schema::create('membership_user', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')
                 ->constrained('users')
+                ->cascadeOnDelete();
+            $table->foreignId('membership_id')
+                ->constrained('membership')
+                ->cascadeOnDelete();
+            $table->date('start_date')->nullable()
+                ->comment('Ngày bắt đầu gói membership');
+            $table->date('end_date')->nullable()
+                ->comment('Ngày kết thúc gói membership');
+            $table->tinyInteger('status')->comment('Trạng thái gói: enum định nghĩa MembershipUserStatus');
+            $table->timestamps();
+        });
+
+        Schema::create('membership_organizer', function (Blueprint $table) {
+
+            $table->id();
+            $table->foreignId('organizer_id')
+                ->constrained('organizers')
                 ->cascadeOnDelete();
             $table->foreignId('membership_id')
                 ->constrained('membership')
@@ -110,6 +136,10 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained();
             $table->timestamp('expired_at')->nullable();
             $table->json('config_pay')->nullable();
+            $table->foreignId('organizer_id')
+                ->constrained('organizers')
+                ->onUpdate('cascade')
+                ->onDelete('cascade');
             $table->softDeletes();
             $table->timestamps();
         });
@@ -183,6 +213,9 @@ return new class extends Migration
             $table->foreign('ward_code')->references('code')->on('wards')->cascadeOnDelete();
             $table->decimal('latitude', 10, 6)->comment('Vĩ độ');
             $table->decimal('longitude', 10, 6)->comment('Kinh độ');
+            $table->boolean('free_to_join')
+                ->default(true)
+                ->comment('Sự kiện miễn phí tham gia hay không');
             $table->softDeletes();
             $table->timestamps();
         });
@@ -220,6 +253,8 @@ return new class extends Migration
             $table->foreignId('event_schedule_id')->constrained('event_schedules')->cascadeOnDelete();
             $table->string('title')->comment('Tiêu đề của tài liệu');
             $table->text('description')->comment('Mô tả chi tiết về tài liệu');
+            $table->unsignedInteger('price')->default(0)->comment('Giá tài liệu nếu giá trị = 0, tài liệu miễn phí');
+
             $table->softDeletes();
             $table->timestamps();
         });
@@ -245,6 +280,7 @@ return new class extends Migration
             $table->comment('Bảng event_schedule_document_user để lưu trữ các file trong lịch trình sự kiện người dùng từng tham gia');
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('event_schedule_document_id')->constrained('event_schedule_documents')->cascadeOnDelete();
+            $table->tinyInteger('status')->default(1)->comment('Lưu trạng thái của khách mời đối với tài liệu sự kiện');
             $table->softDeletes();
             $table->timestamps();
         });
@@ -294,6 +330,9 @@ return new class extends Migration
             $table->bigInteger('capacity')->comment('Số lượng ghế trong khu vực');
             $table->foreignId('event_id')->constrained()->cascadeOnDelete();
             $table->boolean('vip')->default(false);
+            $table->string('price')
+                ->nullable()
+                ->comment('Giá vé khu vực');
             $table->softDeletes();
             $table->timestamps();
         });
@@ -316,6 +355,7 @@ return new class extends Migration
             $table->comment('Bảng event_comments lưu trữ các bình luận về sự kiện');
             $table->foreignId('event_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->tinyInteger('type')->comment('Phân loại nội dung bình luận');
             $table->text('content')->comment('Nội dung bình luận');
             $table->timestamps();
         });
@@ -328,16 +368,22 @@ return new class extends Migration
             $table->foreignId('event_seat_id')->nullable()->constrained()->nullOnDelete();
             $table->string('ticket_code')->nullable()->unique()->comment('Mã vé, định dạng như TICKET-123456');
             $table->tinyInteger('status')->comment('Trạng thái vé trong enum EventUserHistoryStatus');
+            $table->json('features')->nullable()->comment('Cấu hình quyền của người dùng trong sự kiện: Bình luận mất phí');
             $table->timestamps();
         });
 
         // Tạo bảng configs để lưu trữ các cấu hình hệ thống
         Schema::create('configs', function (Blueprint $table) {
             $table->id();
-            $table->string('config_key')->unique();
+            $table->string('config_key');
             $table->smallInteger('config_type')->nullable()->comment('Loại cấu hình, Lưu trong enum ConfigType');
             $table->text('config_value');
             $table->text('description')->nullable();
+            $table->foreignId('organizer_id')
+                ->constrained('organizers')
+                ->onDelete('cascade')
+                ->comment('Khóa ngoại tới bảng organizer')
+                ->after('config_type');
             $table->timestamps();
         });
 
@@ -386,7 +432,6 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->softDeletes();
             $table->timestamps();
-            $table->index('user_id');
         });
 
         // Tạo bảng event_polls để lưu trữ các cuộc khảo sát/bình chọn
@@ -403,22 +448,6 @@ return new class extends Migration
             $table->tinyInteger('duration_unit')->comment('Đơn vị duration lưu trữ ở constant type unit duration');
             $table->integer('duration')->comment('Thời lượng (giờ/phút/ngày) kéo dài khảo sát.');
             $table->tinyInteger('is_active')->comment('Trạng thái kích hoạt (1: Active, 0: Inactive).');
-            $table->softDeletes();
-            $table->timestamps();
-        });
-
-        // Tạo bảng event_poll_user để lưu trữ danh sách người dùng được phép tham gia bình chọn/khảo sát
-        Schema::create('event_poll_user', function (Blueprint $table) {
-            $table->id();
-            $table->comment('Lưu trữ danh sách User (đã Check-in) được phép tham gia một cuộc Khảo sát cụ thể.');
-            $table->foreignId('user_id')
-                ->constrained('users')
-                ->cascadeOnDelete();
-            $table->foreignId('event_poll_id')
-                ->constrained('event_polls')
-                ->cascadeOnDelete();
-            // Đảm bảo mỗi User chỉ được ghi nhận một lần cho mỗi Poll
-            $table->unique(['user_id', 'event_poll_id'], 'unique_user_poll');
             $table->softDeletes();
             $table->timestamps();
         });
@@ -446,8 +475,6 @@ return new class extends Migration
                 ->cascadeOnDelete();
             $table->char('label', length: 255)->comment('Nội dung của tùy chọn/đáp án.');
             $table->tinyInteger('order')->comment('Thứ tự hiển thị của tùy chọn.');
-            // Đánh dấu đáp án đúng (Chỉ dùng cho nghiệp vụ Quiz/Thi đấu. Có thể bỏ nếu chỉ là bình chọn)
-            $table->tinyInteger('is_correct')->nullable()->comment('Đánh dấu đáp án đúng (0: Sai, 1: Đúng). Chỉ áp dụng cho kiểu câu hỏi Quiz.');
             $table->softDeletes();
             $table->timestamps();
         });
@@ -465,9 +492,11 @@ return new class extends Migration
             $table->foreignId('event_poll_question_option_id')
                 ->nullable()
                 ->comment('Khóa ngoại liên kết với tùy chọn/đáp án đã chọn.')
+                ->nullable()
                 ->constrained('event_poll_question_options')
                 ->cascadeOnDelete();
-            $table->unique(['user_id', 'event_poll_question_id'], 'unique_user_answer');
+            $table->string('answer_content')->nullable()->comment('Nội dung câu trả lời của người dùng cho câu hỏi dạng trả lời tự do');
+            $table->index(['user_id', 'event_poll_question_id']);
             $table->softDeletes();
             $table->timestamps();
         });
@@ -499,13 +528,13 @@ return new class extends Migration
         Schema::dropIfExists('sessions');
         Schema::dropIfExists('personal_access_tokens');
         Schema::dropIfExists('membership_user');
+        Schema::dropIfExists('membership_organizer');
         Schema::dropIfExists('event_game_gifts');
         Schema::dropIfExists('event_user_gift');
         Schema::dropIfExists('user_reset_codes');
         Schema::dropIfExists('user_notifications');
         Schema::dropIfExists('user_devices');
         Schema::dropIfExists('event_polls');
-        Schema::dropIfExists('event_poll_user');
         Schema::dropIfExists('event_poll_questions');
         Schema::dropIfExists('event_poll_question_options');
         Schema::dropIfExists('event_poll_votes');

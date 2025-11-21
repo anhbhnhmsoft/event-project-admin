@@ -37,6 +37,7 @@ class Event extends Model
         'ward_code',
         'latitude',
         'longitude',
+        'free_to_join',
     ];
     protected $casts = [
         'start_time' => 'datetime',
@@ -44,6 +45,7 @@ class Event extends Model
         'latitude' => 'decimal:6',
         'longitude' => 'decimal:6',
         'status' => 'integer',
+        'free_to_join' => 'boolean',
     ];
 
     protected static function booted()

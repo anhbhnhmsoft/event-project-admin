@@ -11,17 +11,22 @@ use App\Http\Resources\EventScheduleDetailResource;
 use App\Http\Resources\EventScheduleDocumentResource;
 use App\Http\Resources\EventSeatResource;
 use App\Http\Resources\EventUserHistoryResource;
+use App\Http\Resources\EventSeatTransactionResource;
 use App\Services\EventCommentService;
 use App\Services\EventScheduleService;
+use App\Services\EventSeatService;
 use App\Services\EventService;
 use App\Services\EventUserHistoryService;
 use App\Services\MemberShipService;
 use App\Utils\Constants\ConfigMembership;
+use App\Utils\Constants\EventCommentType;
+use App\Utils\Constants\EventDocumentUserStatus;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use App\Utils\Constants\EventUserHistoryStatus;
+use App\Utils\Helper;
 use Illuminate\Support\Facades\Storage;
 
 class EventController extends Controller
@@ -96,12 +101,6 @@ class EventController extends Controller
             ], 404);
         }
         if ($event['event']->organizer_id != $user->organizer_id) {
-            return response()->json([
-                'message' => __('common.common_error.permission_error'),
-            ], 403);
-        }
-        // nếu check ko có membership
-        if (!$user->activeMembership->first() || !$user->activeMembership->first()->config[ConfigMembership::ALLOW_CHOOSE_SEAT->value]) {
             return response()->json([
                 'message' => __('common.common_error.permission_error'),
             ], 403);
@@ -215,17 +214,48 @@ class EventController extends Controller
         }
 
         $user = $request->user();
+        $data = $validator->getData();
 
-        $result = $this->eventUserHistoryService->createEventHistory($validator->getData(), $user->id, $user->organizer_id);
+        // kiểm tra xem có quyền membership chọn chỗ ngồi không
+        $checkPermission = $this->membershipService->getMembershipUser($user->id);
+        if (!$checkPermission['status'] || !$checkPermission['membershipUser'] ||
+            !$checkPermission['membershipUser']?->config[ConfigMembership::ALLOW_CHOOSE_SEAT->value]) {
+            // nếu là đặt chỗ thì kiểm tra thanh toán
+            if ($data['status'] === EventUserHistoryStatus::BOOKED->value && isset($data['event_seat_id'])) {
+                $eventSeatService = app(EventSeatService::class);
+                $paymentResult = $eventSeatService->checkAndCreatePayment($data['event_id'], $data['event_seat_id']);
+
+                if ($paymentResult['status'] && $paymentResult['payment_required']) {
+                    $transaction = $paymentResult['data'];
+                    return response()->json([
+                        'message' => __('event.error.payment_seat_required'),
+                        'data' => new EventSeatTransactionResource($transaction),
+                        'payment_required' => true,
+                    ], 200);
+                }
+
+                if (!$paymentResult['status']) {
+                    return response()->json([
+                        'message' => $paymentResult['message'],
+                    ], 400);
+                }
+            }
+        }
+        // nếu có membership thì ko cần check thanh toán
+
+
+        $result = $this->eventUserHistoryService->createEventHistory($data, $user->id, $user->organizer_id);
 
         if ($result['status'] === false) {
             return response()->json([
                 'message' => $result['message'],
             ], 422);
         }
+
         return response()->json([
             'message' => $result['message'],
             'data' => EventUserHistoryResource::make($result['data']),
+            'payment_required' => false,
         ], 200);
     }
 
@@ -236,7 +266,8 @@ class EventController extends Controller
             $request->all(),
             [
                 'event_id' => ['required', 'exists:events,id'],
-                'content' => ['required', 'string', 'max:1000'],
+                'content'  => ['required', 'string', 'max:1000'],
+                'type'     => ['required', 'numeric']
             ],
             [
                 'event_id.required' => __('event.validation.event_id_exists'),
@@ -244,6 +275,8 @@ class EventController extends Controller
                 'content.required' => __('common.common_error.validation_failed'),
                 'content.max' => __('common.common_error.max_content', ['max' => 1000]),
                 'content.string' => __('common.common_error.validation_failed'),
+                'type.required' => __('common.common_error.validation_failed'),
+                'type.int' => __('common.common_error.validation_failed'),
             ]
         );
         if ($validator->fails()) {
@@ -252,10 +285,14 @@ class EventController extends Controller
             ], 422);
         }
 
-        $validated = $validator->validated();
+        $validated = $validator->getData();
         $user = $request->user();
+        if (Helper::containsProfanity($validated['content'])) {
+            return response()->json([
+                'message' => __('common.common_error.inappropriate_language'),
+            ], 422);
+        }
         $event = $this->eventService->getEventDetail($validated['event_id']);
-
         if (!$event['status']) {
             return response()->json([
                 'message' => $event['message'],
@@ -268,19 +305,21 @@ class EventController extends Controller
             ], 403);
         }
 
-
-        $checkPermission = $this->membershipService->getMembershipUser($user->id);
-        if (!$checkPermission['status'] || !$checkPermission['membershipUser'] || !$checkPermission['membershipUser']->config[ConfigMembership::ALLOW_COMMENT->value]) {
-            return response()->json([
-                'message' => __('common.common_error.permission_error'),
-            ], 403);
-        }
-
         $newComment = [
-            'user_id' => $user->id,
+            'user_id'  => $user->id,
             'event_id' => $validated['event_id'],
-            'content' => $validated['content']
+            'content'  => $validated['content'],
+            'type'     => $validated['type']
         ];
+
+        if ($validated['type'] == EventCommentType::PRIVATE->value) {
+            $checkPermission = $this->membershipService->getMembershipUser($user->id);
+            if (!$checkPermission['status'] || !$checkPermission['membershipUser'] || !$checkPermission['membershipUser']?->config[ConfigMembership::ALLOW_COMMENT->value]) {
+                return response()->json([
+                    'message' => __('common.common_error.permission_error'),
+                ], 403);
+            }
+        }
 
         $result = $this->eventCommentService->eventCommentInsert($newComment);
 
@@ -301,7 +340,30 @@ class EventController extends Controller
         $page = $request->integer('page', 1);
         $limit = $request->integer('limit', 10);
 
+        $type = $filters['type'] ?? null;
+
+        if ($type == EventCommentType::PRIVATE->value) {
+            $user = $request->user();
+            $membership = $user->activeMembership->first();
+
+            $allowComment = $membership && ($membership->config[ConfigMembership::ALLOW_COMMENT->value] ?? false);
+
+            if (!$allowComment) {
+                return response()->json([
+                    'message' => __('common.common_success.get_success'),
+                    'data' => [],
+                    'pagination' => [
+                        'total' => 0,
+                        'per_page' => $limit,
+                        'current_page' => $page,
+                        'last_page' => 1,
+                    ],
+                ], 200);
+            }
+        }
+
         $comments = $this->eventCommentService->eventCommentPaginator($filters, $page, $limit);
+
         return response()->json([
             'message' => __('common.common_success.get_success'),
             'data' => EventListCommentResource::collection($comments),
@@ -309,7 +371,7 @@ class EventController extends Controller
                 'total' => $comments->total(),
                 'per_page' => $comments->perPage(),
                 'current_page' => $comments->currentPage(),
-                'last_page' => $comments->lastPage()
+                'last_page' => $comments->lastPage(),
             ],
         ], 200);
     }
@@ -325,10 +387,6 @@ class EventController extends Controller
             ], 422);
         }
         $user = $request->user();
-        $allowDocument = true;
-        if (!$user->activeMembership->first() || !$user->activeMembership->first()->config[ConfigMembership::ALLOW_DOCUMENTARY->value]) {
-            $allowDocument = false;
-        }
 
 
         if ($schedule['schedule']->event->organizer_id != $user->organizer_id) {
@@ -338,9 +396,8 @@ class EventController extends Controller
         }
 
         return response()->json([
-            'message' => __('common.common_success.success'),
-            'data' => (new EventScheduleDetailResource($schedule['schedule']))
-                ->additional(['allowDocument' => $allowDocument]),
+            'message' => __('common.common_success.get_success'),
+            'data' => new EventScheduleDetailResource($schedule['schedule']),
         ]);
     }
 
@@ -365,24 +422,35 @@ class EventController extends Controller
                 'message' => __('common.common_error.permission_error'),
             ], 403);
         }
-        // nếu check ko có membership
-        if (!$user->activeMembership->first() || !$user->activeMembership->first()->config[ConfigMembership::ALLOW_DOCUMENTARY->value]) {
-            // thì kiêểm tra xem document này có user chưa
-            if (!$document['document']->users()->where('user_id', $user->id)->exists()) {
-                return response()->json([
-                    'message' => __('common.common_error.permission_error'),
-                ], 403);
+        // nếu ko phải tài liệu miễn phí
+        if ($document['document']->price > 0) {
+            // nếu check ko có membership
+            if (!$user->activeMembership->first() ||
+                !$user->activeMembership->first()->config[ConfigMembership::ALLOW_DOCUMENTARY->value]) {
+                // thì kiêểm tra xem document này có user chưa
+                if (!$document['document']->users()->where('user_id', $user->id)->exists()) {
+                    return response()->json([
+                        'message' => __('common.common_error.permission_error'),
+                    ], 403);
+                }
             }
         }
 
-        $eventScheduleDocumentUser = $this->eventScheduleService->insertEventScheduleDocumentUser($user->id, $document['document']->id);
+
+        $data = [
+            'user_id' => $user->id,
+            'event_schedule_document_id' =>  $document['document']->id,
+            'status' => EventDocumentUserStatus::ACTIVE->value
+        ];
+
+        $eventScheduleDocumentUser = $this->eventScheduleService->insertEventScheduleDocumentUser($data);
         if (!$eventScheduleDocumentUser['status']) {
             return response()->json([
                 'message' => __('common.common_error.server_error'),
             ], 500);
         }
         return response()->json([
-            'message' => __('common.common_success.success'),
+            'message' => __('common.common_success.get_success'),
             'data' => new EventScheduleDocumentResource($document['document']),
         ]);
     }

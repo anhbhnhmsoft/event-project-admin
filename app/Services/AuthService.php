@@ -24,6 +24,9 @@ use Illuminate\Support\Facades\App;
 use App\Models\UserResetCode;
 use App\Mail\ResetPasswordMail;
 use App\Models\EventSeat;
+use App\Models\Organizer;
+use App\Utils\Constants\CommonStatus;
+use App\Utils\Constants\ConfigType;
 use App\Utils\Constants\EventSeatStatus;
 use App\Utils\Helper;
 use Illuminate\Contracts\Database\Eloquent\Builder;
@@ -43,7 +46,7 @@ class AuthService
         try {
             $user = User::query()
                 ->where('email', $data['email'])
-                ->where('organizer_id', $data['organizer_id'])
+                ->whereHasActiveOrganizer((int) $data['organizer_id'])
                 ->first();
             if (!$user || ! Hash::check($data['password'], $user->password)) {
                 throw new ServiceException(__('auth.error.invalid_credentials'));
@@ -60,11 +63,13 @@ class AuthService
                 'user' => $user,
             ];
         } catch (ServiceException $e) {
+            Log::debug($e->getMessage());
             return [
                 'status' => false,
                 'message' => $e->getMessage(),
             ];
         } catch (\Throwable $e) {
+            Log::debug($e->getMessage());
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),
@@ -85,7 +90,7 @@ class AuthService
                 'lang' => request()->input('locate') ?? Language::VI->value,
             ]);
             $url = URL::temporarySignedRoute(
-                'api.verification.verify',
+                'verification.verify',
                 now()->addMinutes(60),
                 ['id' => $user->getKey(), 'hash' => sha1($user->getEmailForVerification())]
             );
@@ -106,6 +111,7 @@ class AuthService
     public function editInfoUser(array $data)
     {
         $user = Auth::user();
+        /** @var User $user */
         try {
             $user->name = $data['name'];
             $user->address = $data['address'] ?? null;
@@ -130,6 +136,7 @@ class AuthService
     public function editInfoAvatar($file): array
     {
         $user = Auth::user();
+        /** @var User $user */
         try {
             if (!$file instanceof UploadedFile) {
                 throw new ServiceException(__('auth.validation.avatar_invalid'));
@@ -166,6 +173,7 @@ class AuthService
     public function deleteAvatar(): array
     {
         $user = Auth::user();
+        /** @var User $user */
         try {
             if ($user->avatar_path) {
                 Storage::delete($user->avatar_path);
@@ -313,106 +321,120 @@ class AuthService
         DB::beginTransaction();
 
         try {
-            // Tạo hoặc cập nhật user
+            $userExists = true;
+            $seatWasUpdated = false;
+
             $user = User::query()
                 ->where('email', $data['email'])
                 ->where('organizer_id', $data['organizer_id'])
                 ->first();
 
             if (! $user) {
+                // TẠO MỚI USER
                 $user = User::query()->create([
-                    'name'           => trim($data['name']),
-                    'email'          => $data['email'],
-                    'password'       => Hash::make($data['phone']),
-                    'organizer_id'   => (int) $data['organizer_id'],
-                    'role'           => RoleUser::CUSTOMER->value,
-                    'lang'           => $data['lang'] ?? Language::VI->value,
-                    'phone'          => $data['phone'],
+                    'name'              => trim($data['name']),
+                    'email'             => $data['email'],
+                    'password'          => Hash::make($data['phone']),
+                    'organizer_id'      => (int) $data['organizer_id'],
+                    'role'              => RoleUser::CUSTOMER->value,
+                    'lang'              => $data['lang'] ?? Language::VI->value,
+                    'phone'             => $data['phone'],
                     'email_verified_at' => now(),
                     'phone_verified_at' => now(),
                 ]);
-                $action = 'created';
+                $userExists = false; // Đánh dấu là user mới được tạo
             } elseif (! $user->phone) {
+                // USER TỒN TẠI, CẬP NHẬT PHONE
                 $user->update(['phone' => $data['phone']]);
-                $action = 'updated';
-            } else {
-                $action = 'rebooked';
             }
 
-            // Lấy event & ghế trống
+            // Lấy event
             $event = Event::query()->findOrFail($data['event_id']);
 
-            $seat = EventSeat::query()
-                ->whereHas('area', function (Builder $q) use ($event) {
-                    $q->where('event_id', $event->id)
-                        ->where('vip', false);
-                })
-                ->where('status', EventSeatStatus::AVAILABLE->value)
-                ->whereNull('user_id')
-                ->orderBy('id')
-                ->lockForUpdate()
-                ->first();
-
-            if (! $seat) {
-                DB::rollBack();
-                return [
-                    'status'  => false,
-                    'message' => __('event.validation.no_available_seat'),
-                ];
-            }
-
-            // Xác định trạng thái vé
-            $status = $event->status == EventStatus::ACTIVE->value
-                ? EventUserHistoryStatus::PARTICIPATED->value
-                : EventUserHistoryStatus::BOOKED->value;
-
-            //  Lấy vé cũ (nếu có)
+            // Lấy vé cũ (history)
             $history = EventUserHistory::query()
                 ->where('event_id', $event->id)
                 ->where('user_id', $user->id)
                 ->first();
 
+            // Xác định trạng thái vé
+            $status = $event->status === EventStatus::ACTIVE->value
+                ? EventUserHistoryStatus::PARTICIPATED->value
+                : EventUserHistoryStatus::BOOKED->value;
+
             if (! $history) {
+
+                // Tìm ghế trống
+                $seat = EventSeat::query()
+                    ->whereHas('area', function (Builder $q) use ($event) {
+                        $q->where('event_id', $event->id)->where('vip', false);
+                    })
+                    ->where('status', EventSeatStatus::AVAILABLE->value)
+                    ->whereNull('user_id')
+                    ->orderBy('id')
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $seat) {
+                    DB::rollBack();
+                    return [
+                        'status'  => false,
+                        'message' => __('event.validation.no_available_seat'),
+                        'title'   => __('event.validation.register_fail_title'),
+                    ];
+                }
+
                 // Tạo ticket code mới
                 do {
                     $ticketCode = 'TICKET-' . Helper::getTimestampAsId();
                 } while (EventUserHistory::where('ticket_code', $ticketCode)->exists());
-                //Tạo vé mới
+
+                // Tạo vé mới và GÁN GHẾ MỚI
                 EventUserHistory::query()->create([
                     'event_id'      => $event->id,
                     'user_id'       => $user->id,
                     'status'        => $status,
-                    'event_seat_id' => $seat->id,
+                    'event_seat_id' => $seat->id, // Gán ghế mới
                     'ticket_code'   => $ticketCode,
                 ]);
-            } else {
-                //  Cập nhật vé cũ (nếu có)
-                $history->update([
-                    'status'        => $status,
-                    'event_seat_id' => $seat->id,
+
+                $seatWasUpdated = true;
+
+                // Cập nhật ghế
+                $seat->update([
+                    'user_id' => $user->id,
+                    'status'  => EventSeatStatus::BOOKED->value,
                 ]);
-
-                // Giải phóng ghế cũ (nếu có)
-                if ($history && $history->event_seat_id && $history->event_seat_id != $seat->id) {
-                    EventSeat::where('id', $history->event_seat_id)->update([
-                        'user_id' => null,
-                        'status'  => EventSeatStatus::AVAILABLE->value,
-                    ]);
-                }
+            } else {
+                $history->update(['status' => $status]);
             }
-
-            // Cập nhật ghế cho user
-            $seat->update([
-                'user_id' => $user->id,
-                'status'  => EventSeatStatus::BOOKED->value,
-            ]);
 
             DB::commit();
 
+            $finalHistory = EventUserHistory::query()
+                ->with('seat')
+                ->where('event_id', $event->id)
+                ->where('user_id', $user->id)
+                ->first();
+
+            $ticketCode = $finalHistory->ticket_code;
+            $seatName = $finalHistory->eventSeat->name ?? '';
+
+            $finalMessage = $this->generateFinalMessage(
+                !$userExists,
+                !$history, // !history = vé vừa được tạo
+                $seatWasUpdated
+            );
+
             return [
                 'status'  => true,
-                'message' => __('event.validation.success'),
-                'action'  => $action
+                'message' => $finalMessage['message'],
+                'title'   => $finalMessage['title'],
+                'data' => [
+                    'ticket_code' => $ticketCode,
+                    'seat_name' => $seatName,
+                    'user_exists' => $userExists,
+                ]
             ];
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -421,6 +443,202 @@ class AuthService
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),
+                'title' => __('event.validation.register_fail_title'),
+            ];
+        }
+    }
+
+    private function generateFinalMessage(bool $isNewUser, bool $isNewTicket, bool $seatWasUpdated): array
+    {
+        if ($isNewUser) {
+            return [
+                'title' => __('event.messages.register_success_title'),
+                'message' => __('event.messages.new_user_new_ticket_message'),
+            ];
+        }
+
+        if ($isNewTicket && $seatWasUpdated) {
+            return [
+                'title' => __('event.messages.ticket_granted_title'),
+                'message' => __('event.messages.existing_user_new_ticket_message'),
+            ];
+        }
+
+        if (!$isNewTicket) {
+            return [
+                'title' => __('event.messages.ticket_confirmed_title'),
+                'message' => __('event.messages.existing_user_existing_ticket_message'),
+            ];
+        }
+
+        return [
+            'title' => __('common.messages.process_complete_title'),
+            'message' => __('common.messages.process_complete_message'),
+        ];
+    }
+
+
+
+    public function registerOrganizer(array $data): array
+    {
+        DB::beginTransaction();
+
+        try {
+            $organizer = Organizer::create([
+                'name' => $data['name'],
+                'status' => CommonStatus::ACTIVE,
+            ]);
+
+            $user = \App\Models\User::create([
+                'name' => empty($data['user_name']) ? $data['name'] : $data['user_name'],
+                'email' => $data['email'],
+                'password' => Hash::make($data['password']),
+                'role' => RoleUser::ADMIN,
+                'phone' => $data['phone'] ?? null,
+                'organizer_id' => $organizer->id,
+                'lang' => Language::VI,
+            ]);
+            $configs = [
+                [
+                    'config_key' => ConfigName::CLIENT_ID_APP->value,
+                    'config_type' => ConfigType::STRING->value,
+                    'config_value' => '',
+                    'organizer_id' => $organizer->id
+                ],
+                [
+                    'config_key' => ConfigName::API_KEY->value,
+                    'config_type' => ConfigType::STRING->value,
+                    'config_value' => '',
+                    'organizer_id' => $organizer->id
+                ],
+                [
+                    'config_key' => ConfigName::CHECKSUM_KEY->value,
+                    'config_type' => ConfigType::STRING->value,
+                    'config_value' => '',
+                    'organizer_id' => $organizer->id
+                ],
+                [
+                    'config_key' => ConfigName::LINK_ZALO_SUPPORT->value,
+                    'config_type' => ConfigType::STRING->value,
+                    'config_value' => 'https://zalo.me/your-support-link',
+                    'organizer_id' => $organizer->id
+                ],
+                [
+                    'config_key' => ConfigName::LINK_FACEBOOK_SUPPORT->value,
+                    'config_type' => ConfigType::STRING->value,
+                    'config_value' => 'https://facebook.com/your-support-page',
+                    'organizer_id' => $organizer->id
+                ],
+            ];
+
+            Config::query()->insert($configs);
+
+            DB::commit();
+
+            try {
+                $user->sendEmailVerificationNotification();
+            } catch (\Throwable $e) {
+                Log::error('Failed to send verification email: ' . $e->getMessage());
+            }
+
+            return [
+                'status' => true,
+                'user' => $user,
+                'organizer' => $organizer,
+            ];
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Register organizer failed: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'data' => $data,
+            ]);
+
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
+        }
+    }
+
+    public function quickCheckin(array $data): array
+    {
+        DB::beginTransaction();
+        try {
+            // Tìm user theo email hoặc phone và organizer
+            $user = User::query()
+                ->where('organizer_id', $data['organizer_id'])
+                ->where(function ($query) use ($data) {
+                    if (!empty($data['email'])) {
+                        $query->where('email', $data['email']);
+                    }
+                    if (!empty($data['phone'])) {
+                        if (!empty($data['email'])) {
+                            $query->orWhere('phone', $data['phone']);
+                        } else {
+                            $query->where('phone', $data['phone']);
+                        }
+                    }
+                })
+                ->first();
+
+            if (!$user) {
+                return [
+                    'status' => false,
+                    'title' => __('event.messages.account_not_found_title'),
+                    'message' => __('event.messages.account_not_found_message'),
+                ];
+            }
+
+            // Tìm vé của user cho sự kiện này
+            $history = EventUserHistory::query()
+                ->where('user_id', $user->id)
+                ->where('event_id', $data['event_id'])
+                ->first();
+
+            if (!$history) {
+                return [
+                    'status' => false,
+                    'title' => __('event.messages.ticket_not_found_title'),
+                    'message' => __('event.messages.ticket_not_found_message'),
+                ];
+            }
+
+            // Kiểm tra trạng thái sự kiện
+            $event = Event::find($data['event_id']);
+            if ($event->status !== EventStatus::ACTIVE->value) {
+                return [
+                    'status' => false,
+                    'title' => __('event.messages.event_not_started_title'),
+                    'message' => __('event.messages.event_not_started_message'),
+                ];
+            }
+
+            // Cập nhật trạng thái check-in
+            $history->update([
+                'status' => EventUserHistoryStatus::PARTICIPATED->value,
+            ]);
+
+            $history->load('eventSeat');
+
+            DB::commit();
+
+            return [
+                'status' => true,
+                'title' => __('event.messages.checkin_success_title'),
+                'message' => __('event.messages.checkin_success_message'),
+                'data' => [
+                    'ticket_code' => $history->ticket_code,
+                    'seat_name' => $history->eventSeat?->name,
+                ]
+            ];
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error("Quick check-in failed: " . $e->getMessage());
+
+            return [
+                'status' => false,
+                'title' => __('event.messages.checkin_failed_title'),
+                'message' => __('event.messages.checkin_failed_message'),
             ];
         }
     }

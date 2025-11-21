@@ -16,6 +16,7 @@ class EventPollVote extends Model
         'user_id',
         'event_poll_question_id',
         'event_poll_question_option_id',
+        'answer_content'
     ];
 
     protected static function booted()

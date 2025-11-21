@@ -1,10 +1,23 @@
 <?php
 
 return [
+    'save' => 'Lưu',
     'common_success' => [
+        'name' => 'Tên',
         'get_success' => 'Lấy dữ liệu thành công',
         'add_success' => 'Thêm dữ liệu thành công',
         'update_success' => 'Cập nhật dữ liệu thành công',
+        'processing' => 'Đang xử lý...',
+        'cancel' => 'Hủy bỏ',
+        'save' => 'Lưu thay đổi',
+        'close' => 'Đóng',
+        'all' => 'Tất cả',
+        'empty' => 'Trống',
+        'create' => 'Tạo mới',
+        'edit' => 'Sửa',
+        'delete' => 'Xóa',
+        'view' => 'Xem',
+        'create_and_create_another' => 'Tạo và tạo thêm',
     ],
     'common_error' => [
         'server_error' => 'Đã xảy ra lỗi trên máy chủ, vui lòng liên hệ quản trị viên để được hỗ trợ.',
@@ -22,6 +35,8 @@ return [
         'data_exists' => 'Dữ liệu đã tồn tại, vui lòng thử lại.',
         'validation_failed' => 'Dữ liệu không hợp lệ.',
         'max_content' => 'Nội dung không được vượt quá :max ký tự.',
+        'inappropriate_language' => 'Nội dung không phù hợp với chính sách của hệ thống.',
+        'api_error' => 'Có lỗi xảy ra vui lòng thử lại.',
     ],
     'validation' => [
         'status_integer' => 'Trạng thái phải là số nguyên.',
@@ -35,13 +50,54 @@ return [
         'notification_id_integer' => 'ID thông báo phải là số nguyên.',
         'notification_id_exists' => 'ID thông báo không tồn tại.',
 
-        'poll_not_available'   => 'Poll này không còn hiệu lực hoặc chưa bắt đầu.',
-        'user_not_in_poll'     => 'Bạn không nằm trong danh sách tham gia poll này.',
-        'answers_required'     => 'Vui lòng gửi ít nhất một câu trả lời.',
-        'answer_already_exists'=> 'Bạn đã gửi câu trả lời cho câu hỏi này rồi.',
-        'question_not_found'   => 'Không tìm thấy câu hỏi trong poll.',
-        'option_not_found'     => 'Không tìm thấy lựa chọn hợp lệ.',
+        'poll_not_available'     => 'Poll này không còn hiệu lực hoặc chưa bắt đầu.',
+        'user_not_in_poll'          => 'Bạn không nằm trong danh sách tham gia poll này.',
+        'answers_required'          => 'Vui lòng gửi ít nhất một câu trả lời.',
+        'answer_already_exists' => 'Bạn đã gửi câu trả lời cho câu hỏi này rồi.',
+        'question_not_found'     => 'Không tìm thấy câu hỏi trong poll.',
+        'option_not_found'          => 'Không tìm thấy lựa chọn hợp lệ.',
     ],
     'mark_as_read_success' => 'Đánh dấu đã đọc thành công.',
     'push_token_saved' => 'Lưu thành công.',
+    'resource' => [
+        'dashboard' => [
+            'choose_event' => 'Vui lòng chọn sự kiện trước khi xuất Excel.',
+            'export_excel' => 'Xuất Excel',
+            'select' => [
+                'heading' => 'Bộ lọc sự kiện',
+                'choose_event_label' => 'Chọn sự kiện',
+                'organizer_label' => 'Chọn tổ chức',
+                'start_date_label' => 'Từ ngày',
+                'end_date_label' => 'Tới ngày',
+                'chart_type_label' => 'Loại thống kê',
+                'event_placeholder' => '--- Vui lòng chọn một sự kiện ---',
+                'organizer_placeholder' => '--- Vui lòng chọn một tổ chức ---',
+                'chart_type_hour' => 'Theo Giờ (Cộng dồn)',
+                'chart_type_day' => 'Theo Ngày',
+            ],
+            'chart' => [
+                'heading' => 'Thống kê check-in & đăng ký',
+                'type_hour' => 'Theo Giờ',
+                'type_day' => 'Theo Ngày',
+                'label_checkin' => 'Số check-in',
+                'label_registration' => 'Số đăng ký',
+                'placeholder_no_event' => 'Vui lòng chọn sự kiện để thống kê dữ liệu',
+            ],
+            'stats' => [
+                'no_event_title' => 'Chưa chọn sự kiện',
+                'no_event_message' => 'Vui lòng chọn sự kiện để xem thống kê.',
+                'total_registered_title' => 'Tổng đăng ký',
+                'total_registered_description' => 'Số người đăng ký tham gia sự kiện',
+                'total_checkin_title' => 'Số Check-in',
+                'total_checkin_description' => 'Số người đã check-in',
+                'attendance_rate_title' => 'Tỉ lệ tham dự',
+                'attendance_rate_description' => 'So với tổng số đăng ký',
+                'error_title' => 'Lỗi',
+                'error_message' => 'Không thể tải thống kê',
+            ],
+        ],
+        'setting' => [
+            'name' => 'Cấu hình'
+        ],
+    ],
 ];

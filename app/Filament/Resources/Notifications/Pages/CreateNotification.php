@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Notifications\Pages;
 use App\Models\User;
 use App\Utils\Constants\UserNotificationStatus;
 use App\Filament\Resources\Notifications\NotificationResource;
+use App\Filament\Traits\CheckPlanBeforeAccess;
 use App\Jobs\SendNotifications;
 use App\Models\UserNotification;
 use App\Services\NotificationService;
@@ -20,14 +21,24 @@ use Throwable;
 
 class CreateNotification extends CreateRecord
 {
+    use CheckPlanBeforeAccess;
     protected static string $resource = NotificationResource::class;
-    protected static ?string $title = 'Tạo thông báo';
+    public function getTitle(): string
+    {
+        return __('admin.notifications.pages.create_title');
+    }
 
     protected NotificationService $notificationService;
 
     public function boot(NotificationService $notificationService): void
     {
         $this->notificationService = $notificationService;
+    }
+
+    public function mount(): void
+    {
+        parent::mount();
+        $this->ensurePlanAccessible();
     }
 
     public function getBreadcrumbs(): array

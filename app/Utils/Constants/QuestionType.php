@@ -4,12 +4,18 @@ namespace App\Utils\Constants;
 
 enum QuestionType: int
 {
-    case SINGLE = 1;
+
+    case MULTIPLE   = 1;
+
+    case OPEN_ENDED = 2;
+
 
     public static function label(int $type): string
     {
         return match ($type) {
-            self::SINGLE->value => 'Single choice (Một đáp án)',
+            self::MULTIPLE->value   => __('constants.question_type.multiple'),
+            self::OPEN_ENDED->value => __('constants.question_type.open_ended'),
+            default => __('constants.question_type.unknown'),
         };
     }
 
@@ -17,7 +23,7 @@ enum QuestionType: int
     {
         $options = [];
         foreach (self::cases() as $case) {
-            $options[$case->value] = $case->label($case->value);
+            $options[$case->value] = self::label($case->value);
         }
         return $options;
     }

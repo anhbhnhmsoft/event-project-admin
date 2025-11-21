@@ -10,16 +10,16 @@ enum Language: string
     public static function getOptions(): array
     {
         return [
-            self::VI->value => 'Tiếng Việt',
-            self::EN->value => 'English',
+            self::VI->value => __('constants.language.vi'),
+            self::EN->value => __('constants.language.en'),
         ];
     }
 
     public function label(): string
     {
         return match ($this) {
-            self::VI => 'Tiếng Việt',
-            self::EN => 'English',
+            self::VI => __('constants.language.vi'),
+            self::EN => __('constants.language.en'),
         };
     }
 }

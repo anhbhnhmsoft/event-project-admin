@@ -1,35 +1,38 @@
 <?php
 
-namespace App\Filament\Resources\Organizers\Schemas;
+namespace App\Filament\Resources\OrganizersAdmin\Schemas;
 
 use App\Utils\Constants\CommonStatus;
+use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Schemas\Schema;
 
-class OrganizerSchema
+class OrganizerAdminSchema
 {
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
             TextInput::make('name')
-                ->label('Tên nhà tổ chức')
+                ->label(__('admin.organizers.form.name'))
                 ->required(),
             FileUpload::make('image')
-                ->label('Ảnh đại diện')
+                ->label(__('admin.organizers.form.image'))
                 ->image()
                 ->imageEditor()
                 ->disk('public')
                 ->directory('organizers')
                 ->visibility('public')
                 ->nullable(),
-            Textarea::make('description')
-                ->label('Mô tả')
-                ->columnSpanFull(),
+            RichEditor::make('description')
+                ->label(__('admin.organizers.form.description'))
+                ->required()
+                ->columnSpanFull()
+                ->extraAttributes(['style' => 'min-height: 300px;']),
             Select::make('status')
-                ->label('Trạng thái')
+                ->label(__('admin.organizers.form.status'))
                 ->options(CommonStatus::getOptions())
                 ->default(CommonStatus::ACTIVE->value)
                 ->required(),

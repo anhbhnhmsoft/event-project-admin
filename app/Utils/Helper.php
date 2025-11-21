@@ -2,9 +2,16 @@
 
 namespace App\Utils;
 
+use App\Utils\Constants\RoleUser;
+use App\Filament\Pages\ServicePlan;
+use App\Services\OrganizerService;
 use Carbon\Carbon;
+use Exception;
+use Filament\Notifications\Notification;
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Redirect;
 
 final class Helper
 {
@@ -86,6 +93,18 @@ final class Helper
         return route('events.quick-register', ['token' => $token]);
     }
 
+    public static function quickCheckinUrl($event): string
+    {
+        $payload = [
+            'event_id' => $event->id,
+            'organizer_id' => $event->organizer_id,
+        ];
+
+        $token = Crypt::encryptString(json_encode($payload));
+
+        return route('events.quick-checkin', ['token' => $token]);
+    }
+
     public static function generateQRCodeBanking($binBank, $bankNumber, $bankName, $amount, $addInfo = null): string
     {
 
@@ -103,5 +122,119 @@ final class Helper
         $dataString = urldecode(http_build_query($data));
 
         return hash_hmac('sha256', $dataString, $key);
+    }
+
+    public static function checkSuperAdmin(): bool
+    {
+        if (auth()->check()) {
+            $user = auth()->user();
+            return $user->role === RoleUser::SUPER_ADMIN->value;
+        }
+        return false;
+    }
+
+    public static function checkAdmin(): bool
+    {
+        if (auth()->check()) {
+            $user = auth()->user();
+            return in_array($user->role, [RoleUser::SUPER_ADMIN->value, RoleUser::ADMIN->value]);
+        }
+        return false;
+    }
+
+    public static function checkSpeaker(): bool
+    {
+        if (auth()->check()) {
+            $user = auth()->user();
+            return in_array($user->role, [RoleUser::SUPER_ADMIN->value, RoleUser::ADMIN->value, RoleUser::SPEAKER->value]);
+        }
+        return false;
+    }
+
+    public static function checkPlanOrganizer(): bool
+    {
+        $user = Auth::user();
+        if ($user->role !== RoleUser::SUPER_ADMIN->value) {
+
+            $organizerService = app(OrganizerService::class);
+            $result = $organizerService->getOrganizerDetail($user->organizer_id);
+
+            if (!$result['status']) {
+                Auth::logout();
+                Notification::make()
+                    ->title('Lỗi: Không tìm thấy thông tin tổ chức.')
+                    ->danger()
+                    ->send();
+
+                throw new Exception('Thông tin tổ chức không hợp lệ.');
+            }
+
+            $organizer = $result['organizer'];
+            $plan = $organizer->plansActive->first();
+
+            if (!$plan || $plan->pivot->end_date < now()) {
+
+                $message = 'Gói dịch vụ của tổ chức bạn đã hết hạn.';
+                if (!$plan) {
+                    $message = 'Gói dịch vụ của tổ chức bạn cần kích hoạt.';
+                }
+
+                if ($plan && $plan->pivot->end_date < now() && !$organizer->status) {
+                    Auth::logout();
+                    $message = 'Tổ chức của bạn hiện đã đóng, liên hệ quản trị viên để kích hoạt.';
+                }
+
+                Notification::make()
+                    ->title($message)
+                    ->danger()
+                    ->send();
+
+                Redirect::to(ServicePlan::getUrl());
+
+                return false;
+            }
+
+            return true;
+        }
+        return true;
+    }
+
+    public static function containsProfanity(string $text): bool
+    {
+        $badWords = [
+            'địt',
+            'lồn',
+            'loz',
+            'lol',
+            'cặc',
+            'buồi',
+            'chịch',
+            'đụ',
+            'mẹ mày',
+            'bố mày',
+            'đm',
+            'dm',
+            'vcl',
+            'vl',
+            'cc',
+            'fuck',
+            'shit',
+            'bitch',
+            'asshole',
+            'dick',
+            'pussy'
+        ];
+
+        $text = trim(preg_replace('/\s+/', ' ', $text));
+        $text = mb_strtolower($text, 'UTF-8');
+
+        foreach ($badWords as $word) {
+            $pattern = '/(^|\s)' . preg_quote($word, '/') . '(\s|$|[.,!?])/ui';
+            if (preg_match($pattern, $text)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -3,10 +3,11 @@
 namespace App\Filament\Resources\Events\Pages;
 
 use App\Filament\Resources\Events\EventResource;
+use App\Filament\Traits\CheckPlanBeforeAccess;
 use App\Models\EventPoll;
 use App\Models\EventPollQuestion;
 use App\Models\EventPollQuestionOption;
-use App\Models\User;
+use App\Models\EventPollVote;
 use App\Utils\Constants\CommonStatus;
 use App\Utils\Constants\UnitDurationType;
 use App\Utils\Constants\QuestionType;
@@ -19,6 +20,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
 use Filament\Resources\Pages\Page;
@@ -33,18 +35,19 @@ use Filament\Tables\Table;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\Facades\Log;
-
+use Illuminate\Support\Facades\Crypt;
 
 class EventVotes extends Page implements HasTable
 {
     use InteractsWithRecord;
     use Tables\Concerns\InteractsWithTable;
+    use CheckPlanBeforeAccess;
 
     protected static string $resource = EventResource::class;
 
-    protected static ?string $title = 'Quản lý khảo sát / bình chọn sự kiện';
-    protected static ?string $modelLabel = 'Khảo sát';
-    protected static ?string $pluralModelLabel = 'Khảo sát / Bình chọn';
+    // protected static ?string $title = __('event.pages.votes_title');
+    // protected static ?string $modelLabel = 'Khảo sát';
+    // protected static ?string $pluralModelLabel = 'Khảo sát / Bình chọn';
 
     protected string $view = 'filament.pages.event-votes';
 
@@ -58,6 +61,7 @@ class EventVotes extends Page implements HasTable
     public function mount(int|string $record): void
     {
         $this->record = $this->resolveRecord($record);
+        $this->ensurePlanAccessible();
     }
 
     public function table(Table $table): Table
@@ -66,38 +70,38 @@ class EventVotes extends Page implements HasTable
             ->query(EventPoll::query()->where('event_id', $this->record->id))
             ->columns([
                 TextColumn::make('title')
-                    ->label('Tiêu đề')
+                    ->label(__('admin.events.votes.title'))
                     ->limit(50)
                     ->searchable()
                     ->sortable(),
 
                 TextColumn::make('start_time')
-                    ->label('Bắt đầu')
+                    ->label(__('admin.events.votes.start_time'))
                     ->dateTime('d/m/Y H:i')
                     ->sortable(),
 
                 TextColumn::make('end_time')
-                    ->label('Kết thúc')
+                    ->label(__('admin.events.votes.end_time'))
                     ->dateTime('d/m/Y H:i')
                     ->sortable(),
 
                 TextColumn::make('questions_count')
-                    ->label('Số câu hỏi')
+                    ->label(__('admin.events.votes.questions_count'))
                     ->counts('questions')
                     ->alignCenter(),
 
                 IconColumn::make('is_active')
-                    ->label('Kích hoạt')
+                    ->label(__('admin.events.votes.is_active'))
                     ->boolean(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('is_active')
-                    ->label('Trạng thái')
+                    ->label(__('admin.events.votes.status'))
                     ->options(CommonStatus::getOptions()),
             ])
             ->headerActions([
                 Action::make('create')
-                    ->label('Tạo khảo sát mới')
+                    ->label(__('admin.events.votes.create_new_poll'))
                     ->icon('heroicon-m-plus')
                     ->button()
                     ->color('success')
@@ -108,13 +112,13 @@ class EventVotes extends Page implements HasTable
                         $result = $eventPollService->createEventPoll($data);
                         if ($result['status']) {
                             Notification::make()
-                                ->title('Tạo khảo sát mới thành công!')
+                                ->title(__('admin.events.votes.create_success'))
                                 ->success()
                                 ->send();
                             $this->resetTable();
                         } else {
                             Notification::make()
-                                ->title('Có lỗi xảy ra, tạo khảo sát không thành công!')
+                                ->title(__('admin.events.votes.create_failed'))
                                 ->danger()
                                 ->send();
                         }
@@ -123,7 +127,7 @@ class EventVotes extends Page implements HasTable
             ->recordActions([ActionGroup::make([
 
                 Action::make('edit')
-                    ->label('Chỉnh sửa')
+                    ->label(__('admin.events.votes.edit'))
                     ->icon('heroicon-m-pencil')
                     ->color('warning')
                     ->schema($this->getPollFormSchema())
@@ -134,20 +138,20 @@ class EventVotes extends Page implements HasTable
                         $result = $eventPollService->updateEventPoll($data);
                         if ($result['status']) {
                             Notification::make()
-                                ->title('Sửa khảo sát mới thành công!')
+                                ->title(__('admin.events.votes.update_success'))
                                 ->success()
                                 ->send();
                             $this->resetTable();
                         } else {
                             Notification::make()
-                                ->title('Có lỗi xảy ra, sửa khảo sát không thành công!')
+                                ->title(__('admin.events.votes.update_failed'))
                                 ->danger()
                                 ->send();
                         }
                     }),
 
                 Action::make('questions')
-                    ->label('Quản lý câu hỏi')
+                    ->label(__('admin.events.votes.manage_questions'))
                     ->icon('heroicon-o-queue-list')
                     ->color('info')
                     ->modalWidth('7xl')
@@ -165,7 +169,6 @@ class EventVotes extends Page implements HasTable
                                 'options' => $q->options->map(fn($o) => [
                                     'label' => $o->label,
                                     'order' => $o->order,
-                                    'is_correct' => (bool) $o->is_correct,
                                 ])->toArray(),
                             ])
                             ->toArray(),
@@ -173,8 +176,8 @@ class EventVotes extends Page implements HasTable
                     ->action(function (EventPoll $record, array $data): void {
                         DB::transaction(function () use ($record, $data) {
                             EventPollQuestion::where('event_poll_id', $record->id)->get()->each(function ($q) {
-                                $q->options()->delete();
-                                $q->delete();
+                                $q->options()->forceDelete();
+                                $q->forceDelete();
                             });
 
                             if (!empty($data['questions']) && is_array($data['questions'])) {
@@ -192,7 +195,6 @@ class EventVotes extends Page implements HasTable
                                                 'event_poll_question_id' => $question->id,
                                                 'label' => $opt['label'] ?? '',
                                                 'order' => $opt['order'] ?? ($optIndex + 1),
-                                                'is_correct' => isset($opt['is_correct']) ? (int) $opt['is_correct'] : 0,
                                             ]);
                                         }
                                     }
@@ -201,68 +203,14 @@ class EventVotes extends Page implements HasTable
                         });
 
                         Notification::make()
-                            ->title('Tạo khảo sát mới thành công!')
+                            ->title(__('admin.events.votes.manage_questions_success'))
                             ->success()
                             ->send();
                         $this->resetTable();
                     }),
 
-                Action::make('manage_users')
-                    ->label('Quản lý người tham gia')
-                    ->icon('heroicon-o-user-group')
-                    ->color('purple')
-                    ->modalWidth('5xl')
-                    ->fillForm(function (EventPoll $record) {
-                        return [
-                            'user_ids' => $record->users()->pluck('users.name', 'users.id')->toArray(),
-                        ];
-                    })
-
-                    ->schema([
-                        Section::make('Cập nhật người tham gia')
-                            ->schema([
-                                Select::make('user_ids')
-                                    ->label('Chọn/Tìm kiếm người dùng')
-                                    ->multiple()
-                                    ->searchable()
-                                    ->preload()
-                                    ->options(function (EventPoll $record) {
-                                        $eventId = $record->event_id;
-                                        User::whereHas('eventUserHistories', function ($q) use ($eventId) {
-                                            $q->where('event_id', $eventId);
-                                        })->pluck('name', 'id');
-                                    })
-                                    ->helperText('Chỉ hiển thị người dùng đã được check-in vào sự kiện này.'),
-                            ]),
-                    ])
-
-                    ->action(function (EventPoll $record, array $data): void {
-                        $eventPollService = app(EventPollService::class);
-
-                        $result = $eventPollService->makeUsersForPoll($data['user_ids'], $record->id);
-
-                        $notification = Notification::make();
-
-                        if ($result['status']) {
-                            $synced = $result['data']['attached'] ?? [];
-                            $notification
-                                ->title('Cập nhật người tham gia thành công!')
-                                ->body('Đã đồng bộ ' . count($synced) . ' người dùng mới.')
-                                ->success();
-                        } else {
-                            $notification
-                                ->title('Cập nhật người tham gia thất bại!')
-                                ->body($result['message'] ?? 'Lỗi không xác định.')
-                                ->danger();
-                        }
-
-                        $notification->send();
-                    })
-                    ->modalSubmitActionLabel('Cập nhật')
-                    ->modalCancelActionLabel('Đóng'),
-
                 Action::make('delete')
-                    ->label('Xóa')
+                    ->label(__('admin.events.votes.delete'))
                     ->icon('heroicon-m-trash')
                     ->color('danger')
                     ->requiresConfirmation()
@@ -270,17 +218,151 @@ class EventVotes extends Page implements HasTable
                         $result = $record->delete();
                         if ($result) {
                             Notification::make()
-                                ->title('Xóa khảo sát thành công!')
+                                ->title(__('admin.events.votes.delete_success'))
                                 ->success()
                                 ->send();
                         } else {
                             Notification::make()
-                                ->title('Xóa khảo sát không thành công!')
+                                ->title(__('admin.events.votes.delete_failed'))
                                 ->danger()
                                 ->send();
                         }
                         $this->resetTable();
                     }),
+                Action::make('get-link')
+                    ->label(__('admin.events.votes.get_link'))
+                    ->url(function ($record): string {
+                        return route('event.poll.show', ['idcode' => $record->id]);
+                    }),
+                Action::make('view-results')
+                    ->label(__('admin.events.votes.view_results'))
+                    ->icon('heroicon-o-chart-bar')
+                    ->color('primary')
+                    ->modalWidth('7xl')
+                    ->modalHeading(fn(EventPoll $record) => __('admin.events.votes.poll_results') . ': ' . $record->title)
+                    ->infolist(function (EventPoll $record) {
+                        $questions = $record->questions()
+                            ->with(['options'])
+                            ->orderBy('order')
+                            ->get();
+
+                        // Đếm tổng số người tham gia
+                        $totalResponses = EventPollVote::query()
+                            ->whereIn('event_poll_question_id', $questions->pluck('id'))
+                            ->distinct('user_id')
+                            ->count('user_id');
+
+                        $sections = [];
+
+                        // Section tổng quan
+                        $sections[] = Section::make(__('admin.events.votes.overview'))
+                            ->schema([
+                                TextEntry::make('total_responses')
+                                    ->label(__('admin.events.votes.total_responses'))
+                                    ->default($totalResponses)
+                                    ->badge()
+                                    ->color('success'),
+                                TextEntry::make('total_questions')
+                                    ->label(__('admin.events.votes.total_questions'))
+                                    ->default($questions->count())
+                                    ->badge()
+                                    ->color('info'),
+                            ])
+                            ->columns(2);
+
+                        // Section cho từng câu hỏi
+                        foreach ($questions as $index => $question) {
+                            $questionSchema = [
+                                TextEntry::make('question_type_' . $question->id)
+                                    ->label(__('admin.events.votes.question_type_label'))
+                                    ->default(QuestionType::label($question->type))
+                                    ->badge()
+                                    ->color('gray'),
+                            ];
+
+                            if ($question->type == QuestionType::MULTIPLE->value) {
+                                // Câu hỏi trắc nghiệm - hiển thị biểu đồ
+                                foreach ($question->options as $option) {
+                                    $answerCount = EventPollVote::query()
+                                        ->where('event_poll_question_id', $question->id)
+                                        ->where('event_poll_question_option_id', $option->id)
+                                        ->count();
+
+                                    $percentage = $totalResponses > 0
+                                        ? round(($answerCount / $totalResponses) * 100, 1)
+                                        : 0;
+
+                                    $questionSchema[] = TextEntry::make('option_' . $option->id)
+                                        ->label($option->label)
+                                        ->default(function () use ($answerCount, $percentage, $totalResponses) {
+                                            $barWidth = $totalResponses > 0 ? $percentage : 0;
+                                            return new \Illuminate\Support\HtmlString(
+                                                '<div class="flex items-center gap-3">
+                                    <div class="flex-1 bg-gray-200 rounded-full h-6 dark:bg-gray-700">
+                                        <div class="bg-primary-600 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold" style="width: ' . $barWidth . '%">
+                                            ' . ($barWidth > 10 ? $percentage . '%' : '') . '
+                                        </div>
+                                    </div>
+                                    <span class="text-sm font-medium min-w-[80px] text-right">' . $answerCount . ' ' . __('admin.events.votes.votes') . ($barWidth <= 10 ? ' (' . $percentage . '%)' : '') . '</span>
+                                </div>'
+                                            );
+                                        })
+                                        ->columnSpanFull();
+                                }
+                            } elseif ($question->type == QuestionType::OPEN_ENDED->value) {
+                                $answers = EventPollVote::query()
+                                    ->where('event_poll_question_id', $question->id)
+                                    ->whereNotNull('answer_content')
+                                    ->select('answer_content', 'created_at')
+                                    ->orderBy('created_at', 'desc')
+                                    ->limit(10)
+                                    ->get();
+
+                                $answerCount = EventPollVote::query()
+                                    ->where('event_poll_question_id', $question->id)
+                                    ->whereNotNull('answer_content')
+                                    ->count();
+
+                                $questionSchema[] = TextEntry::make('answer_count_' . $question->id)
+                                    ->label(__('admin.events.votes.answer_count'))
+                                    ->default($answerCount . ' ' . __('admin.events.votes.answers'))
+                                    ->badge()
+                                    ->color('success');
+
+                                if ($answers->isNotEmpty()) {
+                                    $answerList = $answers->map(function ($answer) {
+                                        return '• ' . $answer->answer_content;
+                                    })->join("\n");
+
+                                    $questionSchema[] = TextEntry::make('answers_' . $question->id)
+                                        ->label(__('admin.events.votes.recent_answers'))
+                                        ->default($answerList)
+                                        ->columnSpanFull()
+                                        ->prose();
+                                }
+                            }
+
+                            $sections[] = Section::make(__('admin.events.votes.question') . ' ' . ($index + 1) . ': ' . $question->question)
+                                ->schema($questionSchema)
+                                ->collapsible()
+                                ->collapsed(false);
+                        }
+
+                        return $sections;
+                    })
+                    ->modalCloseButton(true)
+                    // ->modalFooterActions([
+                    //     Action::make('export')
+                    //         ->label('Xuất báo cáo')
+                    //         ->icon('heroicon-o-arrow-down-tray')
+                    //         ->color('success')
+                    //         ->action(function (EventPoll $record) {
+                    //             Notification::make()
+                    //                 ->title('Tính năng đang phát triển')
+                    //                 ->info()
+                    //                 ->send();
+                    //         }),
+                    // ]),
 
             ])])
             ->defaultSort('start_time', 'desc');
@@ -290,29 +372,29 @@ class EventVotes extends Page implements HasTable
     {
         return [
             TextInput::make('title')
-                ->label('Tiêu đề')
+                ->label(__('admin.events.votes.poll_title'))
                 ->required()
                 ->maxLength(255),
 
             DateTimePicker::make('start_time')
-                ->label('Thời gian bắt đầu')
+                ->label(__('admin.events.votes.start_time_label'))
                 ->required()
                 ->default(now()),
 
             Select::make('duration_unit')
-                ->label('Đơn vị thời lượng')
+                ->label(__('admin.events.votes.duration_unit'))
                 ->options(UnitDurationType::getOptions())
                 ->required(),
 
             TextInput::make('duration')
                 ->numeric()
-                ->label('Thời lượng')
+                ->label(__('admin.events.votes.duration'))
                 ->required()
                 ->default(1)
                 ->minValue(1),
 
             Toggle::make('is_active')
-                ->label('Kích hoạt')
+                ->label(__('admin.events.votes.is_active_label'))
                 ->default(true),
         ];
     }
@@ -321,59 +403,57 @@ class EventVotes extends Page implements HasTable
     {
         return [
             Repeater::make('questions')
-                ->label('Câu hỏi')
+                ->label(__('admin.events.votes.questions'))
                 ->defaultItems(0)
                 ->schema([
                     Select::make('type')
-                        ->label('Loại câu hỏi')
+                        ->label(__('admin.events.votes.question_type'))
                         ->options(QuestionType::getOptions())
                         ->required()
-                        ->default(1)
+                        ->default(QuestionType::MULTIPLE->value)
                         ->reactive(),
 
                     Textarea::make('question')
-                        ->label('Nội dung câu hỏi')
+                        ->label(__('admin.events.votes.question_content'))
                         ->required()
                         ->rows(3),
 
                     TextInput::make('order')
-                        ->label('Thứ tự')
+                        ->label(__('admin.events.votes.order'))
                         ->numeric()
                         ->default(1)
                         ->minValue(1),
 
                     Repeater::make('options')
-                        ->label('Tùy chọn / Đáp án')
+                        ->label(__('admin.events.votes.options'))
                         ->schema([
                             TextInput::make('label')
-                                ->label('Nội dung tùy chọn')
+                                ->label(__('admin.events.votes.option_content'))
                                 ->required()
                                 ->maxLength(255),
 
                             TextInput::make('order')
-                                ->label('Thứ tự')
+                                ->label(__('admin.events.votes.order'))
                                 ->numeric()
                                 ->default(1)
                                 ->minValue(1),
-                            Toggle::make('is_correct')
-                                ->label('Đáp án đúng (cho quiz)')
-                                ->helperText('Đánh dấu nếu đây là đáp án đúng'),
                         ])
-                        ->columns(3)
-                        ->addActionLabel('Thêm tùy chọn')
+                        ->columns(2)
+                        ->addActionLabel(__('admin.events.votes.add_option'))
                         ->collapsible()
                         ->cloneable()
                         ->reorderable()
                         ->minItems(2)
-                        ->helperText('Tối thiểu 2 tùy chọn cho câu hỏi trắc nghiệm'),
+                        ->helperText(__('admin.events.votes.options_helper'))
+                        ->visible(fn($get) => $get('type') == QuestionType::MULTIPLE->value),
                 ])
                 ->columns(1)
                 ->cloneable()
-                ->addActionLabel('Thêm câu hỏi')
+                ->addActionLabel(__('admin.events.votes.add_question'))
                 ->reorderable()
                 ->collapsible()
                 ->minItems(1)
-                ->itemLabel(fn(array $state): ?string => $state['question'] ?? 'Câu hỏi mới'),
+                ->itemLabel(fn(array $state): ?string => $state['question'] ?? __('admin.events.votes.new_question')),
         ];
     }
 }

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Jobs\SendMembershipExpireEmail;
 use App\Jobs\SendNotifications;
 use App\Models\Membership;
+use App\Models\MembershipOrganizer;
 use App\Models\MembershipUser;
 use App\Models\User;
 use App\Utils\Constants\MembershipUserStatus;
@@ -57,6 +58,18 @@ class MemberShipService
         }
     }
 
+    public function getListMembershipForAdmin(array $filters = [], string $sortBy = '')
+    {
+        try {
+            $query = Membership::filter($filters)->sortBy($sortBy)->get();
+
+            return $query;
+        } catch (Exception $e) {
+            Log::error("Get List Membership For Admin Error :" . $e->getMessage());
+            return [];
+        }
+    }
+
     public function getMembershipDetail($id): array
     {
         try {
@@ -72,7 +85,7 @@ class MemberShipService
 
             return [
                 'status' => true,
-                'membership' => $membership,
+                'data' => $membership,
             ];
         } catch (\Exception $e) {
             return [
@@ -82,7 +95,7 @@ class MemberShipService
         }
     }
 
-    public function membershipRegister(Membership $membership): array
+    public function membershipRegister(Membership $plan, $typeRegister): array
     {
         $now = now();
         $transId = Helper::getTimestampAsId();
@@ -91,13 +104,25 @@ class MemberShipService
         try {
             $user = Auth::user();
             // Khởi tạo membership user mới
-            $membershipUser = MembershipUser::query()->create([
-                'user_id' => $user->id,
-                'membership_id' => $membership->id,
-                'start_date' => $now,
-                'end_date' => $now->copy()->addMonths($membership->duration),
-                'status' => MembershipUserStatus::INACTIVE->value
-            ]);
+            $membership = null;
+            if ($typeRegister == TransactionType::MEMBERSHIP->value) {
+
+                $membership = MembershipUser::query()->create([
+                    'user_id' => $user->id,
+                    'membership_id' => $plan->id,
+                    'start_date' => $now,
+                    'end_date' => $now->copy()->addMonths($plan->duration),
+                    'status' => MembershipUserStatus::INACTIVE->value
+                ]);
+            } else if ($typeRegister == TransactionType::PLAN_SERVICE->value) {
+                $membership = MembershipOrganizer::query()->create([
+                    'organizer_id' => $user->organizer_id,
+                    'membership_id' => $plan->id,
+                    'start_date' => $now,
+                    'end_date' => $now->copy()->addMonths($plan->duration),
+                    'status' => MembershipUserStatus::INACTIVE->value
+                ]);
+            }
 
             // khởi tạo giao dịch kèm theo là khởi tạo payOS
             // desc bank
@@ -106,14 +131,14 @@ class MemberShipService
             $expiredAt = now()->addMinutes(10);
             // payload payOS
             $payload = [
-                'amount' => (int)$membership->price,
+                'amount' => (int)$plan->price,
                 'cancelUrl' => route('home'),
                 'description' => $descBank,
                 'orderCode' => $orderCode,
                 'returnUrl' => route('home'),
             ];
             // khởi tạo PayOS
-            $response = $this->cassoService->registerPaymentRequest($payload, $expiredAt);
+            $response = $this->cassoService->registerPaymentRequest($payload, $expiredAt, $typeRegister);
             Log::info("PayOS", ['code' => $response['code'], 'desc' => $response['data']]);
 
             // nếu payOS trả ra lỗi
@@ -125,17 +150,23 @@ class MemberShipService
                     'message' => __('common.common_error.api_error'),
                 ];
             }
-
+            $user = Auth::user();
+            $organizerId = match ($typeRegister) {
+                TransactionType::PLAN_SERVICE->value => 1,
+                TransactionType::MEMBERSHIP->value => $user->organizer_id,
+                TransactionType::EVENT_SEAT->value => $user->organizer_id,
+                default => null,
+            };
             // Khởi tạo transaction
             // hiện tại chỉ có casso
             $transaction = $this->transactionService->create([
                 'id' => $transId,
                 'user_id' => $user->id,
                 'type_trans' => TransactionTypePayment::CASSO,
-                'foreign_id' => $membershipUser->id,
+                'foreign_id' => $membership->id,
                 'transaction_id' => $response['data']['paymentLinkId'],
-                'type' => TransactionType::MEMBERSHIP->value,
-                'money' => $membership->price,
+                'type' => $typeRegister == TransactionType::MEMBERSHIP->value ? TransactionType::MEMBERSHIP->value :  TransactionType::PLAN_SERVICE->value,
+                'money' => $plan->price,
                 'transaction_code' => $orderCode,
                 'description' => $descBank,
                 'status' => TransactionStatus::WAITING->value,
@@ -145,7 +176,8 @@ class MemberShipService
                     'name' => $response['data']['accountName'],
                     'bin' => $response['data']['bin'],
                     'number' => $response['data']['accountNumber']
-                ]
+                ],
+                'organizer_id' => $organizerId
             ]);
 
             DB::commit();

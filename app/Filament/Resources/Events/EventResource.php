@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Events;
 use App\Filament\Resources\Events\Pages\CreateEvent;
 use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Filament\Resources\Events\Pages\EventComments;
+use App\Filament\Resources\Events\Pages\EventDetailSpeaker;
 use App\Filament\Resources\Events\Pages\EventGames;
 use App\Filament\Resources\Events\Pages\EventVotes;
 use App\Filament\Resources\Events\Pages\ListEvents;
@@ -12,7 +13,7 @@ use App\Filament\Resources\Events\Pages\SeatsEvent;
 use App\Filament\Resources\Events\Schemas\EventForm;
 use App\Filament\Resources\Events\Tables\EventsTable;
 use App\Models\Event;
-use App\Utils\Constants\RoleUser;
+use App\Utils\Helper;
 use BackedEnum;
 use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
@@ -28,8 +29,15 @@ class EventResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static ?string $modelLabel = 'Sự kiện';
-    protected static ?string $pluralModelLabel = 'Sự kiện';
+    public static function getModelLabel(): string
+    {
+        return __('admin.events.model_label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.events.plural_model_label');
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -40,11 +48,14 @@ class EventResource extends Resource
     {
         return EventsTable::configure($table);
     }
+    public function mount(): void
+    {
+        parent::mount();
+    }
 
     public static function canAccess(): bool
     {
-        $user = Auth::user();
-        return $user->role === RoleUser::SUPER_ADMIN->value || $user->role === RoleUser::ADMIN->value || $user->role === RoleUser::SPEAKER->value;
+        return Helper::checkSpeaker();
     }
 
     public static function getEloquentQuery(): Builder
@@ -52,10 +63,10 @@ class EventResource extends Resource
         $query = parent::getEloquentQuery();
         $user = Auth::user();
 
-        if ($user->role === RoleUser::SUPER_ADMIN->value) {
+        // Nếu là super admin thì không lọc
+        if (Helper::checkSuperAdmin()) {
             return $query;
         }
-
         return $query->where('organizer_id', $user->organizer_id);
     }
 
@@ -74,8 +85,9 @@ class EventResource extends Resource
             'edit' => EditEvent::route('/{record}/edit'),
             'seats-manage' => SeatsEvent::route('/{record}/seats'),
             'comments-manage' => EventComments::route('/{record}/comments'),
-            'games-manage'     => EventGames::route('/{record}/games'),
-            'votes-manage'     => EventVotes::route('/{record}/votes'),
+            'games-manage' => EventGames::route('/{record}/games'),
+            'votes-manage' => EventVotes::route('/{record}/votes'),
+            'speaker-screen' => EventDetailSpeaker::route('{record}/speaker')
         ];
     }
 

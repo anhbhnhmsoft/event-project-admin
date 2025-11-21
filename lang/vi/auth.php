@@ -26,6 +26,8 @@ return [
         'password_not_match' => 'Mật khẩu không khớp',
         'organizer_not_found' => 'Nhà tổ chức không tồn tại',
         'unauthorized' => 'Không có quyền truy cập',
+        'unauthorized_access' => 'Tài khoản của bạn không có quyền truy cập vào hệ thống quản trị',
+        'email_not_verified' => 'Email chưa được xác thực, vui lòng kiểm tra email để xác thực tài khoản',
         'validation_failed' => 'Dữ liệu không hợp lệ',
         'server_error' => 'Lỗi máy chủ',
         'unverified_email' => 'Email chưa được xác thực, vui lòng kiểm tra email để xác thực tài khoản',
@@ -59,4 +61,25 @@ return [
         'introduce_invalid' => 'Giới thiệu bản thân không hợp lệ',
         'avatar_invalid' => "Ảnh đại diện không hợp lệ"
     ],
+    'login' => [
+        'heading'           => 'Đăng nhập',
+        'remember_me'       => 'Ghi nhớ đăng nhập',
+        'email'             => 'Địa chỉ email',
+        'password'          => 'Mật khẩu',
+        'organizer'         => 'Tổ chức',
+        'select_organizer'  => 'Chọn tổ chức'
+    ],
+    'register' => [
+        'heading'           => 'Đăng ký',
+        'organization_name' => 'Tên tổ chức',
+        'email'             => 'Email',
+        'phone'             => 'Số điện thoại',
+        'password'          => 'Mật khẩu',
+        'password_confirmation' => 'Xác nhận mật khẩu',
+        'register'          => 'Đăng ký',
+        'success_title'     => 'Đăng ký thành công!',
+        'success_message'   => 'Vui lòng kiểm tra email để xác thực tài khoản.',
+        'error_title'       => 'Đăng ký thất bại',
+        'error_message'     => 'Có lỗi xảy ra khi đăng ký. Vui lòng thử lại sau.'
+    ]
 ];

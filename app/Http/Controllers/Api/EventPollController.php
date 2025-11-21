@@ -3,15 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\EventPollResource;
-use App\Http\Resources\UserResource;
-use App\Http\Resources\EventPollQuestionResource;
-use App\Http\Resources\EventPollVoteResource;
+use App\Models\EventPoll;
 use App\Services\EventPollService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
 
 class EventPollController extends Controller
 {
@@ -22,183 +19,74 @@ class EventPollController extends Controller
         $this->eventPollService = $eventPollService;
     }
 
-    /**
-     * Danh sách poll theo event
-     */
-    public function list(Request $request): JsonResponse
+    public function submit(Request $request, $idcode)
     {
-        $validator = Validator::make($request->all(), [
-            'event_id' => ['required', 'integer', 'exists:events,id'],
-        ], [
-            'event_id.required' => __('event.validation.event_id_required'),
-            'event_id.exists'   => __('common.common_error.data_not_found'),
+        $data = $request->validate([
+            'email' => 'required|email',
+            'phone' => 'nullable|string',
+            'answers' => 'required|array',
         ]);
+        $result = $this->eventPollService->submitAnswers($idcode, $data['email'], $data['answers']);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'status'  => false,
-                'message' => __('common.common_error.validation_failed'),
-                'errors'  => $validator->errors(),
-            ], 422);
-        }
-
-        $polls = $this->eventPollService->getPollsByEvent($validator->validated()['event_id']);
-        if (!$polls['status']) {
-            return response()->json([
-                'status'  => false,
-                'message' => $polls['message'],
-            ], 404);
-        }
-
-        return response()->json([
-            'status'  => true,
-            'message' => __('common.common_success.get_success'),
-            'data'    => EventPollResource::collection($polls['data']),
-        ], 200);
+        return response()->json(
+            [
+                'message' => $result['message']
+            ]
+        );
     }
 
-    public function poll(int $pollId): JsonResponse
+    public function show($idcode)
     {
-        $result = $this->eventPollService->getPollDetail($pollId);
+        $poll = $this->eventPollService->getPoll((int) $idcode);
 
-        if (!$result['status']) {
-            return response()->json([
-                'status'  => false,
-                'message' => $result['message'],
-            ], 404);
+        if (!$poll) {
+            Log::warning('Poll not found', ['poll_id' => $idcode]);
+            abort(404, __('poll.validation.invalid_poll'));
         }
 
-        return response()->json([
-            'status'  => true,
-            'message' => __('common.common_success.get_success'),
-            'data'    => new EventPollResource($result['data']),
-        ], 200);
-    }
-
-    /**
-     * Danh sách user trong poll
-     */
-    public function listUsersPoll(int $pollId): JsonResponse
-    {
-        $result = $this->eventPollService->getUsersByPoll($pollId);
-        if (!$result['status']) {
-            return response()->json([
-                'status'  => false,
-                'message' => $result['message'],
-            ], 404);
+        if (!$poll->is_active) {
+            Log::warning('Poll inactive', ['poll_id' => $poll->id]);
+            abort(403, __('poll.validation.poll_inactive'));
         }
 
-        return response()->json([
-            'status'  => true,
-            'message' => __('common.common_success.get_success'),
-            'data'    => UserResource::collection($result['data']),
-        ], 200);
-    }
-
-    /**
-     * Danh sách câu hỏi trong poll
-     */
-    public function listQuestionsPoll(int $pollId): JsonResponse
-    {
-
-        $poll = $this->eventPollService->getPollDetail($pollId);
-
-        if (!$poll['status']) {
-            return response()->json([
-                'status'  => false,
-                'message' => __('poll.validation.poll_not_available'),
-            ], 400);
+        if ($poll->end_time && $poll->end_time < now()) {
+            Log::info('Poll expired', [
+                'poll_id' => $poll->id,
+                'end_time' => $poll->end_time,
+                'now' => now(),
+            ]);
+            abort(403, __('poll.validation.poll_expired'));
+        }
+        if ($poll->event->organizer->status !== \App\Utils\Constants\CommonStatus::ACTIVE->value) {
+            Log::warning('Organizer inactive', [
+                'organizer_id' => $poll->event->organizer->id,
+                'status' => $poll->event->organizer->status
+            ]);
+            abort(403, __('poll.validation.organizer_inactive'));
         }
 
-        $result = $this->eventPollService->getQuestionsByPoll($pollId);
-        if (!$result['status']) {
-            return response()->json([
-                'status'  => false,
-                'message' => $result['message'],
-            ], 404);
-        }
-
-        return response()->json([
-            'status'  => true,
-            'message' => __('common.common_success.get_success'),
-            'data'    => EventPollQuestionResource::collection($result['data']),
-        ], 200);
-    }
-
-
-    /**
-     * Lấy danh sách câu trả lời của poll
-     */
-    public function listAnswerPoll(Request $request, int $pollId): JsonResponse
-    {
-        $result = $this->eventPollService->getAnswers($pollId);
-        if (!$result['status']) {
-            return response()->json([
-                'status'  => false,
-                'message' => $result['message'],
-            ], 404);
-        }
-
-        return response()->json([
-            'status'  => true,
-            'message' => __('common.common_success.get_success'),
-            'data'    => EventPollVoteResource::collection($result['data']),
-        ], 200);
-    }
-
-    /**
-     * User gửi câu trả lời vào poll
-     */
-    public function pushAnswerPoll(Request $request, int $pollId): JsonResponse
-    {
-        $userId = $request->user()->id;
-        $validator = Validator::make($request->all(), [
-            'answers'               => ['required', 'array'],
-            'answers.*.question_id' => [
-                'required',
-                'integer',
-                'exists:event_poll_questions,id',
-                Rule::unique('event_poll_votes', 'event_poll_question_id')
-                    ->where(fn($q) => $q->where('user_id', $userId))
+        return Inertia::render('TakeSurvey', [
+            'poll' => [
+                'id' => $idcode,
+                'title' => $poll->title,
+                'questions' => $poll->questions->map(function ($q) {
+                    return [
+                        'id' => (string) $q->id,
+                        'type' => $q->type,
+                        'question' => $q->question,
+                        'options' => $q->options->map(fn($opt) => [
+                            'id' => (string) $opt->id,
+                            'label' => $opt->label,
+                        ]),
+                    ];
+                }),
             ],
-            'answers.*.option_id'   => ['required', 'integer', 'exists:event_poll_question_options,id'],
-        ], [
-            'answers.required' => __('poll.validation.answers_required'),
-            'answers.*.question_id.unique' => __('poll.validation.answer_already_exists'),
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status'  => false,
-                'message' => __('common.common_error.validation_failed'),
-                'errors'  => $validator->errors(),
-            ], 422);
-        }
-        $poll = $this->eventPollService->getPollDetail($pollId);
-
-        if (!$poll['status']) {
-            return response()->json([
-                'status'  => false,
-                'message' => __('poll.validation.poll_not_available'),
-            ], 400);
-        }
-
-        $data = $validator->validated();
-
-
-        $result = $this->eventPollService->submitAnswers($pollId, $userId, $data['answers']);
-
-        if (!$result['status']) {
-            return response()->json([
-                'status'  => false,
-                'message' => $result['message'],
-            ], 400);
-        }
-
-        return response()->json([
-            'status'  => true,
-            'message' => __('common.common_success.success'),
-            'data'    => EventPollVoteResource::collection($result['data']),
-        ], 200);
+            'user' => auth()->user()
+                ? [
+                    'email' => auth()->user()->email,
+                    'phone' => auth()->user()->phone,
+                ]
+                : null,
+        ])->rootView('layout.app');
     }
 }

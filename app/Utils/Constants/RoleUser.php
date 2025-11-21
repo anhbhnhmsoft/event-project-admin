@@ -22,10 +22,10 @@ enum RoleUser: int
     public function label(): string
     {
         return match ($this) {
-            self::SUPER_ADMIN => 'Super Admin',
-            self::ADMIN => 'Quản trị viên',
-            self::CUSTOMER => 'Khách hàng',
-            self::SPEAKER => 'Người dẫn chương trình',
+            self::SUPER_ADMIN => __('constants.role_user.super_admin'),
+            self::ADMIN => __('constants.role_user.admin'),
+            self::CUSTOMER => __('constants.role_user.customer'),
+            self::SPEAKER => __('constants.role_user.speaker'),
         };
     }
 
@@ -36,5 +36,16 @@ enum RoleUser: int
             self::ADMIN->value,
             self::SPEAKER->value
         ]);
+    }
+
+    public static function getLabel(string $value): string
+    {
+        return match ($value) {
+            self::SUPER_ADMIN->value => __('constants.role_user.super_admin'),
+            self::ADMIN->value       => __('constants.role_user.admin'),
+            self::SPEAKER->value     => __('constants.role_user.speaker'),
+            self::CUSTOMER->value    => __('constants.role_user.customer'),
+            default                  => __('constants.role_user.unknown'),
+        };
     }
 }

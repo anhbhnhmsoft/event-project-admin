@@ -6,6 +6,7 @@ use App\Filament\Resources\Transactions\Pages\ListTransactions;
 use App\Filament\Resources\Transactions\Tables\TransactionsTable;
 use App\Models\Transactions;
 use App\Utils\Constants\RoleUser;
+use App\Utils\Helper;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
@@ -18,13 +19,19 @@ class TransactionsResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCreditCard;
 
-    protected static ?string $modelLabel = 'Giao dịch';
-    protected static ?string $pluralModelLabel = 'Thống Kê Giao Dịch';
+    public static function getModelLabel(): string
+    {
+        return __('admin.transactions.model_label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin.transactions.plural_model_label');
+    }
 
     public static function canAccess(): bool
     {
-        $user = Auth::user();
-        return $user->role === RoleUser::SUPER_ADMIN->value;
+        return Helper::checkAdmin();
     }
 
     public static function table(Table $table): Table

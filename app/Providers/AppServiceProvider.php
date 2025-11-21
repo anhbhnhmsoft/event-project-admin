@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Http\Responses\CustomLoginResponse;
 use App\Services\AuthService;
 use App\Services\CassoService;
 use App\Services\ConfigService;

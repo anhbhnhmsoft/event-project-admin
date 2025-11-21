@@ -24,7 +24,7 @@ Route::middleware('set-locale')->group(function () {
     Route::prefix('email')->group(function () {
         Route::get('/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
             ->middleware(['signed', 'throttle:6,1'])
-            ->name('api.verification.verify');
+            ->name('verification.verify');
         Route::post('/verification-notification', [AuthController::class, 'resendVerify'])
             ->middleware('throttle:6,1');
     });
@@ -46,6 +46,7 @@ Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
         Route::get('/', [EventController::class, 'list']);
         Route::post('/history', [EventController::class, 'eventUserHistory']);
         Route::post('/history_register', [EventController::class, 'createEventUserHistory']);
+        Route::post('/document/register', [TransactionController::class, 'registerComment']);
         Route::post('/comment', [EventController::class, 'createEventComment']);
         Route::get('/list-comment', [EventController::class, 'listComment']);
         Route::get('/{id}', [EventController::class, 'show']);
@@ -65,6 +66,7 @@ Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
         Route::get('/{id}', [TransactionController::class, 'show']);
     });
 
+
     Route::prefix('/notifications')->group(function () {
         Route::get('/', [NotificationController::class, 'index']);
         Route::get('/unread', [NotificationController::class, 'getUnReadCount']);
@@ -74,17 +76,9 @@ Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
     });
     Route::prefix('/schedule')->group(function () {
         Route::get('/list', [EventController::class, 'listDocument']);
+        Route::post('/document/register', [TransactionController::class, 'registerDocument']);
         Route::get('/document/{id}', [EventController::class, 'getDetailScheduleDocument']);
         Route::get('/{id}', [EventController::class, 'getDetailSchedule']);
-    });
-
-    Route::prefix('poll')->group(function () {
-        Route::get('/', [EventPollController::class, 'list']);
-        Route::get('/{pollId}', [EventPollController::class, 'poll']);
-        Route::get('/{pollId}/users', [EventPollController::class, 'listUsersPoll']);
-        Route::get('/{pollId}/questions', [EventPollController::class, 'listQuestionsPoll']);
-        Route::get('/{pollId}/answers', [EventPollController::class, 'listAnswerPoll']);
-        Route::post('/{pollId}/answers', [EventPollController::class, 'pushAnswerPoll']);
     });
 });
 
@@ -97,3 +91,4 @@ Route::prefix('common')->middleware('set-locale')->group(function () {
 });
 
 Route::post('/webhook/payos', [WebhookCassoController::class, 'handle']);
+Route::post('/webhook/event-seat-payment', [EventController::class, 'handleSeatPaymentWebhook']);

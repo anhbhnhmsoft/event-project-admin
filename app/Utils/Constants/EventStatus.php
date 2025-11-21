@@ -11,9 +11,9 @@ enum EventStatus: int
     public function label(): string
     {
         return match ($this) {
-            self::ACTIVE => 'Đang diễn ra',
-            self::UPCOMING => 'Sắp diễn ra',
-            self::CLOSED => 'Đã kết thúc',
+            self::ACTIVE => __('constants.event_status.active'),
+            self::UPCOMING => __('constants.event_status.upcoming'),
+            self::CLOSED => __('constants.event_status.closed'),
         };
     }
 

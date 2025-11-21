@@ -27,21 +27,21 @@ class NotificationSchema
         $steps = [];
 
         if ($user->role == RoleUser::SUPER_ADMIN->value) {
-            $steps[] = Step::make('Chọn nhà tổ chức')
+            $steps[] = Step::make(__('admin.notifications.form.steps.select_organizer'))
                 ->schema([
                     Select::make('organizer_id')
-                        ->label('Nhà tổ chức')
+                        ->label(__('admin.notifications.form.organizer'))
                         ->options(fn() => Organizer::query()->orderBy('name')->pluck('name', 'id'))
                         ->searchable()
                         ->preload()
                         ->required()
                         ->live()
                         ->validationMessages([
-                            'required' => 'Vui lòng chọn nhà tổ chức.',
+                            'required' => __('admin.notifications.form.validation.organizer_required'),
                         ]),
                 ]);
         } else {
-            $steps[] = Step::make('Người nhận & nội dung')
+            $steps[] = Step::make(__('admin.notifications.form.steps.recipients_content'))
                 ->schema([
                     Hidden::make('organizer_id')
                         ->default(fn() => $user->organizer_id ?? null)
@@ -49,19 +49,19 @@ class NotificationSchema
                 ]);
         }
 
-        $steps[] = Step::make('Người nhận & nội dung')
+        $steps[] = Step::make(__('admin.notifications.form.steps.recipients_content'))
             ->schema([
                 Radio::make('mode')
-                    ->label('Chế độ gửi')
+                    ->label(__('admin.notifications.form.send_mode'))
                     ->options(TypeSendNotification::getOptions())
                     ->default(TypeSendNotification::SOME_USERS->value)
                     ->inline()
                     ->live()
                     ->validationMessages([
-                        'required' => 'Vui lòng chọn chế độ gửi.',
+                        'required' => __('admin.notifications.form.validation.send_mode_required'),
                     ]),
                 Select::make('user_ids')
-                    ->label('Người nhận')
+                    ->label(__('admin.notifications.form.recipients'))
                     ->options(function (Get $get) use ($user) {
                         $organizerId = $get('organizer_id') ?: ($user->organizer_id ?? null);
                         return User::query()
@@ -75,29 +75,29 @@ class NotificationSchema
                     ->visible(fn(Get $get) => $get('mode') == TypeSendNotification::SOME_USERS->value)
                     ->required(fn(Get $get) => $get('mode') == TypeSendNotification::SOME_USERS->value)
                     ->validationMessages([
-                        'exists' => 'Người dùng không tồn tại trong nhà tổ chức này.',
-                        'required' => 'Vui lòng chọn người nhận.',
+                        'exists' => __('admin.notifications.form.validation.user_not_exists'),
+                        'required' => __('admin.notifications.form.validation.recipients_required'),
                     ]),
                 Select::make('notification_type')
-                    ->label('Loại thông báo')
+                    ->label(__('admin.notifications.form.notification_type'))
                     ->options(UserNotificationType::getOptions())
                     ->required()
                     ->validationMessages([
-                        'required' => 'Vui lòng chọn loại thông báo.',
+                        'required' => __('admin.notifications.form.validation.notification_type_required'),
                     ]),
                 TextInput::make('title')
-                    ->label('Tiêu đề')
+                    ->label(__('admin.notifications.form.title'))
                     ->required()
                     ->maxLength(255)
                     ->validationMessages([
-                        'required' => 'Vui lòng nhập tiêu đề.',
+                        'required' => __('admin.notifications.form.validation.title_required'),
                     ]),
                 Textarea::make('description')
-                    ->label('Mô tả')
+                    ->label(__('admin.notifications.form.description'))
                     ->required()
                     ->columnSpanFull()
                     ->validationMessages([
-                        'required' => 'Vui lòng nhập Mô tả',
+                        'required' => __('admin.notifications.form.validation.description_required'),
                     ])
                     ->extraAttributes(['style' => 'min-height: 300px;']),
             ]);
@@ -117,16 +117,16 @@ class NotificationSchema
                     ->default(fn() => $user->organizer_id ?? null)
                     ->dehydrated(),
                 Radio::make('mode')
-                    ->label('Chế độ gửi')
+                    ->label(__('admin.notifications.form.send_mode'))
                     ->options(TypeSendNotification::getOptions())
                     ->default(TypeSendNotification::SOME_USERS->value)
                     ->inline()
                     ->live()
                     ->validationMessages([
-                        'required' => 'Vui lòng chọn chế độ gửi.',
+                        'required' => __('admin.notifications.form.validation.send_mode_required'),
                     ]),
                 Select::make('user_ids')
-                    ->label('Người nhận')
+                    ->label(__('admin.notifications.form.recipients'))
                     ->options(function (Get $get) use ($user) {
                         $organizerId = $get('organizer_id') ?: ($user->organizer_id ?? null);
                         return User::query()
@@ -140,29 +140,29 @@ class NotificationSchema
                     ->visible(fn(Get $get) => $get('mode') == TypeSendNotification::SOME_USERS->value)
                     ->required(fn(Get $get) => $get('mode') == TypeSendNotification::SOME_USERS->value)
                     ->validationMessages([
-                        'exists' => 'Người dùng không tồn tại trong nhà tổ chức này.',
-                        'required' => 'Vui lòng chọn người nhận.',
+                        'exists' => __('admin.notifications.form.validation.user_not_exists'),
+                        'required' => __('admin.notifications.form.validation.recipients_required'),
                     ]),
                 Select::make('notification_type')
-                    ->label('Loại thông báo')
+                    ->label(__('admin.notifications.form.notification_type'))
                     ->options(UserNotificationType::getOptions())
                     ->required()
                     ->validationMessages([
-                        'required' => 'Vui lòng chọn loại thông báo.',
+                        'required' => __('admin.notifications.form.validation.notification_type_required'),
                     ]),
                 TextInput::make('title')
-                    ->label('Tiêu đề')
+                    ->label(__('admin.notifications.form.title'))
                     ->required()
                     ->maxLength(255)
                     ->validationMessages([
-                        'required' => 'Vui lòng nhập tiêu đề.',
+                        'required' => __('admin.notifications.form.validation.title_required'),
                     ]),
                 Textarea::make('description')
-                    ->label('Mô tả')
+                    ->label(__('admin.notifications.form.description'))
                     ->required()
                     ->columnSpanFull()
                     ->validationMessages([
-                        'required' => 'Vui lòng nhập Mô tả',
+                        'required' => __('admin.notifications.form.validation.description_required'),
                     ])
                     ->extraAttributes(['style' => 'min-height: 300px;']),
             ])

@@ -11,43 +11,45 @@ use App\Utils\Constants\EventStatus;
 use App\Utils\Constants\StoragePath;
 use App\Utils\Constants\EventUserRole;
 use App\Models\User;
+use Carbon\Carbon;
 use Closure;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Forms\Components\RichEditor;
 use App\Filament\Forms\Components\LocationPicker;
 use Filament\Forms\Components\DatePicker;
-use Filament\Schemas\Components\Wizard;
-use Filament\Schemas\Components\Wizard\Step;
 use Illuminate\Support\Facades\Auth;
 use App\Utils\Constants\RoleUser;
 use Illuminate\Validation\Rule;
 use Filament\Forms\Components\Repeater;
 use App\Utils\Helper;
 use Filament\Forms\Components\ViewField;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 
 class EventForm
 {
     public static function configure(Schema $schema): Schema
     {
         return $schema->schema([
-            Wizard::make([
-                Step::make('info')
-                    ->label('Thông tin sự kiện')
+            Tabs::make('schema')->tabs([
+                Tab::make('info')
+                    ->label(__('admin.events.form.info'))
                     ->columns(2)
                     ->schema([
                         FileUpload::make('image_represent_path')
-                            ->label('Ảnh đại diện sự kiện')
+                            ->label(__('admin.events.form.image'))
                             ->columnSpanFull()
                             ->image()
                             ->storeFiles(false)
                             ->disk('public')
-                            ->helperText('Vui lòng chọn ảnh đại diện cho cửa hàng. Định dạng hợp lệ: JPG, PNG. Dung lượng tối đa 10MB.')
+                            ->helperText(__('admin.events.form.image_help'))
                             ->imageEditor()
                             ->maxSize(10240)
                             ->directory(StoragePath::EVENT_PATH->value)
@@ -56,40 +58,44 @@ class EventForm
                             ->required()
                             ->openable()
                             ->validationMessages([
-                                'required' => 'Vui lòng chọn ảnh đại diện cho sự kiện.',
-                                'image' => 'Tệp tải lên phải là hình ảnh hợp lệ (JPG, PNG).',
-                                'maxSize' => 'Dung lượng ảnh không được vượt quá 10MB.',
+                                'required' => __('admin.events.form.validation.image_required'),
+                                'image' => __('admin.events.form.validation.image_invalid'),
+                                'maxSize' => __('admin.events.form.validation.image_size'),
                             ]),
                         TextInput::make('name')
-                            ->label('Tên sự kiện')
+                            ->label(__('admin.events.form.name'))
                             ->trim()
                             ->minLength(10)
                             ->maxLength(255)
-                            ->placeholder('Tối thiểu 10 kí tự, tối đa 255 kí tự')
+                            ->placeholder(__('admin.events.form.name_placeholder'))
                             ->live(debounce: 500)
                             ->required()
                             ->validationMessages([
-                                'required' => 'Vui lòng nhập tên địa điểm.',
-                                'minLength' => 'Tên địa điểm phải có ít nhất 10 ký tự.',
-                                'maxLength' => 'Tên địa điểm không được vượt quá 255 ký tự.',
+                                'required' => __('admin.events.form.validation.name_required'),
+                                'minLength' => __('admin.events.form.validation.name_min_length'),
+                                'maxLength' => __('admin.events.form.validation.name_max_length'),
                             ]),
                         Select::make('organizer_id')
                             ->searchable()
-                            ->label('Thuộc nhà tổ chức')
+                            ->label(__('admin.events.form.organizer'))
                             ->required()
                             ->live(debounce: 500)
-                            ->default(fn() => (($user = Auth::user()) && $user->role !== RoleUser::SUPER_ADMIN->value) ? $user->organizer_id : null)
+                            ->default(function () {
+                                $user = Auth::user();
+                                if (Helper::checkSuperAdmin()) {
+                                    return null;
+                                }
+                                return $user->organizer_id;
+                            })
                             ->options(function (Get $get) {
                                 $user = Auth::user();
-
-                                if ($user && in_array($user->role, [RoleUser::SUPER_ADMIN->value], true)) {
+                                if (Helper::checkSuperAdmin()) {
                                     return Organizer::query()
                                         ->where('status', CommonStatus::ACTIVE->value)
                                         ->orWhere('id', $get('organizer_id'))
                                         ->pluck('name', 'id')
                                         ->all();
                                 }
-
                                 if ($user && $user->organizer_id) {
                                     return Organizer::query()
                                         ->where('id', $user->organizer_id)
@@ -99,52 +105,52 @@ class EventForm
 
                                 return [];
                             })
-                            ->disabled(fn() => ($user = Auth::user()) && $user->role !== RoleUser::SUPER_ADMIN->value)
+                            ->disabled(fn() => !Helper::checkSuperAdmin())
                             ->dehydrated(true)
-                            ->loadingMessage('Chờ 1 chút...')
-                            ->noSearchResultsMessage('Không tìm thấy nhà tổ chức.')
+                            ->loadingMessage(__('admin.events.form.loading'))
+                            ->noSearchResultsMessage(__('admin.events.form.no_organizer_found'))
                             ->rules([
                                 Rule::exists('organizers', 'id')
                                     ->where(fn($query) => $query->where('status', CommonStatus::ACTIVE->value)),
                             ])
                             ->validationMessages([
-                                'required' => 'Vui lòng chọn nhà tổ chức.',
+                                'required' => __('admin.events.form.validation.organizer_required'),
                             ]),
                         DatePicker::make('day_represent')
-                            ->label('Ngày tổ chức sự kiện')
+                            ->label(__('admin.events.form.event_date'))
                             ->columnSpanFull()
                             ->rules([
                                 'after_or_equal: ' . now()->format('Y-m-d'),
                             ])
                             ->validationMessages([
-                                'after_or_equal' => 'Ngày tổ chức sự kiện phải lớn hơn hoặc bằng ngày hiện tại',
+                                'after_or_equal' => __('admin.events.form.validation.event_date_after'),
                             ])
                             ->required(),
                         TextInput::make('start_time')
-                            ->label('Giờ bắt đầu')
-                            ->placeholder('HH:MM')
+                            ->label(__('admin.events.form.start_time'))
+                            ->placeholder(__('admin.events.form.time_placeholder'))
                             ->required()
-                            ->helperText('Nhập giờ mở cửa theo định dạng 24h, ví dụ: 08:00')
+                            ->helperText(__('admin.events.form.start_time_help'))
                             ->mask('99:99')
                             ->regex('/^(?:[01]\d|2[0-3]):[0-5]\d$/')
                             ->live()
                             ->rules([
                                 fn(Get $get) => (
-                                    $get('day_represent') && \Carbon\Carbon::parse($get('day_represent'))->isToday()
+                                    $get('day_represent') && Carbon::parse($get('day_represent'))->isToday()
                                 )
                                     ? ['date_format:H:i', 'after_or_equal:' . now()->format('H:i')]
                                     : ['date_format:H:i'],
                             ])
                             ->validationMessages([
-                                'after_or_equal' => 'Giờ mở cửa phải lớn hơn hoặc bằng giờ hiện tại.',
-                                'required' => 'Vui lòng nhập giờ mở cửa.',
-                                'regex' => 'Giờ mở cửa phải theo định dạng 24h (HH:MM), ví dụ: 08:00 hoặc 23:59.',
+                                'after_or_equal' => __('admin.events.form.validation.start_time_after'),
+                                'required' => __('admin.events.form.validation.start_time_required'),
+                                'regex' => __('admin.events.form.validation.start_time_format'),
                             ]),
                         TextInput::make('end_time')
-                            ->label('Giờ kết thúc')
-                            ->placeholder('HH:MM')
+                            ->label(__('admin.events.form.end_time'))
+                            ->placeholder(__('admin.events.form.time_placeholder'))
                             ->required()
-                            ->helperText('Nhập giờ đóng cửa theo định dạng 24h, ví dụ: 22:00')
+                            ->helperText(__('admin.events.form.end_time_help'))
                             ->mask('99:99')
                             ->regex('/^(?:[01]\d|2[0-3]):[0-5]\d$/')
                             ->live()
@@ -155,54 +161,59 @@ class EventForm
                                         $e = \App\Utils\Helper::timeToMinutes($value);
                                         $s = \App\Utils\Helper::timeToMinutes($start);
                                         if ($e !== null && $s !== null && $e <= $s) {
-                                            $fail('Giờ đóng cửa phải lớn hơn giờ mở cửa.');
+                                            $fail(__('admin.events.form.validation.end_time_after_start'));
                                             return;
                                         }
                                     }
                                 },
                                 fn(Get $get) => (
-                                    $get('day_represent') && \Carbon\Carbon::parse($get('day_represent'))->isToday()
+                                    $get('day_represent') && Carbon::parse($get('day_represent'))->isToday()
                                 )
                                     ? ['date_format:H:i', 'after_or_equal:' . now()->format('H:i')]
                                     : ['date_format:H:i'],
                             ])
                             ->validationMessages([
-                                'after_or_equal' => 'Giờ đóng cửa phải lớn hơn hoặc bằng giờ hiện tại.',
-                                'required' => 'Vui lòng nhập giờ đóng cửa.',
-                                'regex' => 'Giờ đóng cửa phải theo định dạng 24h (HH:MM), ví dụ: 08:00 hoặc 23:59.',
+                                'after_or_equal' => __('admin.events.form.validation.end_time_after'),
+                                'required' => __('admin.events.form.validation.end_time_required'),
+                                'regex' => __('admin.events.form.validation.end_time_format'),
                             ]),
                         Textarea::make('short_description')
-                            ->label('Mô tả ngắn về sự kiện')
-                            ->placeholder('Mô tả ngắn về sự kiện này')
+                            ->label(__('admin.events.form.short_description'))
+                            ->placeholder(__('admin.events.form.short_description'))
                             ->rows(8)
                             ->columnSpanFull()
                             ->validationMessages([
-                                'required' => 'Vui lòng nhập Mô tả ngắn về sự kiện',
+                                'required' => __('admin.events.form.validation.short_description_required'),
                             ]),
                         RichEditor::make('description')
-                            ->label('Chi tiết')
+                            ->label(__('admin.events.form.description'))
                             ->required()
                             ->columnSpanFull()
                             ->validationMessages([
-                                'required' => 'Vui lòng nhập Mô tả chi tiết',
+                                'required' => __('admin.events.form.validation.description_required'),
                             ])
                             ->extraAttributes(['style' => 'min-height: 300px;']),
+                        Toggle::make('free_to_join')
+                            ->label(__('admin.events.form.free_to_join'))
+                            ->helperText(__('admin.events.form.free_to_join_help'))
+                            ->default(true)
+                            ->inline(false),
                         Select::make('status')
-                            ->label('Trạng thái')
+                            ->label(__('admin.events.form.status'))
                             ->required()
                             ->default(EventStatus::UPCOMING->value)
                             ->options(EventStatus::getOptions())
                             ->validationMessages([
-                                'required' => 'Vui lòng tích chọn',
+                                'required' => __('admin.events.form.validation.status_required'),
                             ]),
                     ]),
-                Step::make('participants')
-                    ->label('Người tham gia')
+                Tab::make('participants')
+                    ->label(__('admin.events.form.participants'))
                     ->columns(1)
                     ->schema([
                         Repeater::make('participants')
-                            ->label('Người trong sự kiện')
-                            ->addActionLabel('Thêm người')
+                            ->label(__('admin.events.form.users_in_event'))
+                            ->addActionLabel(__('admin.events.form.add_participant'))
                             ->columnSpanFull()
                             ->collapsible()
                             ->reorderable()
@@ -224,7 +235,7 @@ class EventForm
                                 if ($userName) {
                                     return $userName;
                                 }
-                                return 'Người dùng';
+                                return __('admin.events.form.user');
                             })
                             ->rules([
                                 fn() => function ($attribute, $value, \Closure $fail) {
@@ -240,78 +251,76 @@ class EventForm
                                         $validCount++;
                                         $pair = $userId . ':' . $role;
                                         if (isset($seenPairs[$pair])) {
-                                            $fail('Người dùng với vai trò này đã được thêm vào sự kiện.');
+                                            $fail(__('admin.events.form.validation.participant_duplicate'));
                                             return;
                                         }
                                         $seenPairs[$pair] = true;
                                     }
                                     if ($validCount === 0) {
-                                        $fail('Vui lòng thêm ít nhất 1 người dùng với vai trò.');
+                                        $fail(__('admin.events.form.validation.participant_min'));
                                     }
                                 },
                             ])
                             ->validationMessages([
-                                'required' => 'Vui lòng thêm người trong sự kiện.',
+                                'required' => __('admin.events.form.validation.participant_required'),
                             ])
                             ->schema([
                                 Hidden::make('id'),
                                 Select::make('user_id')
-                                    ->label('Người dùng')
+                                    ->label(__('admin.events.form.user'))
                                     ->searchable()
                                     ->live()
                                     ->options(function (Get $get) {
                                         $user = Auth::user();
                                         $organizerId = $get('../../organizer_id');
-                                        if ($user && in_array($user->role, [RoleUser::SUPER_ADMIN->value], true)) {
+                                        if (Helper::checkSuperAdmin()) {
                                             if ($organizerId === null || $organizerId === '' || $organizerId === 0) {
                                                 return [
-                                                    '' => 'Vui lòng chọn nhà tổ chức trước'
+                                                    '' => __('admin.events.form.validation.organizer_required')
                                                 ];
                                             }
                                             return User::query()
+                                                ->select('id', 'name', 'role')
                                                 ->where('organizer_id', $organizerId)
                                                 ->where('role', '!=', RoleUser::SUPER_ADMIN->value)
                                                 ->pluck('name', 'id')
                                                 ->all();
                                         }
-                                        if ($user && $user->organizer_id) {
-                                            return User::query()
-                                                ->where('organizer_id', $user->organizer_id)
-                                                ->where('role', '!=', RoleUser::SUPER_ADMIN->value)
-                                                ->pluck('name', 'id')
-                                                ->all();
-                                        }
-                                        return [];
+                                        return User::query()
+                                            ->where('organizer_id', $user->organizer_id)
+                                            ->where('role', '!=', RoleUser::SUPER_ADMIN->value)
+                                            ->pluck('name', 'id')
+                                            ->all();
                                     })
                                     ->required()
                                     ->validationMessages([
-                                        'required' => 'Vui lòng chọn người dùng.',
+                                        'required' => __('admin.events.form.validation.user_required'),
                                     ]),
                                 Select::make('role')
-                                    ->label('Vai trò')
+                                    ->label(__('admin.events.form.role'))
                                     ->required()
                                     ->live()
                                     ->options(EventUserRole::options())
                                     ->validationMessages([
-                                        'required' => 'Vui lòng chọn vai trò.',
+                                        'required' => __('admin.events.form.validation.role_required'),
                                     ]),
                             ])
                             ->default([[]]),
                     ]),
-                Step::make('schedules')
-                    ->label('Lịch trình')
+                Tab::make('schedules')
+                    ->label(__('admin.events.form.schedule'))
                     ->dehydrated(true)
                     ->columns(1)
                     ->schema([
                         Repeater::make('schedules')
-                            ->label('Danh sách lịch trình')
-                            ->addActionLabel('Thêm lịch trình')
+                            ->label(__('admin.events.form.schedule_list'))
+                            ->addActionLabel(__('admin.events.form.add_schedule'))
                             ->columnSpanFull()
                             ->collapsible()
                             ->orderColumn('sort')
                             ->reorderable()
                             ->minItems(1)
-                            ->itemLabel(fn(array $state): string => (string) ($state['title'] ?? 'Lịch trình'))
+                            ->itemLabel(fn(array $state): string => (string) ($state['title'] ?? __('admin.events.form.schedule')))
                             ->rules([
                                 fn(Get $get) => function ($_, $value, Closure $fail) use ($get) {
                                     $eventStart = $get('start_time');
@@ -327,7 +336,7 @@ class EventForm
                                         return;
                                     }
                                     if ($eventEndMin <= $eventStartMin) {
-                                        $fail('Khung giờ sự kiện không hợp lệ (giờ kết thúc phải sau giờ bắt đầu).');
+                                        $fail(__('admin.events.form.validation.event_time_invalid'));
                                         return;
                                     }
 
@@ -338,24 +347,24 @@ class EventForm
                                         $scheduleEnd = $schedule['end_time'] ?? null;
 
                                         if ($scheduleStart === null || $scheduleEnd === null) {
-                                            $fail('Lịch trình #' . ($i + 1) . ' thiếu giờ bắt đầu hoặc giờ kết thúc.');
+                                            $fail(__('admin.events.form.validation.schedule_time_missing', ['index' => $i + 1]));
                                             continue;
                                         }
 
                                         $scheduleStartMin = Helper::timeToMinutes($scheduleStart);
                                         $scheduleEndMin = Helper::timeToMinutes($scheduleEnd);
                                         if ($scheduleStartMin === null || $scheduleEndMin === null) {
-                                            $fail('Lịch trình #' . ($i + 1) . ' có giờ không hợp lệ.');
+                                            $fail(__('admin.events.form.validation.schedule_time_invalid', ['index' => $i + 1]));
                                             continue;
                                         }
 
                                         if ($scheduleEndMin <= $scheduleStartMin) {
-                                            $fail('Lịch trình #' . ($i + 1) . ' có giờ kết thúc phải sau giờ bắt đầu.');
+                                            $fail(__('admin.events.form.validation.schedule_end_after_start', ['index' => $i + 1]));
                                             continue;
                                         }
 
                                         if ($scheduleStartMin < $eventStartMin || $scheduleEndMin > $eventEndMin) {
-                                            $fail('Lịch trình #' . ($i + 1) . ' vượt ngoài khung thời gian sự kiện.');
+                                            $fail(__('admin.events.form.validation.schedule_outside_event', ['index' => $i + 1]));
                                         }
 
                                         $totalMinutes += ($scheduleEndMin - $scheduleStartMin);
@@ -363,7 +372,7 @@ class EventForm
 
                                     $eventMinutes = $eventEndMin - $eventStartMin;
                                     if ($totalMinutes > $eventMinutes) {
-                                        $fail('Tổng thời lượng của các lịch trình vượt quá thời lượng của sự kiện.');
+                                        $fail(__('admin.events.form.validation.schedule_total_exceeds'));
                                     }
                                 },
                             ])
@@ -371,28 +380,37 @@ class EventForm
                                 Hidden::make('id'),
                                 Hidden::make('sort'),
                                 TextInput::make('title')
-                                    ->label('Tiêu đề')
+                                    ->label(__('admin.events.form.title'))
                                     ->live(debounce: 3000)
                                     ->required()
                                     ->maxLength(255)
                                     ->validationMessages([
-                                        'required' => 'Vui lòng nhập tiêu đề lịch trình.',
+                                        'required' => __('admin.events.form.validation.schedule_title_required'),
                                     ]),
                                 RichEditor::make('description')
-                                    ->label('Mô tả')
+                                    ->label(__('admin.events.form.description'))
                                     ->extraAttributes(['style' => 'min-height: 300px;']),
                                 ViewField::make('existing_documents')
-                                    ->label('Danh sách file')
+                                    ->label(__('admin.events.form.file_list'))
                                     ->view('filament.forms.components.event-existing-files')
                                     ->dehydrated(false)
-                                    ->viewData(function(Get $get)  {
+                                    ->viewData(function (Get $get) {
+                                        $documents = $get('documents') ?? [];
+
+                                        $documentsWithMetadata = array_map(function ($doc) {
+                                            if (isset($doc['files_metadata']) && is_array($doc['files_metadata'])) {
+                                                $doc['files'] = $doc['files_metadata'];
+                                            }
+                                            return $doc;
+                                        }, $documents);
+
                                         return [
-                                            'documentData' => $get('documents'),
+                                            'documentData' => $documentsWithMetadata,
                                         ];
                                     }),
                                 TextInput::make('start_time')
-                                    ->label('Giờ bắt đầu')
-                                    ->placeholder('HH:MM')
+                                    ->label(__('admin.events.form.start_time'))
+                                    ->placeholder(__('admin.events.form.time_placeholder'))
                                     ->mask('99:99')
                                     ->regex('/^(?:[01]\d|2[0-3]):[0-5]\d$/')
                                     ->required()
@@ -420,12 +438,12 @@ class EventForm
                                         },
                                     ])
                                     ->validationMessages([
-                                        'required' => 'Vui lòng nhập giờ bắt đầu.',
-                                        'regex' => 'Giờ bắt đầu phải theo định dạng 24h (HH:MM).',
+                                        'required' => __('admin.events.form.validation.schedule_start_required'),
+                                        'regex' => __('admin.events.form.validation.schedule_start_format'),
                                     ]),
                                 TextInput::make('end_time')
-                                    ->label('Giờ kết thúc')
-                                    ->placeholder('HH:MM')
+                                    ->label(__('admin.events.form.end_time'))
+                                    ->placeholder(__('admin.events.form.time_placeholder'))
                                     ->mask('99:99')
                                     ->regex('/^(?:[01]\d|2[0-3]):[0-5]\d$/')
                                     ->required()
@@ -453,33 +471,41 @@ class EventForm
                                         },
                                     ])
                                     ->validationMessages([
-                                        'required' => 'Vui lòng nhập giờ kết thúc.',
-                                        'regex' => 'Giờ kết thúc phải theo định dạng 24h (HH:MM).',
+                                        'required' => __('admin.events.form.validation.schedule_end_required'),
+                                        'regex' => __('admin.events.form.validation.schedule_end_format'),
                                     ]),
                                 Repeater::make('documents')
-                                    ->label('Tài liệu')
+                                    ->label(__('admin.events.form.documents'))
                                     ->columnSpanFull()
                                     ->collapsible()
-                                    ->addActionLabel('Thêm vào tài liệu')
+                                    ->addActionLabel(__('admin.events.form.add_document'))
                                     ->reorderable()
                                     ->dehydrated(true)
                                     ->default([])
                                     ->schema([
                                         Hidden::make('id')
-                                            ->label('ID tài liệu'),
+                                            ->label(__('admin.events.form.document_id')),
+                                        Hidden::make('files_metadata')
+                                            ->dehydrated(false),
                                         TextInput::make('title')
-                                            ->label('Tiêu đề tài liệu')
+                                            ->label(__('admin.events.form.document_title'))
                                             ->required()
                                             ->maxLength(255)
                                             ->validationMessages([
-                                                'required' => 'Vui lòng nhập tiêu đề tài liệu.',
+                                                'required' => __('admin.events.form.validation.document_title_required'),
                                             ]),
+                                        TextInput::make('price')
+                                            ->label(__('admin.events.form.document_price'))
+                                            ->default(0)
+                                            ->numeric()
+                                            ->helperText(__('admin.events.form.document_price_help')),
                                         RichEditor::make('description')
-                                            ->label('Mô tả tài liệu')
+                                            ->label(__('admin.events.form.document_description'))
                                             ->required()
                                             ->extraAttributes(['style' => 'min-height: 300px;']),
+
                                         FileUpload::make('files')
-                                            ->label('Tệp đính kèm')
+                                            ->label(__('admin.events.form.attachment'))
                                             ->multiple()
                                             ->required()
                                             ->downloadable()
@@ -487,44 +513,45 @@ class EventForm
                                             ->storeFiles(false)
                                             ->directory(StoragePath::EVENT_PATH->value)
                                             ->maxSize(51200)
+                                            ->panelLayout('grid')
                                             ->reorderable()
                                             ->appendFiles()
                                             ->live()
                                             ->validationMessages([
-                                                'required' => 'Vui lòng chọn tệp đính kèm.',
+                                                'required' => __('admin.events.form.validation.attachment_required'),
                                             ])
-                                            ->formatStateUsing(function ($state) {
-                                                if (is_array($state)) {
-                                                    return array_map(function ($file) {
-                                                        if (is_array($file) && isset($file['file_path'])) {
-                                                            return $file['file_path'];
-                                                        }
-                                                        return $file;
-                                                    }, $state);
-                                                }
-                                                return $state;
-                                            }),
+                                        // ->formatStateUsing(function ($state) {
+                                        //     if (is_array($state)) {
+                                        //         return array_map(function ($file) {
+                                        //             if (is_array($file) && isset($file['file_path'])) {
+                                        //                 return $file;
+                                        //             }
+                                        //             return $file;
+                                        //         }, $state);
+                                        //     }
+                                        //     return $state;
+                                        // }),
                                     ])
                                     ->default([]),
                             ])
                             ->default([[]]),
                     ]),
-                Step::make('location')
-                    ->label('Vị trí')
+                Tab::make('location')
+                    ->label(__('admin.events.form.location'))
                     ->columns(2)
                     ->schema([
                         Select::make('province_code')
-                            ->label('Tỉnh thành')
+                            ->label(__('admin.events.form.province'))
                             ->options(Province::all()->pluck('name', 'code'))
                             ->searchable()
                             ->columnSpanFull()
                             ->live()
                             ->required()
                             ->validationMessages([
-                                'required' => 'Vui lòng chọn địa chỉ.',
+                                'required' => __('admin.events.form.validation.address_required'),
                             ]),
                         Select::make('district_code')
-                            ->label('Quận, Huyện')
+                            ->label(__('admin.events.form.district'))
                             ->options(function (Get $get) {
                                 if ($get('province_code')) {
                                     return District::query()->where('province_code', $get('province_code'))->pluck('name', 'code')->all();
@@ -536,10 +563,10 @@ class EventForm
                             ->live()
                             ->required()
                             ->validationMessages([
-                                'required' => 'Vui lòng chọn địa chỉ.',
+                                'required' => __('admin.events.form.validation.address_required'),
                             ]),
                         Select::make('ward_code')
-                            ->label('Phường, Xã')
+                            ->label(__('admin.events.form.ward'))
                             ->searchable()
                             ->columnSpanFull()
                             ->options(function (Get $get) {
@@ -551,17 +578,17 @@ class EventForm
                             ->live()
                             ->required()
                             ->validationMessages([
-                                'required' => 'Vui lòng chọn địa chỉ.',
+                                'required' => __('admin.events.form.validation.address_required'),
                             ]),
                         LocationPicker::make('event_location')
-                            ->label('Vị trí chi tiết ')
+                            ->label(__('admin.events.form.detailed_location'))
                             ->columnSpanFull()
                             ->defaultLocation(21.0285, 105.8542)
                             ->zoom(15)
                             ->height(500)
                             ->required()
                             ->validationMessages([
-                                'required' => 'Vui lòng chọn địa chỉ chi tiết.',
+                                'required' => __('admin.events.form.validation.detailed_address_required'),
                             ]),
                     ]),
 

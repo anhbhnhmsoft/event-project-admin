@@ -27,6 +27,7 @@ class EventListCommentResource extends JsonResource
                 'name' => $user->name,
                 'avatar_url'=> $user->avatar_path ? Helper::generateURLImagePath($user->avatar_path) : null
             ],
+            'type' => $this->type,
             'content' => $this->content,
             'created_at' => $this->created_at
         ];

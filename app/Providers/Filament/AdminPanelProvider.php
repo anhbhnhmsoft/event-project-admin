@@ -3,6 +3,9 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Login;
+use App\Filament\Pages\Register;
+use App\Http\Middleware\SetLocale;
+use Filament\Auth\Pages\EmailVerification\EmailVerificationPrompt;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -10,6 +13,8 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
+use Illuminate\Contracts\View\View;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -27,16 +32,20 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->authGuard('web')
             ->path('admin')
+            ->globalSearch(false)
             ->login(Login::class)
+            ->registration(Register::class)
             ->colors([
                 'primary' => Color::Blue,
             ])
+            ->emailVerification(EmailVerificationPrompt::class)
             ->brandLogo(asset('images/logo-michec.png'))
             ->brandLogoHeight('6rem')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([])
+            ->sidebarFullyCollapsibleOnDesktop()
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -50,10 +59,15 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+                SetLocale::class
             ])
             ->renderHook(
                 'panels::head.end',
                 fn() => Blade::render('<link rel="icon" type="image/svg+xml" href="' . asset('images/logo-michec-icon.png') . '" />'),
+            )
+            ->renderHook(
+                PanelsRenderHook::GLOBAL_SEARCH_AFTER,
+                fn(): View => view('livewire.lang-switcher'),
             )
             ->userMenuItems([]);
     }

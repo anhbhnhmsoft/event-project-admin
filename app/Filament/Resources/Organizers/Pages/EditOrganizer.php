@@ -3,40 +3,97 @@
 namespace App\Filament\Resources\Organizers\Pages;
 
 use App\Filament\Resources\Organizers\OrganizerResource;
-use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
+use App\Models\Organizer;
 use Filament\Actions\Action;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
+use Filament\Resources\Pages\Page;
+use Filament\Schemas\Components\Actions;
+use Filament\Schemas\Components\Form;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
+use Filament\Schemas\Schema;
+use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Support\Facades\Auth;
 
-class EditOrganizer extends EditRecord
+class EditOrganizer extends Page implements HasSchemas
 {
+    use InteractsWithSchemas;
+
+    /**
+     * @var array<string, mixed> | null
+     */
+    public ?array $data = [];
+
     protected static string $resource = OrganizerResource::class;
 
-    protected static ?string $title = 'Sửa nhà tổ chức';
+    protected string $view = "filament.pages.edit-org-admin";
 
-    protected function getHeaderActions(): array
+    public function getTitle(): Htmlable|string
     {
-        return [
-            DeleteAction::make()
-            ->label('Xóa'),
-        ];
-    }
-    public function getBreadcrumbs(): array
-    {
-        return [
-            url()->previous() => 'Nhà tổ chức',
-            '' => 'Sửa nhà tổ chức',
-        ];
+        return __('admin.organizers.edit');
     }
 
-    protected function getSaveFormAction(): Action
+    public function mount(): void
     {
-        return parent::getSaveFormAction()->label('Lưu thay đổi');
+        $this->form->fill($this->getRecord()?->attributesToArray());
     }
 
-    protected function getCancelFormAction(): Action
+    public function form(Schema $schema): Schema
     {
-        return parent::getCancelFormAction()->label('Hủy');
+        return $schema->components([
+            Form::make([
+                TextInput::make('name')
+                    ->label(__('admin.organizers.form.name'))
+                    ->required(),
+                FileUpload::make('image')
+                    ->label(__('admin.organizers.form.image'))
+                    ->image()
+                    ->imageEditor()
+                    ->disk('public')
+                    ->directory('organizers')
+                    ->visibility('public')
+                    ->nullable(),
+                RichEditor::make('description')
+                    ->label(__('admin.organizers.form.description'))
+                    ->required()
+                    ->columnSpanFull()
+                    ->extraAttributes(['style' => 'min-height: 300px;']),
+            ])->livewireSubmitHandler('save')
+                ->footer([
+                    Actions::make([
+                        Action::make(__('common.save'))
+                            ->submit('save')
+                            ->keyBindings(['mod+s']),
+                    ]),
+                ])
+        ])->record($this->getRecord())
+            ->statePath('data');
+    }
+
+    public function save(): void
+    {
+        $data = $this->form->getState();
+
+        $record = $this->getRecord();
+        $record->fill($data);
+        $record->save();
+
+        if ($record->wasRecentlyCreated) {
+            $this->form->record($record)->saveRelationships();
+        }
+        
+        Notification::make()
+            ->success()
+            ->title(__('common.common_success.update_success'))
+            ->send();
+    }
+
+    public function getRecord()
+    {
+        $organizer_id = Auth::user()->organizer_id;
+        return Organizer::find($organizer_id);
     }
 }
-
-

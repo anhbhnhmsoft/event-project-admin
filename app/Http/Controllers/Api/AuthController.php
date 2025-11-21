@@ -276,7 +276,7 @@ class AuthController extends Controller
         }
 
         $url = URL::temporarySignedRoute(
-            'api.verification.verify',
+            'verification.verify',
             now()->addMinutes(60),
             ['id' => $user->getKey(), 'hash' => sha1($user->getEmailForVerification())]
         );
@@ -397,7 +397,7 @@ class AuthController extends Controller
         $request->user()->tokens()->delete();
 
         return response()->json([
-            'message' => __('auth .success.logout_success'),
+            'message' => __('auth.success.logout_success'),
         ], 200);
     }
 }

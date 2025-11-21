@@ -48,7 +48,7 @@ class GameEventController extends Controller
         $result = $this->eventGameService->getDetailGameEvent($id);
 
         if (!$result['status']) {
-            return abort(404, $result['message'] ?? 'Trò chơi không tồn tại');
+            return abort(404, $result['message'] ?? __('game.error.game_not_found'));
         }
 
         $game = $result['game'];
@@ -56,11 +56,11 @@ class GameEventController extends Controller
         $event = $game->event;
 
         if (!$this->eventGameService->checkGameAccess($game, $user)) {
-            return abort(403, 'Bạn không có quyền truy cập trò chơi này');
+            return abort(403, __('common.common_error.permission_error'));
         }
 
         if ($event->status != EventStatus::ACTIVE->value) {
-            return abort(403, 'Sự kiện không khả dụng');
+            return abort(403, __('event.error.Event_not_to_organizer'));
         }
 
         return Inertia::render('GamePlay', [
@@ -76,7 +76,7 @@ class GameEventController extends Controller
         if (!$result['status']) {
             return response()->json([
                 'status'  => false,
-                'message' => $result['message'] ?? 'Không tìm thấy game.',
+                'message' => $result['message'] ?? __('game.error.game_not_found'),
             ], 404);
         }
 
@@ -95,7 +95,7 @@ class GameEventController extends Controller
         if (!$result['status']) {
             return response()->json([
                 'status'  => false,
-                'message' => $result['message'] ?? 'Không tìm thấy trò chơi.',
+                'message' => $result['message'] ?? __('game.error.game_not_found'),
             ], 404);
         }
 
@@ -120,7 +120,7 @@ class GameEventController extends Controller
         if (!$result['status']) {
             return response()->json([
                 'status'  => false,
-                'message' => $result['message'] ?? 'Không tìm thấy game.',
+                'message' => $result['message'] ?? __('game.error.game_not_found'),
             ], 404);
         }
 
@@ -129,7 +129,7 @@ class GameEventController extends Controller
         if (!$this->eventGameService->checkGameAccess($game, $user)) {
             return response()->json([
                 'status'  => false,
-                'message' => 'Không có quyền truy cập.',
+                'message' => __('common.common_error.permission_error'),
             ], 403);
         }
 
@@ -139,7 +139,7 @@ class GameEventController extends Controller
         if (!$usersResult['status']) {
             return response()->json([
                 'status'  => false,
-                'message' => $usersResult['message'] ?? 'Không thể tải danh sách người chơi.',
+                'message' => $usersResult['message'] ?? __('game.error.cannot_load_players'),
             ], 500);
         }
 
@@ -175,7 +175,7 @@ class GameEventController extends Controller
         if (!$result['status']) {
             return response()->json([
                 'status'  => false,
-                'message' => $result['message'] ?? 'Không thể quay thưởng.',
+                'message' => $result['message'] ?? __('game.error.cannot_spin'),
             ], 500);
         }
 

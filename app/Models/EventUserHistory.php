@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 class EventUserHistory extends Pivot
 {
     use HasFactory;
-    
+
     protected $table = 'event_user_histories';
 
     protected $fillable = [
@@ -19,6 +19,11 @@ class EventUserHistory extends Pivot
         'event_seat_id',
         'ticket_code',
         'status',
+        'features'
+    ];
+
+    protected $casts = [
+        'features' => 'array'
     ];
 
     protected static function booted()
