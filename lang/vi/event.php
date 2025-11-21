@@ -6,10 +6,10 @@ return [
         'filter_success' => 'Lọc thành công',
         'congratulartion_prize' => '🎉 Chúc mừng bạn nhận được phần quà!',
         'congratulartion_desc' => 'Bạn đã giành được quà tặng :gift_name trong trò chơi :game.',
-        'notification_title_mbs_near'   => 'Thông báo thời hạn sớm',
-        'notification_desc_mbs_near'   => 'Gói thành viên của bạn sẽ hết hạn trong 7 ngày nữa. Hãy gia hạn để tiếp tục sử dụng dịch vụ!',
-        'notification_title_mbs_expired'   => 'Cảnh báo hết hạn!',
-        'notification_desc_mbs_expired'   => 'Gói thành viên của bạn sẽ hết hạn trong vòng 24 giờ tới. Vui lòng gia hạn ngay để tránh bị gián đoạn dịch vụ.',
+        'notification_title_mbs_near' => 'Thông báo thời hạn sớm',
+        'notification_desc_mbs_near' => 'Gói thành viên của bạn sẽ hết hạn trong 7 ngày nữa. Hãy gia hạn để tiếp tục sử dụng dịch vụ!',
+        'notification_title_mbs_expired' => 'Cảnh báo hết hạn!',
+        'notification_desc_mbs_expired' => 'Gói thành viên của bạn sẽ hết hạn trong vòng 24 giờ tới. Vui lòng gia hạn ngay để tránh bị gián đoạn dịch vụ.',
         'notification_title_event_start' => 'Sự kiện :name đã bắt đầu!',
         'notification_desc_event_start' => 'Sự kiện bạn đã đăng ký đã bắt đầu. Hãy tham gia ngay!',
         'success' => 'Thành công',
@@ -48,7 +48,7 @@ return [
         'area_not_found' => 'Không tìm thấy khu vực',
         'cannot_create_ticket' => 'Không thể tạo vé',
         'seat_payment_description' => 'Ghế :seat_code - :event_id',
-        'register_fail_title'   => 'Đăng ký thất bại'
+        'register_fail_title' => 'Đăng ký thất bại'
     ],
     'general' => [
         'event_title' => 'Sự kiện',
@@ -96,10 +96,9 @@ return [
         'questions_label' => 'Câu hỏi',
     ],
     'mail' => [
-        'subject_event_start' => 'Sự kiện :name đã bắt đầu!',
+        'subject_event_start' => 'Sự kiện :name sắp diễn ra!',
     ],
-    'messages' =>
-    [
+    'messages' => [
         'register_success_title' => 'Đăng Ký & Cấp Vé Thành Công!',
         'new_user_new_ticket_message' => 'Chào mừng bạn! Chúng tôi đã tạo tài khoản và cấp vé thành công. Thông tin đăng nhập (mật khẩu mặc định là SĐT của bạn) và vé tham dự đã được gửi đến email. Vui lòng kiểm tra hộp thư để biết chi tiết.',
 
@@ -120,5 +119,5 @@ return [
         'checkin_failed_title' => 'Lỗi hệ thống',
         'checkin_failed_message' => 'Đã xảy ra lỗi trong quá trình check-in. Vui lòng thử lại.',
         'no_seat_assigned' => 'Chưa có ghế',
-    ]
+    ],
 ];

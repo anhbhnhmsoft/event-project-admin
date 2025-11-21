@@ -20,12 +20,12 @@
 <body>
     <div class="container">
         <div class="header">
-            <h2> Sự kiện {{ $event_name }} đã bắt đầu!</h2>
+            <h2> Sự kiện {{ $event_name }} sắp diễn ra!</h2>
         </div>
 
         <div class="content">
             <p>Xin chào,</p>
-            <p>Chúng tôi thông báo rằng sự kiện mà bạn quan tâm đã chính thức bắt đầu! Hãy tham gia ngay theo thông tin dưới đây:</p>
+            <p>Chúng tôi thông báo rằng sự kiện mà bạn quan tâm sắp diễn ra! Hãy tham gia ngay theo thông tin dưới đây:</p>
 
             <div class="info-box">
                 <p><strong>Tên sự kiện:</strong> <span class="highlight">{{ $event_name }}</span></p>

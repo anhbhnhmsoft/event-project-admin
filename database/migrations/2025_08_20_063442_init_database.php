@@ -216,7 +216,6 @@ return new class extends Migration
             $table->boolean('free_to_join')
                 ->default(true)
                 ->comment('Sự kiện miễn phí tham gia hay không');
-            $table->unsignedInteger('price_comment')->default(0)->comment('Phân loại khu vực bình luận nếu giá trị = 0, sự kiện không phân loại khu vực bình luận');
             $table->softDeletes();
             $table->timestamps();
         });

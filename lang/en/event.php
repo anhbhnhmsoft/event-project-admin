@@ -101,7 +101,7 @@ return [
         'questions_label' => 'Questions',
     ],
     'mail' => [
-        'subject_event_start' => 'Event :name has started!',
+        'subject_event_start' => 'Event :name is about to start!',
     ],
     'messages' =>
     [
