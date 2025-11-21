@@ -11,6 +11,7 @@ use App\Utils\Constants\ConfigType;
 use App\Utils\Constants\Language;
 use App\Utils\Constants\RoleUser;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -276,9 +277,92 @@ class OrganizerService
     public function deleteOrganizerAndUsers(int $organizerId): void
     {
         $organizer = Organizer::find($organizerId);
+        
         if ($organizer) {
             User::where('organizer_id', $organizerId)->delete();
             $organizer->forceDelete();
         }
+    }
+
+    public function activateOrganizer(int $organizerId): bool
+    {
+        $organizer = Organizer::find($organizerId);
+        if ($organizer) {
+            return $organizer->update(['status' => true]);
+        }
+        return false;
+    }
+
+    /**
+     * Complete signup flow: register organizer, user, authenticate, and send verification email
+     * 
+     * @param array $organizerData
+     * @param array $userData (must include 'password' in plain text)
+     * @return array ['success' => bool, 'organizer' => Organizer|null, 'user' => User|null, 'error' => string|null]
+     */
+    public function completeSignupFlow(array $organizerData, array $userData): array
+    {
+        try {
+            DB::beginTransaction();
+
+            // Register organizer and user
+            $result = $this->registerOrganizerForSignup($organizerData, $userData);
+            $organizer = $result['organizer'];
+            $user = $result['user'];
+
+            // Attempt authentication
+            $authenticated = Auth::attempt([
+                'email' => $user->email,
+                'password' => $userData['password']
+            ]);
+
+            if (!$authenticated) {
+                throw new \Exception('Authentication failed after registration');
+            }
+
+            // Send verification email (non-blocking)
+            try {
+                $user->sendEmailVerificationNotification();
+            } catch (\Throwable $e) {
+                Log::error('Failed to send verification email during signup', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+
+            DB::commit();
+
+            return [
+                'success' => true,
+                'organizer' => $organizer,
+                'user' => $user,
+                'error' => null
+            ];
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Complete signup flow failed', ['error' => $e->getMessage()]);
+
+            return [
+                'success' => false,
+                'organizer' => null,
+                'user' => null,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Cleanup signup: logout and delete organizer with users
+     * 
+     * @param int $organizerId
+     * @return void
+     */
+    public function cleanupSignup(int $organizerId): void
+    {
+        Auth::logout();
+        session()->invalidate();
+        session()->regenerateToken();
+        
+        $this->deleteOrganizerAndUsers($organizerId);
     }
 }

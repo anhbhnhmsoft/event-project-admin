@@ -34,3 +34,5 @@ Route::middleware(['auth:web'])->prefix('/event-game')->group(function () {
     Route::get('/users/{gameId}', [GameEventController::class, 'getUsers']);
     Route::post('/spin/{gameId}', [GameEventController::class, 'spin']);
 });
+
+Route::get('lang/{locale}', [App\Http\Controllers\LanguageController::class, 'switch'])->name('lang.switch');

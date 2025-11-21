@@ -570,7 +570,8 @@ return [
             'badge' => 'Display Badge',
             'price' => 'Price',
             'status' => 'Active Status',
-            'duration' => 'Package Duration'
+            'duration' => 'Package Duration',
+            'type' => 'Type'
         ]
     ],
     'notifications' => [

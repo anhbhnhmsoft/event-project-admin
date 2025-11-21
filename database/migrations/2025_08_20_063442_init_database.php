@@ -66,7 +66,7 @@ return new class extends Migration
             $table->integer('sort')->nullable()->comment("Sắp xếp hiển thị");
             $table->string('badge_color_background')->nullable()->comment("Màu huy hiệu hiển thị trên trang chủ");
             $table->string('badge_color_text')->nullable()->comment("Màu chữ huy hiệu hiển thị trên trang chủ");
-            $table->json('config')->comment('Cấu hình của gói membership, lưu trữ các tùy chọn như quyền truy cập, tính năng, v.v.');
+            $table->json('config')->nullable()->comment('Cấu hình của gói membership, lưu trữ các tùy chọn như quyền truy cập, tính năng, v.v.');
             $table->boolean('status')->default(true)->comment('Trạng thái của gói membership, true nếu hoạt động, false nếu không hoạt động');
             $table->tinyInteger('type')
                 ->default(1)
@@ -119,7 +119,7 @@ return new class extends Migration
             $table->id();
             $table->comment('Bảng transactions lưu trữ các giao dịch của người dùng');
             // Khóa ngoại liên kết với các bảng, dựa theo type sẽ xác định bảng nào được liên kết
-            $table->bigInteger('foreign_id')->comment('ID của đối tượng liên kết, có thể là ID của gói membership hoặc ID của sự kiện');
+            $table->bigInteger('foreign_id')->nullable()->comment('ID của đối tượng liên kết, có thể là ID của gói membership hoặc ID của sự kiện');
             $table->tinyInteger('type')->comment('Loại giao dịch, trong enum TransactionType');
 
 
@@ -133,7 +133,11 @@ return new class extends Migration
             $table->tinyInteger('status')->comment('Trạng thái giao dịch trong enum TransactionStatus');
             $table->text('metadata')->nullable()->comment('Dữ liệu bổ sung liên quan đến giao dịch, có thể là thông tin bổ sung từ hệ thống thanh toán');
             $table->unique(['type_trans', 'transaction_id']);
-            $table->foreignId('user_id')->constrained();
+            $table->foreignId('user_id')
+                ->nullable()
+                ->onUpdate('cascade')
+                ->onDelete('cascade')
+                ->constrained('users');
             $table->timestamp('expired_at')->nullable();
             $table->json('config_pay')->nullable();
             $table->foreignId('organizer_id')
@@ -507,36 +511,43 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('configs');
+        Schema::dropIfExists('event_schedule_document_user');
+        Schema::dropIfExists('event_user_gift');
         Schema::dropIfExists('event_user_histories');
         Schema::dropIfExists('event_comments');
         Schema::dropIfExists('event_seats');
         Schema::dropIfExists('event_areas');
+        Schema::dropIfExists('event_game_gifts');
         Schema::dropIfExists('event_games');
+        Schema::dropIfExists('event_poll_votes');
+        Schema::dropIfExists('event_poll_question_options');
+        Schema::dropIfExists('event_poll_questions');
+        Schema::dropIfExists('event_polls');
         Schema::dropIfExists('event_schedule_document_files');
         Schema::dropIfExists('event_schedule_documents');
-        Schema::dropIfExists('event_schedule_document_user');
         Schema::dropIfExists('event_schedules');
         Schema::dropIfExists('event_user');
+
         Schema::dropIfExists('events');
-        Schema::dropIfExists('organizers');
-        Schema::dropIfExists('ward');
-        Schema::dropIfExists('provinces');
-        Schema::dropIfExists('transactions');
-        Schema::dropIfExists('membership');
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('sessions');
-        Schema::dropIfExists('personal_access_tokens');
+
         Schema::dropIfExists('membership_user');
         Schema::dropIfExists('membership_organizer');
-        Schema::dropIfExists('event_game_gifts');
-        Schema::dropIfExists('event_user_gift');
-        Schema::dropIfExists('user_reset_codes');
+        Schema::dropIfExists('membership');
+
         Schema::dropIfExists('user_notifications');
+        Schema::dropIfExists('user_reset_codes');
         Schema::dropIfExists('user_devices');
-        Schema::dropIfExists('event_polls');
-        Schema::dropIfExists('event_poll_questions');
-        Schema::dropIfExists('event_poll_question_options');
-        Schema::dropIfExists('event_poll_votes');
+        Schema::dropIfExists('sessions');
+        Schema::dropIfExists('personal_access_tokens');
+
+        Schema::dropIfExists('ward');
+        Schema::dropIfExists('districts');
+        Schema::dropIfExists('provinces');
+
+        Schema::dropIfExists('transactions');
+        Schema::dropIfExists('configs');
+
+        Schema::dropIfExists('users');
+        Schema::dropIfExists('organizers');
     }
 };

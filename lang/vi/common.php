@@ -38,6 +38,7 @@ return [
         'inappropriate_language' => 'Nội dung không phù hợp với chính sách của hệ thống.',
         'api_error' => 'Có lỗi xảy ra vui lòng thử lại.',
     ],
+    'not_init' => 'Chưa khởi tạo',
     'validation' => [
         'status_integer' => 'Trạng thái phải là số nguyên.',
         'status_in' => 'Trạng thái không hợp lệ.',
