@@ -135,6 +135,12 @@ class EventService
                 ->whereRaw('CONCAT(DATE(day_represent), " ", TIME(end_time)) < ?', [$now])
                 ->update(['status' => EventStatus::CLOSED->value]);
 
+            // Mở sự kiện đang diễn ra
+            Event::query()
+                ->where('status', EventStatus::UPCOMING->value)
+                ->whereRaw('CONCAT(DATE(day_represent), " ", TIME(start_time)) <= ?', [$now])
+                ->update(['status' => EventStatus::ACTIVE->value]);
+
             DB::commit();
             return [
                 'status' => true,
