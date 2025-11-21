@@ -3,6 +3,6 @@
 
 {{ $message }}
 
-Cảm ơn bạn đã đồng hành cùng chúng tôi,<br>
+{{ __('emails.membership.expire_thank_you') }}<br>
 {{ config('app.name') }}
 @endcomponent

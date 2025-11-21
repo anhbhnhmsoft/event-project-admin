@@ -38,22 +38,22 @@
 
 <body>
     <div class="container">
-        <h2>Xin chào {{ $user->name }},</h2>
+        <h2>{{ __('emails.auth.verify_greeting', ['name' => $user->name]) }}</h2>
 
-        <p>Cảm ơn bạn đã đăng ký tài khoản tại {{ config('app.name') }}!</p>
+        <p>{{ __('emails.auth.verify_thank_you', ['app_name' => config('app.name')]) }}</p>
 
-        <p>Vui lòng click vào nút bên dưới để xác thực địa chỉ email của bạn:</p>
+        <p>{{ __('emails.auth.verify_instruction') }}</p>
 
-        <a href="{{ $url }}" class="button">Xác thực Email</a>
+        <a href="{{ $url }}" class="button">{{ __('emails.auth.verify_button') }}</a>
 
-        <p>Nếu bạn không thể click vào nút trên, vui lòng copy và paste đường link sau vào trình duyệt:</p>
+        <p>{{ __('emails.auth.verify_copy_link') }}</p>
         <p style="word-break: break-all; color: #3b82f6;">{{ $url }}</p>
 
-        <p><strong>Lưu ý:</strong> Link xác thực sẽ hết hạn sau 60 phút.</p>
+        <p><strong>{{ __('emails.auth.verify_expire_note') }}</strong></p>
 
         <div class="footer">
-            <p>Nếu bạn không thực hiện đăng ký này, vui lòng bỏ qua email này.</p>
-            <p>&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
+            <p>{{ __('emails.auth.verify_ignore') }}</p>
+            <p>&copy; {{ date('Y') }} {{ config('app.name') }}. {{ __('emails.common.all_rights_reserved') }}</p>
         </div>
     </div>
 </body>
