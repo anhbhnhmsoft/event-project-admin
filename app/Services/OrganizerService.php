@@ -209,4 +209,76 @@ class OrganizerService
             ];
         }
     }
+    public function registerOrganizerForSignup(array $organizerData, array $userData): array
+    {
+        try {
+            $organizer = Organizer::create([
+                'name' => $organizerData['name'],
+                'status' => $organizerData['status'] ?? false,
+            ]);
+
+            $user = User::create([
+                'name' => $userData['name'],
+                'email' => $userData['email'],
+                'phone' => $userData['phone'],
+                'password' => Hash::make($userData['password']),
+                'organizer_id' => $organizer->id,
+                'lang' => Language::VI->value,
+                'role' => RoleUser::ADMIN->value,
+                'email_verified_at' => now()
+            ]);
+
+            $configs = [
+                [
+                    'config_key' => ConfigName::CLIENT_ID_APP->value,
+                    'config_type' => ConfigType::STRING->value,
+                    'config_value' => '',
+                    'organizer_id' => $organizer->id
+                ],
+                [
+                    'config_key' => ConfigName::API_KEY->value,
+                    'config_type' => ConfigType::STRING->value,
+                    'config_value' => '',
+                    'organizer_id' => $organizer->id
+                ],
+                [
+                    'config_key' => ConfigName::CHECKSUM_KEY->value,
+                    'config_type' => ConfigType::STRING->value,
+                    'config_value' => '',
+                    'organizer_id' => $organizer->id
+                ],
+                [
+                    'config_key' => ConfigName::LINK_ZALO_SUPPORT->value,
+                    'config_type' => ConfigType::STRING->value,
+                    'config_value' => 'https://zalo.me/your-support-link',
+                    'organizer_id' => $organizer->id
+                ],
+                [
+                    'config_key' => ConfigName::LINK_FACEBOOK_SUPPORT->value,
+                    'config_type' => ConfigType::STRING->value,
+                    'config_value' => 'https://facebook.com/your-support-page',
+                    'organizer_id' => $organizer->id
+                ],
+            ];
+
+            Config::query()->insert($configs);
+
+            return [
+                'status' => true,
+                'organizer' => $organizer,
+                'user' => $user
+            ];
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
+
+    public function deleteOrganizerAndUsers(int $organizerId): void
+    {
+        $organizer = Organizer::find($organizerId);
+        if ($organizer) {
+            User::where('organizer_id', $organizerId)->delete();
+            $organizer->forceDelete();
+        }
+    }
 }

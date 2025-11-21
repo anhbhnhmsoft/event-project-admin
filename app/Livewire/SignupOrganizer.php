@@ -171,66 +171,32 @@ class SignupOrganizer extends Component
             try {
                 DB::beginTransaction();
 
-                $organizer = Organizer::create([
-                    'name' => $this->organizerName,
-                    'status' => false,
-                ]);
+                $result = $this->organizerService->registerOrganizerForSignup(
+                    ['name' => $this->organizerName, 'status' => false],
+                    [
+                        'name' => $this->userName,
+                        'email' => $this->userEmail,
+                        'phone' => $this->userPhone,
+                        'password' => $this->password
+                    ]
+                );
 
-                $user = User::create([
-                    'name' => $this->userName,
-                    'email' => $this->userEmail,
-                    'phone' => $this->userPhone,
-                    'password' => Hash::make($this->password),
-                    'organizer_id' => $organizer->id,
-                    'lang' => Language::VI->value,
-                    'role' => RoleUser::ADMIN->value,
-                    'email_verified_at' => now()
-                ]);
+                $organizer = $result['organizer'];
+                $user = $result['user'];
+
                 Auth::attempt([
                     'email' => $user->email,
                     'password' => $this->password
                 ]);
                 $this->createdOrganizerId = $organizer->id;
-                $configs = [
-                    [
-                        'config_key' => ConfigName::CLIENT_ID_APP->value,
-                        'config_type' => ConfigType::STRING->value,
-                        'config_value' => '',
-                        'organizer_id' => $organizer->id
-                    ],
-                    [
-                        'config_key' => ConfigName::API_KEY->value,
-                        'config_type' => ConfigType::STRING->value,
-                        'config_value' => '',
-                        'organizer_id' => $organizer->id
-                    ],
-                    [
-                        'config_key' => ConfigName::CHECKSUM_KEY->value,
-                        'config_type' => ConfigType::STRING->value,
-                        'config_value' => '',
-                        'organizer_id' => $organizer->id
-                    ],
-                    [
-                        'config_key' => ConfigName::LINK_ZALO_SUPPORT->value,
-                        'config_type' => ConfigType::STRING->value,
-                        'config_value' => 'https://zalo.me/your-support-link',
-                        'organizer_id' => $organizer->id
-                    ],
-                    [
-                        'config_key' => ConfigName::LINK_FACEBOOK_SUPPORT->value,
-                        'config_type' => ConfigType::STRING->value,
-                        'config_value' => 'https://facebook.com/your-support-page',
-                        'organizer_id' => $organizer->id
-                    ],
-                ];
-
-                Config::query()->insert($configs);
 
                 $this->initializePayment();
 
                 DB::commit();
                 $user->sendEmailVerificationNotification();
                 $this->currentStage = 3;
+
+                return redirect(request()->header('Referer'));
             } catch (\Exception $e) {
                 DB::rollBack();
                 Log::error('Registration failed', ['error' => $e->getMessage()]);
@@ -451,12 +417,20 @@ class SignupOrganizer extends Component
                     ->success();
                 $this->dispatchNotification($notification);
 
+                if ($this->createdOrganizerId) {
+                    $this->organizerService->deleteOrganizerAndUsers($this->createdOrganizerId);
+                    Auth::logout();
+                    session()->invalidate();
+                    session()->regenerateToken();
+                }
+
                 $this->transactionId = null;
                 $this->paymentStatus = null;
                 $this->paymentData = [];
                 $this->expiryTime = null;
+                $this->createdOrganizerId = null;
 
-                $this->backToRegistration();
+                return redirect(request()->header('Referer'));
             } else {
                 $notification = Notification::make()
                     ->title(__('organizer.signup.notifications.cancel_failed'))
