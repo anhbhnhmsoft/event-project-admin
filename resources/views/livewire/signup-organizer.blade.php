@@ -575,7 +575,7 @@
                                     @else
                                     <span class="text-gray-500 dark:text-white font-semibold">
                                         {{ __('organizer.signup.status_label') }}
-                                        {{ $paymentStatus ?? 'Chưa khởi tạo' }}
+                                        {{ $paymentStatus ?? __('common.not_init') }}
                                     </span>
                                     @endif
                                 </div>

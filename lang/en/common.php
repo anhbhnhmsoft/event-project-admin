@@ -47,6 +47,7 @@ return [
         'file_not_found' => 'File not found',
         'invalid_date' => 'Invalid date',
     ],
+    'not_init' => 'Not initialized',
     'validation' => [
         'status_integer' => 'Status must be an integer.',
         'status_in' => 'Status is not valid.',

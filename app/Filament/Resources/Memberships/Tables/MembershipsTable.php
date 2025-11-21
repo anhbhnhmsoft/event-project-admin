@@ -47,6 +47,10 @@ class MembershipsTable
                     ->falseColor('danger'),
                 TextColumn::make('duration')
                     ->label(__('admin.memberships.table.duration')),
+                TextColumn::make('type')
+                    ->label(__('admin.memberships.table.type'))
+                    ->formatStateUsing(fn($state) => MembershipType::label($state))
+                    ->hidden(fn() => Auth::user()->role != RoleUser::SUPER_ADMIN->value),
             ])
             ->filters([])
             ->recordActions([

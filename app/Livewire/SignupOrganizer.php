@@ -2,23 +2,13 @@
 
 namespace App\Livewire;
 
-use App\Models\Config;
-use App\Models\Organizer;
-use App\Models\User;
 use App\Services\MemberShipService;
 use App\Services\OrganizerService;
 use App\Services\TransactionService;
-use App\Utils\Constants\ConfigName;
-use App\Utils\Constants\ConfigType;
-use App\Utils\Constants\Language;
-use App\Utils\Constants\RoleUser;
 use App\Utils\Constants\TransactionStatus;
 use App\Utils\Constants\TransactionType;
 use App\Utils\Helper;
 use Filament\Notifications\Notification;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 use Livewire\Attributes\Session;
@@ -168,47 +158,43 @@ class SignupOrganizer extends Component
 
             $this->validate();
 
-            try {
-                DB::beginTransaction();
-
-                $result = $this->organizerService->registerOrganizerForSignup(
-                    ['name' => $this->organizerName, 'status' => false],
-                    [
-                        'name' => $this->userName,
-                        'email' => $this->userEmail,
-                        'phone' => $this->userPhone,
-                        'password' => $this->password
-                    ]
-                );
-
-                $organizer = $result['organizer'];
-                $user = $result['user'];
-
-                Auth::attempt([
-                    'email' => $user->email,
+            $result = $this->organizerService->completeSignupFlow(
+                ['name' => $this->organizerName, 'status' => false],
+                [
+                    'name' => $this->userName,
+                    'email' => $this->userEmail,
+                    'phone' => $this->userPhone,
                     'password' => $this->password
-                ]);
-                $this->createdOrganizerId = $organizer->id;
+                ]
+            );
 
+            if (!$result['success']) {
+                $notification = Notification::make()
+                    ->title(__('organizer.signup.notifications.register_error'))
+                    ->body(__('organizer.signup.notifications.try_again_error', ['error' => $result['error']]))
+                    ->danger();
+
+                $this->dispatchNotification($notification);
+                $this->createdOrganizerId = null;
+                return;
+            }
+
+            $organizer = $result['organizer'];
+            $this->createdOrganizerId = $organizer->id;
+
+            try {
                 $this->initializePayment();
-
-                DB::commit();
-                $user->sendEmailVerificationNotification();
                 $this->currentStage = 3;
-
                 return redirect(request()->header('Referer'));
             } catch (\Exception $e) {
-                DB::rollBack();
-                Log::error('Registration failed', ['error' => $e->getMessage()]);
-
+                Log::error('Payment initialization failed', ['error' => $e->getMessage()]);
+                
                 $notification = Notification::make()
                     ->title(__('organizer.signup.notifications.register_error'))
                     ->body(__('organizer.signup.notifications.try_again_error', ['error' => $e->getMessage()]))
                     ->danger();
 
                 $this->dispatchNotification($notification);
-
-                $this->createdOrganizerId = null;
             }
         } else {
             $this->currentStage = 3;
@@ -357,10 +343,7 @@ class SignupOrganizer extends Component
                         $this->paymentStatus = $status;
 
                         if ($status == TransactionStatus::SUCCESS->value) {
-                            $organizer = Organizer::find($this->createdOrganizerId);
-                            if ($organizer) {
-                                $organizer->update(['status' => true]);
-                            }
+                            $this->organizerService->activateOrganizer($this->createdOrganizerId);
 
                             $this->currentStage = 4;
 
@@ -407,7 +390,7 @@ class SignupOrganizer extends Component
 
     public function cancelTransaction()
     {
-        if ($this->transactionId && $this->paymentStatus === TransactionStatus::WAITING->value) {
+        if ($this->transactionId && $this->paymentStatus == TransactionStatus::WAITING->value) {
             $result = $this->transactionService->cancelTransaction($this->transactionId);
 
             if (isset($result['status']) && $result['status']) {
@@ -418,10 +401,7 @@ class SignupOrganizer extends Component
                 $this->dispatchNotification($notification);
 
                 if ($this->createdOrganizerId) {
-                    $this->organizerService->deleteOrganizerAndUsers($this->createdOrganizerId);
-                    Auth::logout();
-                    session()->invalidate();
-                    session()->regenerateToken();
+                    $this->organizerService->cleanupSignup($this->createdOrganizerId);
                 }
 
                 $this->transactionId = null;
@@ -429,7 +409,7 @@ class SignupOrganizer extends Component
                 $this->paymentData = [];
                 $this->expiryTime = null;
                 $this->createdOrganizerId = null;
-
+                $this->backToRegistration();
                 return redirect(request()->header('Referer'));
             } else {
                 $notification = Notification::make()
@@ -437,6 +417,8 @@ class SignupOrganizer extends Component
                     ->danger();
                 $this->dispatchNotification($notification);
             }
+            $this->selectPlan = null;
+            $this->backToRegistration();
         } else {
             $this->backToRegistration();
         }
