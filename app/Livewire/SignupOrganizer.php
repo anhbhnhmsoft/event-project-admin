@@ -102,14 +102,14 @@ class SignupOrganizer extends Component
     protected function messages()
     {
         return [
-            'organizerName.required' => 'Tên tổ chức là bắt buộc',
-            'userName.required' => 'Tên người dùng là bắt buộc',
-            'userEmail.required' => 'Email người dùng là bắt buộc',
-            'userEmail.email' => 'Email người dùng không hợp lệ',
-            'userEmail.unique' => 'Email người dùng đã được sử dụng',
-            'userPhone.required' => 'Số điện thoại người dùng là bắt buộc',
-            'password.required' => 'Mật khẩu là bắt buộc',
-            'password.confirmed' => 'Xác nhận mật khẩu không khớp',
+            'organizerName.required' => __('organizer.signup.validation.org_name_required'),
+            'userName.required' => __('organizer.signup.validation.user_name_required'),
+            'userEmail.required' => __('organizer.signup.validation.email_required'),
+            'userEmail.email' => __('organizer.signup.validation.email_invalid'),
+            'userEmail.unique' => __('organizer.signup.validation.email_unique'),
+            'userPhone.required' => __('organizer.signup.validation.phone_required'),
+            'password.required' => __('organizer.signup.validation.password_required'),
+            'password.confirmed' => __('organizer.signup.validation.password_confirmed'),
         ];
     }
 
@@ -137,7 +137,7 @@ class SignupOrganizer extends Component
 
         if (!isset($result['status']) || !$result['status']) {
             $notification = Notification::make()
-                ->title('Không thể tải thông tin gói dịch vụ.')
+                ->title(__('organizer.signup.notifications.load_plan_error'))
                 ->danger();
 
             $this->dispatchNotification($notification);
@@ -149,7 +149,7 @@ class SignupOrganizer extends Component
         $this->currentStage = 2;
 
         $notification = Notification::make()
-            ->title('Đã chọn gói: ' . $this->selectedPlan->name)
+            ->title(__('organizer.signup.notifications.plan_selected', ['plan' => $this->selectedPlan->name]))
             ->success();
 
         $this->dispatchNotification($notification);
@@ -182,12 +182,12 @@ class SignupOrganizer extends Component
                     'phone' => $this->userPhone,
                     'password' => Hash::make($this->password),
                     'organizer_id' => $organizer->id,
-                    'lang'  => Language::VI->value,
-                    'role'  => RoleUser::ADMIN->value,
+                    'lang' => Language::VI->value,
+                    'role' => RoleUser::ADMIN->value,
                     'email_verified_at' => now()
                 ]);
                 Auth::attempt([
-                    'email'    => $user->email,
+                    'email' => $user->email,
                     'password' => $this->password
                 ]);
                 $this->createdOrganizerId = $organizer->id;
@@ -236,8 +236,8 @@ class SignupOrganizer extends Component
                 Log::error('Registration failed', ['error' => $e->getMessage()]);
 
                 $notification = Notification::make()
-                    ->title('Đăng ký hoặc Khởi tạo thanh toán thất bại')
-                    ->body('Vui lòng thử lại. Lỗi: ' . $e->getMessage())
+                    ->title(__('organizer.signup.notifications.register_error'))
+                    ->body(__('organizer.signup.notifications.try_again_error', ['error' => $e->getMessage()]))
                     ->danger();
 
                 $this->dispatchNotification($notification);
@@ -338,7 +338,7 @@ class SignupOrganizer extends Component
         $result = $this->membershipService->getMembershipDetail($planId);
         if (!isset($result['status']) || !$result['status']) {
             $notification = Notification::make()
-                ->title('Không thể tải thông tin gói dịch vụ.')
+                ->title(__('organizer.signup.notifications.load_plan_error'))
                 ->danger();
             $this->dispatchNotification($notification);
             return;
@@ -353,13 +353,13 @@ class SignupOrganizer extends Component
         try {
             $this->createTransactionForPlan();
             $notification = Notification::make()
-                ->title('Đã chuyển sang gói: ' . ($this->selectedPlan->name ?? ''))
+                ->title(__('organizer.signup.notifications.plan_changed', ['plan' => $this->selectedPlan->name ?? '']))
                 ->success();
             $this->dispatchNotification($notification);
         } catch (\Throwable $e) {
             Log::error('Change plan failed', ['error' => $e->getMessage()]);
             $notification = Notification::make()
-                ->title('Không thể chuyển gói')
+                ->title(__('organizer.signup.notifications.change_plan_error'))
                 ->danger();
             $this->dispatchNotification($notification);
         }
@@ -399,12 +399,12 @@ class SignupOrganizer extends Component
                             $this->currentStage = 4;
 
                             $notification = Notification::make()
-                                ->title('Thanh toán thành công!')
+                                ->title(__('organizer.signup.notifications.payment_success'))
                                 ->success();
                             $this->dispatchNotification($notification);
                         } elseif ($status == TransactionStatus::FAILED->value) {
                             $notification = Notification::make()
-                                ->title('Thanh toán thất bại')
+                                ->title(__('organizer.signup.notifications.payment_failed'))
                                 ->danger();
                             $this->dispatchNotification($notification);
                         }
@@ -427,7 +427,7 @@ class SignupOrganizer extends Component
                 $this->paymentStatus = TransactionStatus::FAILED->value;
 
                 $notification = Notification::make()
-                    ->title('Giao dịch đã hết hạn')
+                    ->title(__('organizer.signup.notifications.transaction_expired'))
                     ->warning();
                 $this->dispatchNotification($notification);
             } catch (\Throwable $e) {
@@ -447,7 +447,7 @@ class SignupOrganizer extends Component
             if (isset($result['status']) && $result['status']) {
 
                 $notification = Notification::make()
-                    ->title('Đã hủy giao dịch')
+                    ->title(__('organizer.signup.notifications.transaction_cancelled'))
                     ->success();
                 $this->dispatchNotification($notification);
 
@@ -459,7 +459,7 @@ class SignupOrganizer extends Component
                 $this->backToRegistration();
             } else {
                 $notification = Notification::make()
-                    ->title('Hủy giao dịch thất bại')
+                    ->title(__('organizer.signup.notifications.cancel_failed'))
                     ->danger();
                 $this->dispatchNotification($notification);
             }

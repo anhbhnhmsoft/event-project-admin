@@ -61,12 +61,12 @@ class ConfigForm extends Component
 
         if ($result) {
             Notification::make()
-                ->title(__(''))
+                ->title(__('organizer.config.update_success'))
                 ->success()
                 ->send();
         } else {
             Notification::make()
-                ->title('Cập nhật config thất bại')
+                ->title(__('organizer.config.update_failed'))
                 ->danger()
                 ->send();
         }
@@ -81,9 +81,9 @@ class ConfigForm extends Component
                 'organizer_value.description' => 'nullable|string',
                 'organizer_value.image' => 'nullable|image|max:2048', // 2MB max
             ], [
-                'organizer_value.' . $this->organizer->name . '.required' => 'Tên tổ chức không được để trống',
-                'organizer_value.image.image' => 'File phải là hình ảnh',
-                'organizer_value.image.max' => 'Kích thước ảnh tối đa 2MB',
+                'organizer_value.' . $this->organizer->name . '.required' => __('organizer.config.org_name_required'),
+                'organizer_value.image.image' => __('organizer.config.image_required'),
+                'organizer_value.image.max' => __('organizer.config.image_max'),
             ]);
 
             // Chuẩn bị dữ liệu cập nhật organizer
@@ -121,21 +121,21 @@ class ConfigForm extends Component
                 $this->organizer = $this->service->getOrganizerInfo($this->organizerId);
 
                 Notification::make()
-                    ->title('Cập nhật thành công')
-                    ->body('Thông tin tổ chức và cấu hình đã được cập nhật')
+                    ->title(__('organizer.config.update_success'))
+                    ->body(__('organizer.config.update_success_desc'))
                     ->success()
                     ->send();
 
                 // Reset file input
                 $this->organizer_value['image'] = null;
             } else {
-                throw new \Exception('Cập nhật thất bại');
+                throw new \Exception(__('organizer.config.update_failed'));
             }
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e;
         } catch (\Exception $e) {
             Notification::make()
-                ->title('Cập nhật thất bại')
+                ->title(__('organizer.config.update_failed'))
                 ->body($e->getMessage())
                 ->danger()
                 ->send();

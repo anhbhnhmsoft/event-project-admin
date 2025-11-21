@@ -1,6 +1,6 @@
 <div>
     @assets
-        @vite(['resources/css/app.css'])
+    @vite(['resources/css/app.css'])
     @endassets
 
     <div class="py-4">
@@ -47,8 +47,7 @@
                                                 ? "background-color: {$item->badge_color};"
                                                 : 'background-color: #ccc';
                                         @endphp
-                                        <x-filament::badge size="md" style="{{ $badgeStyle }}"
-                                            class="mb-3 font-semibold self-start">
+                                        <x-filament::badge size="md" style="{{ $badgeStyle }}" class="mb-3 font-semibold self-start">
                                             <p class="text-gray-900 dark:text-gray-100">{{ $item->badge }}</p>
                                         </x-filament::badge>
                                     @endif
@@ -64,7 +63,8 @@
                                             <span class="text-lg font-normal">VND</span>
                                         </h6>
                                         <span class="text-sm text-gray-500 dark:text-gray-400">
-                                            {{ __('admin.service_plan.duration') }}: {{ $item->duration }} {{ __('admin.service_plan.months') }}
+                                            {{ __('admin.service_plan.duration') }}: {{ $item->duration }}
+                                            {{ __('admin.service_plan.months') }}
                                         </span>
 
                                         <p class="text-sm text-gray-700 dark:text-gray-300 mt-2 italic">
@@ -72,9 +72,8 @@
                                         </p>
                                     </div>
 
-                                    <x-filament::button wire:key="buy-{{ $item->id }}" class="w-full mt-4"
-                                        color="primary" icon="heroicon-m-shopping-cart"
-                                        wire:click="onNextStep('{{ $item->id }}')">
+                                    <x-filament::button wire:key="buy-{{ $item->id }}" class="w-full mt-4" color="primary"
+                                        icon="heroicon-m-shopping-cart" wire:click="onNextStep('{{ $item->id }}')">
                                         {{ __('admin.service_plan.buy') }}
                                     </x-filament::button>
                                 </div>
@@ -173,11 +172,11 @@
                                 </template>
 
                                 @if (!empty($dataTransfer['urlBankQrcode']))
-                                    <img src="{{ $dataTransfer['urlBankQrcode'] }}" alt="{{ __('admin.service_plan.qr_code_payment') }}"
+                                    <img src="{{ $dataTransfer['urlBankQrcode'] }}"
+                                        alt="{{ __('admin.service_plan.qr_code_payment') }}"
                                         class="w-full h-full object-contain rounded-xl shadow-lg border border-gray-200 dark:border-gray-700"
-                                        x-bind:class="{ 'opacity-0': loading, 'opacity-100': !loading }"
-                                        x-on:load="loading = false" x-on:error="loading = false"
-                                        style="transition: opacity 0.3s ease;" />
+                                        x-bind:class="{ 'opacity-0': loading, 'opacity-100': !loading }" x-on:load="loading = false"
+                                        x-on:error="loading = false" style="transition: opacity 0.3s ease;" />
                                 @endif
                             @endif
                         </div>
@@ -195,66 +194,62 @@
                                         </span>
 
                                         {{-- Countdown section --}}
-                                        <div wire:ignore.self wire:key="countdown-{{ $expiryTime ?? 'none' }}"
-                                            x-data="{
-                                                expiryTime: {{ $expiryTime ?? 'null' }},
-                                                remaining: '{{ __('admin.service_plan.loading') }}',
-                                                isExpired: false,
-                                                intervalId: null,
+                                        <div wire:ignore.self wire:key="countdown-{{ $expiryTime ?? 'none' }}" x-data="{
+                                                        expiryTime: {{ $expiryTime ?? 'null' }},
+                                                        remaining: '{{ __('admin.service_plan.loading') }}',
+                                                        isExpired: false,
+                                                        intervalId: null,
 
-                                                init() {
-                                                    this.startCountdown();
-                                                },
+                                                        init() {
+                                                            this.startCountdown();
+                                                        },
 
-                                                startCountdown() {
-                                                    if (this.intervalId) clearInterval(this.intervalId);
-                                                    this.updateCountdown();
-                                                    this.intervalId = setInterval(() => this.updateCountdown(), 1000);
-                                                },
+                                                        startCountdown() {
+                                                            if (this.intervalId) clearInterval(this.intervalId);
+                                                            this.updateCountdown();
+                                                            this.intervalId = setInterval(() => this.updateCountdown(), 1000);
+                                                        },
 
-                                                updateCountdown() {
-                                                    if (!this.expiryTime) {
-                                                        this.remaining = '{{ __('admin.service_plan.unknown') }}';
-                                                        return;
-                                                    }
-                                                    const now = Math.floor(Date.now() / 1000);
-                                                    const diff = this.expiryTime - now;
+                                                        updateCountdown() {
+                                                            if (!this.expiryTime) {
+                                                                this.remaining = '{{ __('admin.service_plan.unknown') }}';
+                                                                return;
+                                                            }
+                                                            const now = Math.floor(Date.now() / 1000);
+                                                            const diff = this.expiryTime - now;
 
-                                                    if (diff <= 0) {
-                                                        this.remaining = '{{ __('admin.service_plan.expired') }}';
-                                                        this.isExpired = true;
-                                                        clearInterval(this.intervalId);
-                                                        this.intervalId = null;
-                                                        $wire.checkExpiry();
-                                                    } else {
-                                                        const m = Math.floor(diff / 60);
-                                                        const s = diff % 60;
-                                                        this.remaining = `${m}:${s.toString().padStart(2, '0')}`;
-                                                        this.isExpired = false;
-                                                    }
-                                                }
-                                            }"
+                                                            if (diff <= 0) {
+                                                                this.remaining = '{{ __('admin.service_plan.expired') }}';
+                                                                this.isExpired = true;
+                                                                clearInterval(this.intervalId);
+                                                                this.intervalId = null;
+                                                                $wire.checkExpiry();
+                                                            } else {
+                                                                const m = Math.floor(diff / 60);
+                                                                const s = diff % 60;
+                                                                this.remaining = `${m}:${s.toString().padStart(2, '0')}`;
+                                                                this.isExpired = false;
+                                                            }
+                                                        }
+                                                    }"
                                             x-on:livewire:navigating.window="if (intervalId) clearInterval(intervalId)"
                                             class="w-full">
-                                            <div class="px-4 py-3 rounded-lg border transition-colors"
-                                                :class="{
-                                                    'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800': isExpired,
-                                                    'bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600':
-                                                        !isExpired
-                                                }">
-                                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">{{ __('admin.service_plan.time_remaining') }}</p>
-                                                <p class="text-2xl font-bold font-mono transition-colors"
-                                                    :class="{
-                                                        'text-red-600 dark:text-red-400': isExpired,
-                                                        'text-gray-900 dark:text-gray-100': !isExpired
-                                                    }"
-                                                    x-text="remaining">
+                                            <div class="px-4 py-3 rounded-lg border transition-colors" :class="{
+                                                            'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800': isExpired,
+                                                            'bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600':
+                                                                !isExpired
+                                                        }">
+                                                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                                    {{ __('admin.service_plan.time_remaining') }}</p>
+                                                <p class="text-2xl font-bold font-mono transition-colors" :class="{
+                                                                'text-red-600 dark:text-red-400': isExpired,
+                                                                'text-gray-900 dark:text-gray-100': !isExpired
+                                                            }" x-text="remaining">
                                                 </p>
                                             </div>
                                         </div>
 
-                                        <div
-                                            class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-2">
+                                        <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-2">
                                             <x-heroicon-s-information-circle class="w-4 h-4" />
                                             <span>{{ __('admin.service_plan.auto_cancel') }}</span>
                                         </div>

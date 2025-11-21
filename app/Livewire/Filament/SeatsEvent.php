@@ -21,9 +21,9 @@ class SeatsEvent extends Component
     use WithPagination;
 
     public $event;
-    protected  $areaService;
-    protected  $seatService;
-    protected  $eventUserHistoryService;
+    protected $areaService;
+    protected $seatService;
+    protected $eventUserHistoryService;
 
     public $seatsPerPage = 50;
     public $usersPerPage = 10;
@@ -69,9 +69,11 @@ class SeatsEvent extends Component
     {
         return $this->event
             ->areas()
-            ->with(['seats' => function ($query) {
-                $query->orderByRaw('seat_code + 0 asc')->limit(50);
-            }])
+            ->with([
+                'seats' => function ($query) {
+                    $query->orderByRaw('seat_code + 0 asc')->limit(50);
+                }
+            ])
             ->paginate($this->areasPerPage, ['*'], 'areasPage');
     }
 
@@ -86,7 +88,7 @@ class SeatsEvent extends Component
             'areaCapacity' => 'required|integer|min:1',
             'areaPrice' => function ($attr, $value, $fail) {
                 if (!$this->event->free_to_join && ($value === null || $value === '')) {
-                    $fail('Vui lòng nhập giá khu vực.');
+                    $fail(__('organizer.seats.enter_price'));
                 }
             },
         ]);
@@ -104,7 +106,7 @@ class SeatsEvent extends Component
             $seatResult = $this->generateSeats($area);
             if (!$seatResult) {
                 Notification::make()
-                    ->title('Tạo chỗ ngồi không thành công!')
+                    ->title(__('organizer.seats.create_seat_failed'))
                     ->danger()
                     ->send();
             }
@@ -112,12 +114,12 @@ class SeatsEvent extends Component
             $this->showAreaModal = false;
             $this->resetPage('areasPage');
             Notification::make()
-                ->title('Khu vực đã được tạo thành công!')
+                ->title(__('organizer.seats.area_created'))
                 ->success()
                 ->send();
         } else {
             Notification::make()
-                ->title('Tạo không thành công!')
+                ->title(__('organizer.seats.create_failed'))
                 ->danger()
                 ->send();
         }
@@ -151,12 +153,12 @@ class SeatsEvent extends Component
 
         if ($result) {
             return Notification::make()
-                ->title('Cập nhật thành công!')
+                ->title(__('organizer.seats.update_success'))
                 ->success()
                 ->send();
         } else {
             return Notification::make()
-                ->title('Cập nhật không thành công!')
+                ->title(__('organizer.seats.update_failed'))
                 ->danger()
                 ->send();
         }
@@ -164,7 +166,8 @@ class SeatsEvent extends Component
 
     public function removeSeatUser()
     {
-        if (!$this->seatInfo) return;
+        if (!$this->seatInfo)
+            return;
 
         DB::beginTransaction();
         try {
@@ -180,11 +183,11 @@ class SeatsEvent extends Component
             }
 
             DB::commit();
-            Notification::make()->title('Huỷ vé và trả ghế thành công!')->success()->send();
+            Notification::make()->title(__('organizer.seats.cancel_ticket_success'))->success()->send();
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Remove seat + ticket failed: " . $e->getMessage());
-            Notification::make()->title('Có lỗi xảy ra khi huỷ vé hoặc ghế.')->danger()->send();
+            Notification::make()->title(__('organizer.seats.cancel_ticket_error'))->danger()->send();
         }
 
         $this->seatUser = null;
@@ -192,7 +195,8 @@ class SeatsEvent extends Component
 
     public function assignSeatToUser()
     {
-        if (!$this->selectedSeat || !$this->selectedSeatUser) return;
+        if (!$this->selectedSeat || !$this->selectedSeatUser)
+            return;
 
         DB::beginTransaction();
         try {
@@ -221,11 +225,11 @@ class SeatsEvent extends Component
             }
 
             DB::commit();
-            Notification::make()->title('Ghế và vé đã được tạo thành công!')->success()->send();
+            Notification::make()->title(__('organizer.seats.assign_success'))->success()->send();
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Assign seat + ticket failed: " . $e->getMessage());
-            Notification::make()->title('Có lỗi xảy ra khi tạo ghế hoặc vé.')->danger()->send();
+            Notification::make()->title(__('organizer.seats.assign_error'))->danger()->send();
         }
 
         $this->reset(['selectedSeat', 'selectedSeatUser']);
@@ -282,7 +286,7 @@ class SeatsEvent extends Component
             $this->hiddenDetailSeat = true;
         } else {
             Notification::make()
-                ->title('Không tồn tại chỗ ngồi!')
+                ->title(__('organizer.seats.seat_not_found'))
                 ->danger()
                 ->send();
 
@@ -326,12 +330,12 @@ class SeatsEvent extends Component
         if ($areaDeleted) {
             $this->resetPage('areasPage');
             Notification::make()
-                ->title('Khu vực đã được xóa!')
+                ->title(__('organizer.seats.area_deleted'))
                 ->success()
                 ->send();
         } else {
             Notification::make()
-                ->title('Xóa không thành công!')
+                ->title(__('organizer.seats.delete_failed'))
                 ->danger()
                 ->send();
         }
@@ -345,12 +349,12 @@ class SeatsEvent extends Component
 
         if ($result) {
             Notification::make()
-                ->title('Khu vực đã được cập nhật!')
+                ->title(__('organizer.seats.area_updated'))
                 ->success()
                 ->send();
         } else {
             Notification::make()
-                ->title('Cập nhật không thành công!')
+                ->title(__('organizer.seats.update_failed'))
                 ->danger()
                 ->send();
         }
