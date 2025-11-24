@@ -248,6 +248,7 @@ class EventGameService
         foreach ($gifts as $gift) {
             $cumulative += $gift->rate;
             if ($random <= $cumulative) {
+                sleep(3);
                 $history = $this->createGiftHistory($userId, $gift->id);
                 if (!$history['status']) {
                     return ['status' => false, 'message' => $history['message']];

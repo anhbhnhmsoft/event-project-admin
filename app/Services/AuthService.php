@@ -618,7 +618,14 @@ class AuthService
                 'status' => EventUserHistoryStatus::PARTICIPATED->value,
             ]);
 
-            $history->load('eventSeat');
+            $history->load('seat');
+
+            Log::info('Quick check-in success', [
+                'user_id' => $user->id,
+                'event_id' => $data['event_id'],
+                'ticket_code' => $history->seat?->seat_code,
+            ]);
+
 
             DB::commit();
 
@@ -628,7 +635,7 @@ class AuthService
                 'message' => __('event.messages.checkin_success_message'),
                 'data' => [
                     'ticket_code' => $history->ticket_code,
-                    'seat_name' => $history->eventSeat?->name,
+                    'seat_name' => $history->seat?->seat_code,
                 ]
             ];
         } catch (\Throwable $e) {
