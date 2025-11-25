@@ -30,6 +30,7 @@ class Event extends Model
         'start_time',
         'end_time',
         'image_represent_path',
+        'images',
         'status',
         'address',
         'province_code',
@@ -46,6 +47,7 @@ class Event extends Model
         'longitude' => 'decimal:6',
         'status' => 'integer',
         'free_to_join' => 'boolean',
+        'images' => 'array',
     ];
 
     protected static function booted()

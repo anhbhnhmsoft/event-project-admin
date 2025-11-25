@@ -46,8 +46,7 @@ class Dashboard extends PagesDashboard
                     $eventId = session('event_id');
                     if (!$eventId) {
                         Notification::make()
-                            ->title(__('common.error.get_failed'))
-                            ->body(__('common.resource.dashboard.choose_event'))
+                            ->title(__('common.resource.dashboard.choose_event'))
                             ->danger()
                             ->send();
                         return;

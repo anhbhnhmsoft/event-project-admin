@@ -27,6 +27,7 @@ Route::get('/survey/{idcode}', [EventPollController::class, 'show'])->name('even
 Route::post('/survey/{idcode}', [EventPollController::class, 'submit'])->name('event.poll.submit');
 
 Route::get('/signup', SignupOrganizer::class)->name('signup');
+Route::get('/event-screen/{id}', [EventController::class, 'eventScreen'])->name('event.screen');
 
 Route::middleware(['auth:web'])->prefix('/event-game')->group(function () {
     Route::get('/gifts/{gameId}', [GameEventController::class, 'getGiftsEventGame']);

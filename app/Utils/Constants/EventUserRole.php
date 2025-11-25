@@ -14,6 +14,14 @@ enum EventUserRole: int
             self::PRESENTER->value => __('constants.event_user_role.presenter'),
         ];
     }
+
+    public static function label($value)
+    {
+        return match ($value) {
+            self::ORGANIZER->value => __('constants.event_user_role.organizer'),
+            self::PRESENTER->value => __('constants.event_user_role.presenter'),
+        };
+    }
 }
 
 

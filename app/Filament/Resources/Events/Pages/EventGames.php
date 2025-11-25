@@ -37,9 +37,9 @@ class EventGames extends Page implements HasTable
     use InteractsWithTable;
     use CheckPlanBeforeAccess;
 
-// protected static ?string $title = __('event.pages.games_title');
-//     protected static ?string $modelLabel = __('event.pages.games_title');
-//     protected static ?string $pluralModelLabel = __('event.pages.games_title');
+    // protected static ?string $title = __('event.pages.games_title');
+    //     protected static ?string $modelLabel = __('event.pages.games_title');
+    //     protected static ?string $pluralModelLabel = __('event.pages.games_title');
     protected static string $resource = EventResource::class;
     protected string $view = "filament.pages.event-games";
 
@@ -75,7 +75,10 @@ class EventGames extends Page implements HasTable
                                 Tab::make(__('admin.events.games.basic_info'))->schema([
                                     TextInput::make("name")
                                         ->label(__('admin.events.games.game_name'))
-                                        ->required(),
+                                        ->required()
+                                        ->validationMessages([
+                                            'required' => __('validation.required', ['attribute' => __('admin.events.games.game_name')]),
+                                        ]),
                                     Textarea::make("description")
                                         ->label(__('admin.events.games.description'))
                                         ->rows(3),
@@ -84,7 +87,10 @@ class EventGames extends Page implements HasTable
                                         ->options(
                                             \App\Utils\Constants\EventGameType::getOptions()
                                         )
-                                        ->required(),
+                                        ->required()
+                                        ->validationMessages([
+                                            'required' => __('validation.required', ['attribute' => __('admin.events.games.game_type')]),
+                                        ]),
                                 ]),
                                 Tab::make(__('admin.events.games.configuration'))->schema([
                                     Repeater::make("gifts")
@@ -92,11 +98,18 @@ class EventGames extends Page implements HasTable
                                         ->schema([
                                             TextInput::make("name")
                                                 ->label(__('admin.events.games.gift_name'))
-                                                ->required(),
+                                                ->required()
+                                                ->validationMessages([
+                                                    'required' => __('validation.required', ['attribute' => __('admin.events.games.gift_name')]),
+                                                ]),
                                             TextInput::make("quantity")
                                                 ->numeric()
                                                 ->label(__('admin.events.games.quantity'))
-                                                ->required(),
+                                                ->required()
+                                                ->validationMessages([
+                                                    'required' => __('validation.required', ['attribute' => __('admin.events.games.quantity')]),
+                                                    'numeric' => __('validation.numeric', ['attribute' => __('admin.events.games.quantity')]),
+                                                ]),
                                             Textarea::make("description")
                                                 ->label(__('admin.events.games.description')),
                                             FileUpload::make("image")
@@ -298,7 +311,10 @@ class EventGames extends Page implements HasTable
                                     Tab::make(__('admin.events.games.basic_info'))->schema([
                                         TextInput::make("name")
                                             ->label(__('admin.events.games.game_name'))
-                                            ->required(),
+                                            ->required()
+                                            ->validationMessages([
+                                                'required' => __('validation.required', ['attribute' => __('admin.events.games.game_name')]),
+                                            ]),
                                         Textarea::make("description")
                                             ->label(__('admin.events.games.description'))
                                             ->rows(3),
@@ -307,7 +323,10 @@ class EventGames extends Page implements HasTable
                                             ->options(
                                                 \App\Utils\Constants\EventGameType::getOptions()
                                             )
-                                            ->required(),
+                                            ->required()
+                                            ->validationMessages([
+                                                'required' => __('validation.required', ['attribute' => __('admin.events.games.game_type')]),
+                                            ]),
                                     ]),
                                     Tab::make(__('admin.events.games.configuration'))->schema([
                                         Repeater::make("gifts")
@@ -316,11 +335,18 @@ class EventGames extends Page implements HasTable
                                             ->schema([
                                                 TextInput::make("name")
                                                     ->label(__('admin.events.games.gift_name'))
-                                                    ->required(),
+                                                    ->required()
+                                                    ->validationMessages([
+                                                        'required' => __('validation.required', ['attribute' => __('admin.events.games.gift_name')]),
+                                                    ]),
                                                 TextInput::make("quantity")
                                                     ->numeric()
                                                     ->label(__('admin.events.games.quantity'))
-                                                    ->required(),
+                                                    ->required()
+                                                    ->validationMessages([
+                                                        'required' => __('validation.required', ['attribute' => __('admin.events.games.quantity')]),
+                                                        'numeric' => __('validation.numeric', ['attribute' => __('admin.events.games.quantity')]),
+                                                    ]),
                                                 Textarea::make("description")
                                                     ->label(__('admin.events.games.description')),
                                                 FileUpload::make("image")

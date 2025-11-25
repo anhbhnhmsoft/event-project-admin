@@ -62,6 +62,28 @@ class EventForm
                                 'image' => __('admin.events.form.validation.image_invalid'),
                                 'maxSize' => __('admin.events.form.validation.image_size'),
                             ]),
+                        FileUpload::make('images')
+                            ->label(__('admin.events.form.banner_images'))
+                            ->columnSpanFull()
+                            ->image()
+                            ->multiple()
+                            ->storeFiles(false)
+                            ->disk('public')
+                            ->helperText(__('admin.events.form.banner_images_help'))
+                            ->imageEditor()
+                            ->maxSize(10240)
+                            ->maxFiles(10)
+                            ->directory(StoragePath::EVENT_PATH->value)
+                            ->downloadable()
+                            ->previewable()
+                            ->openable()
+                            ->reorderable()
+                            ->panelLayout('grid')
+                            ->validationMessages([
+                                'image' => __('admin.events.form.validation.image_invalid'),
+                                'maxSize' => __('admin.events.form.validation.image_size'),
+                                'max' => __('admin.events.form.validation.banner_images_max'),
+                            ]),
                         TextInput::make('name')
                             ->label(__('admin.events.form.name'))
                             ->trim()

@@ -351,18 +351,18 @@ class EventVotes extends Page implements HasTable
                         return $sections;
                     })
                     ->modalCloseButton(true)
-                    // ->modalFooterActions([
-                    //     Action::make('export')
-                    //         ->label('Xuất báo cáo')
-                    //         ->icon('heroicon-o-arrow-down-tray')
-                    //         ->color('success')
-                    //         ->action(function (EventPoll $record) {
-                    //             Notification::make()
-                    //                 ->title('Tính năng đang phát triển')
-                    //                 ->info()
-                    //                 ->send();
-                    //         }),
-                    // ]),
+                // ->modalFooterActions([
+                //     Action::make('export')
+                //         ->label('Xuất báo cáo')
+                //         ->icon('heroicon-o-arrow-down-tray')
+                //         ->color('success')
+                //         ->action(function (EventPoll $record) {
+                //             Notification::make()
+                //                 ->title('Tính năng đang phát triển')
+                //                 ->info()
+                //                 ->send();
+                //         }),
+                // ]),
 
             ])])
             ->defaultSort('start_time', 'desc');
@@ -374,24 +374,39 @@ class EventVotes extends Page implements HasTable
             TextInput::make('title')
                 ->label(__('admin.events.votes.poll_title'))
                 ->required()
-                ->maxLength(255),
+                ->maxLength(255)
+                ->validationMessages([
+                    'required' => __('validation.required', ['attribute' => __('admin.events.votes.poll_title')]),
+                    'max' => __('validation.max.string', ['attribute' => __('admin.events.votes.poll_title'), 'max' => 255]),
+                ]),
 
             DateTimePicker::make('start_time')
                 ->label(__('admin.events.votes.start_time_label'))
                 ->required()
-                ->default(now()),
+                ->default(now())
+                ->validationMessages([
+                    'required' => __('validation.required', ['attribute' => __('admin.events.votes.start_time_label')]),
+                ]),
 
             Select::make('duration_unit')
                 ->label(__('admin.events.votes.duration_unit'))
                 ->options(UnitDurationType::getOptions())
-                ->required(),
+                ->required()
+                ->validationMessages([
+                    'required' => __('validation.required', ['attribute' => __('admin.events.votes.duration_unit')]),
+                ]),
 
             TextInput::make('duration')
                 ->numeric()
                 ->label(__('admin.events.votes.duration'))
                 ->required()
                 ->default(1)
-                ->minValue(1),
+                ->minValue(1)
+                ->validationMessages([
+                    'required' => __('validation.required', ['attribute' => __('admin.events.votes.duration')]),
+                    'numeric' => __('validation.numeric', ['attribute' => __('admin.events.votes.duration')]),
+                    'min' => __('validation.min.numeric', ['attribute' => __('admin.events.votes.duration'), 'min' => 1]),
+                ]),
 
             Toggle::make('is_active')
                 ->label(__('admin.events.votes.is_active_label'))
@@ -411,18 +426,28 @@ class EventVotes extends Page implements HasTable
                         ->options(QuestionType::getOptions())
                         ->required()
                         ->default(QuestionType::MULTIPLE->value)
-                        ->reactive(),
+                        ->reactive()
+                        ->validationMessages([
+                            'required' => __('validation.required', ['attribute' => __('admin.events.votes.question_type')]),
+                        ]),
 
                     Textarea::make('question')
                         ->label(__('admin.events.votes.question_content'))
                         ->required()
-                        ->rows(3),
+                        ->rows(3)
+                        ->validationMessages([
+                            'required' => __('validation.required', ['attribute' => __('admin.events.votes.question_content')]),
+                        ]),
 
                     TextInput::make('order')
                         ->label(__('admin.events.votes.order'))
                         ->numeric()
                         ->default(1)
-                        ->minValue(1),
+                        ->minValue(1)
+                        ->validationMessages([
+                            'numeric' => __('validation.numeric', ['attribute' => __('admin.events.votes.order')]),
+                            'min' => __('validation.min.numeric', ['attribute' => __('admin.events.votes.order'), 'min' => 1]),
+                        ]),
 
                     Repeater::make('options')
                         ->label(__('admin.events.votes.options'))
@@ -430,13 +455,21 @@ class EventVotes extends Page implements HasTable
                             TextInput::make('label')
                                 ->label(__('admin.events.votes.option_content'))
                                 ->required()
-                                ->maxLength(255),
+                                ->maxLength(255)
+                                ->validationMessages([
+                                    'required' => __('validation.required', ['attribute' => __('admin.events.votes.option_content')]),
+                                    'max' => __('validation.max.string', ['attribute' => __('admin.events.votes.option_content'), 'max' => 255]),
+                                ]),
 
                             TextInput::make('order')
                                 ->label(__('admin.events.votes.order'))
                                 ->numeric()
                                 ->default(1)
-                                ->minValue(1),
+                                ->minValue(1)
+                                ->validationMessages([
+                                    'numeric' => __('validation.numeric', ['attribute' => __('admin.events.votes.order')]),
+                                    'min' => __('validation.min.numeric', ['attribute' => __('admin.events.votes.order'), 'min' => 1]),
+                                ]),
                         ])
                         ->columns(2)
                         ->addActionLabel(__('admin.events.votes.add_option'))

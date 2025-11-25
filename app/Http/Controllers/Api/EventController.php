@@ -27,7 +27,9 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use App\Utils\Constants\EventUserHistoryStatus;
 use App\Utils\Helper;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\View\View;
 
 class EventController extends Controller
 {
@@ -218,8 +220,10 @@ class EventController extends Controller
 
         // kiểm tra xem có quyền membership chọn chỗ ngồi không
         $checkPermission = $this->membershipService->getMembershipUser($user->id);
-        if (!$checkPermission['status'] || !$checkPermission['membershipUser'] ||
-            !$checkPermission['membershipUser']?->config[ConfigMembership::ALLOW_CHOOSE_SEAT->value]) {
+        if (
+            !$checkPermission['status'] || !$checkPermission['membershipUser'] ||
+            !$checkPermission['membershipUser']?->config[ConfigMembership::ALLOW_CHOOSE_SEAT->value]
+        ) {
             // nếu là đặt chỗ thì kiểm tra thanh toán
             if ($data['status'] === EventUserHistoryStatus::BOOKED->value && isset($data['event_seat_id'])) {
                 $eventSeatService = app(EventSeatService::class);
@@ -425,8 +429,10 @@ class EventController extends Controller
         // nếu ko phải tài liệu miễn phí
         if ($document['document']->price > 0) {
             // nếu check ko có membership
-            if (!$user->activeMembership->first() ||
-                !$user->activeMembership->first()->config[ConfigMembership::ALLOW_DOCUMENTARY->value]) {
+            if (
+                !$user->activeMembership->first() ||
+                !$user->activeMembership->first()->config[ConfigMembership::ALLOW_DOCUMENTARY->value]
+            ) {
                 // thì kiêểm tra xem document này có user chưa
                 if (!$document['document']->users()->where('user_id', $user->id)->exists()) {
                     return response()->json([
@@ -500,5 +506,14 @@ class EventController extends Controller
         }
 
         return Storage::disk('private')->download($filePath);
+    }
+
+    public function eventScreen(Request $request, $id): View
+    {
+        $event = $this->eventService->getEventDetail($id);
+
+        return view('event.screen', [
+            'event' => $event['event'],
+        ]);
     }
 }

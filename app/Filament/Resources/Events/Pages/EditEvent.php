@@ -152,6 +152,7 @@ class EditEvent extends EditRecord
                 'ward_code' => $data['ward_code'],
                 'status' => $data['status'],
                 'free_to_join' => $data['free_to_join'],
+                'images' => $data['images'],
             ];
 
             if (isset($data['image_represent_path']) && $data['image_represent_path'] instanceof TemporaryUploadedFile) {
@@ -162,6 +163,18 @@ class EditEvent extends EditRecord
                 $update['image_represent_path'] = $newPath;
             } else {
                 $update['image_represent_path'] = $record->image_represent_path;
+            }
+
+            if (isset($data['images']) && is_array($data['images'])) {
+                foreach($data['images'] as $image) {
+                    if ($image instanceof TemporaryUploadedFile) {
+                        $filePath = $image->store(
+                            StoragePath::makePathById(StoragePath::EVENT_PATH, $record->id),
+                            'public'
+                        );
+                        $update['images'][] = $filePath;
+                    }
+                }   
             }
 
             if (isset($data['participants'])) {
