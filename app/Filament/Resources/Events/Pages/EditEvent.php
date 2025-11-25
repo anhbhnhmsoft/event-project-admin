@@ -13,6 +13,7 @@ use App\Utils\Constants\StoragePath;
 use App\Utils\Helper;
 use Carbon\Carbon;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Support\Assets\Css;
@@ -465,13 +466,61 @@ class EditEvent extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('seats-manager')
-                ->label(__('admin.events.pages.seats_title'))
-                ->icon('heroicon-o-building-office')
-                ->url(fn() => static::getResource()::getUrl('seats-manage', ['record' => $this->record]))
-                ->color('success'),
-            DeleteAction::make()
-                ->label(__('common.common_success.delete')),
+            ActionGroup::make([
+                Action::make('seats-manager')
+                    ->label(__('admin.events.pages.seats_title'))
+                    ->icon('heroicon-o-building-office')
+                    ->url(fn() => static::getResource()::getUrl('seats-manage', ['record' => $this->record]))
+                    ->color('success'),
+                DeleteAction::make()
+                    ->label(__('common.common_success.delete')),
+                Action::make('quick-register')
+                    ->label(__('admin.events.table.quick_register'))
+                    ->icon('heroicon-o-qr-code')
+                    ->color('primary')
+                    ->modalHeading(__('admin.events.table.qr_code_heading'))
+                    ->modalContent(fn($record) => view('filament.event.quick-register-qr', [
+                        'event' => $record,
+                        'url' => Helper::quickRegisterUrl($record)
+                    ]))
+                    ->modalSubmitAction(false)
+                    ->modalCancelAction(fn(Action $action) => $action->label(__('common.common_success.close'))),
+                Action::make('check-in')
+                    ->label('Check-in QR')
+                    ->icon('heroicon-o-qr-code')
+                    ->color('success')
+                    ->modalHeading('Check-in QR Code')
+                    ->modalContent(fn($record) => view('filament.event.quick-register-qr', [
+                        'event' => $record,
+                        'url' => Helper::quickCheckinUrl($record)
+                    ]))
+                    ->modalSubmitAction(false)
+                    ->modalCancelAction(fn(Action $action) => $action->label(__('common.common_success.close'))),
+                Action::make('comments-manager')
+                    ->label(__('admin.events.table.manage_comments'))
+                    ->icon('heroicon-o-chat-bubble-bottom-center-text')
+                    ->url(fn($record) => EventResource::getUrl('comments-manage', ['record' => $record]))
+                    ->openUrlInNewTab()
+                    ->color('success'),
+                Action::make('games-manager')
+                    ->label(__('admin.events.table.manage_games'))
+                    ->icon('heroicon-o-cube')
+                    ->url(fn($record) => EventResource::getUrl('games-manage', ['record' => $record]))
+                    ->openUrlInNewTab()
+                    ->color('primary'),
+                Action::make('votes-manager')
+                    ->label(__('admin.events.table.manage_votes'))
+                    ->icon('heroicon-o-cube')
+                    ->url(fn($record) => EventResource::getUrl('votes-manage', ['record' => $record]))
+                    ->openUrlInNewTab()
+                    ->color('success'),
+                Action::make('speaker-screen')
+                    ->label(__('admin.events.table.event_screen'))
+                    ->icon('heroicon-o-cube')
+                    ->url(fn($record) => EventResource::getUrl('speaker-screen', ['record' => $record]))
+                    ->openUrlInNewTab()
+                    ->color('primary'),
+            ]),
         ];
     }
 

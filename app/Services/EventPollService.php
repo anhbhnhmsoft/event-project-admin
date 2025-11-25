@@ -20,6 +20,51 @@ use Illuminate\Support\Facades\Log;
 class EventPollService
 {
 
+    public function getListEventPoll(int $eventId): ?\Illuminate\Database\Eloquent\Collection
+    {
+        try {
+            return EventPoll::query()
+                ->where('event_id', $eventId)
+                ->where('is_active', CommonStatus::ACTIVE->value)
+                ->get();
+        }catch (Exception $e) {
+            Log::error('Error get list event poll', [
+                'event_id' => $eventId,
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
+
+    }
+
+    public function getEventPoll(int $pollId): ?EventPoll
+    {
+        try {
+            return EventPoll::query()
+                ->with([
+                    'questions' => function ($query) {
+                        $query->orderBy('order', 'asc');
+                    },
+                    'questions.options' => function ($query) {
+                        $query->orderBy('order', 'asc');
+                    }])
+                ->where('id', $pollId)
+                ->where('is_active', CommonStatus::ACTIVE->value)
+                // kiểm tra start time và end time
+                ->where(function ($query) {
+                    $query->where('start_time', '<=', now())
+                        ->where('end_time', '>=', now());
+                })
+                ->first();
+        }catch (Exception $e) {
+            Log::error('Error get event poll', [
+                'poll_id' => $pollId,
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
+    }
+
     public function getPoll($id)
     {
         return  EventPoll::with(['event.organizer', 'questions.options'])->find($id);

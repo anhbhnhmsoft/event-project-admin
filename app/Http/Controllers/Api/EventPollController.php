@@ -16,11 +16,37 @@ use Inertia\Inertia;
 
 class EventPollController extends Controller
 {
-    protected EventPollService $eventPollService;
 
-    public function __construct(EventPollService $eventPollService)
+    public function __construct(protected EventPollService $eventPollService)
     {
-        $this->eventPollService = $eventPollService;
+    }
+
+    public function list($id, Request $request)
+    {
+        $listEventPoll = $this->eventPollService->getListEventPoll((int) $id);
+        if (!$listEventPoll) {
+            return response()->json([
+                'message' => __('poll.validation.invalid_poll')
+            ], 404);
+        }
+        return response()->json([
+            'message' => __('common.common_success.get_success'),
+            'data' => EventPollResource::collection($listEventPoll)->toArray($request)
+        ]);
+    }
+
+    public function item($pollId, Request $request)
+    {
+        $poll = $this->eventPollService->getEventPoll((int)$pollId);
+        if (!$poll) {
+            return response()->json([
+                'message' => __('poll.validation.invalid_poll')
+            ], 404);
+        }
+        return response()->json([
+            'message' => __('common.common_success.get_success'),
+            'data' => new EventPollQuestionResource($poll)
+        ]);
     }
 
     public function submit(Request $request, $idcode)
