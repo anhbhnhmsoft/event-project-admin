@@ -52,6 +52,8 @@ Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
         Route::get('/{id}', [EventController::class, 'show']);
         Route::get('/{id}/area', [EventController::class, 'showArea']);
         Route::get('/{id}/area/{areaId}', [EventController::class, 'showSeat']);
+        Route::get('/{id}/poll', [EventPollController::class, 'list']);
+        Route::get('/poll/{pollId}', [EventPollController::class, 'item']);
     });
 
     Route::prefix('/membership')->group(function () {

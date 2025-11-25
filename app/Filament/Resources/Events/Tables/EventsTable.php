@@ -131,17 +131,6 @@ class EventsTable
                         ->url(fn($record) => route('event.screen', ['id' => $record->id]))
                         ->openUrlInNewTab()
                         ->color('primary'),
-                    Action::make('check-in')
-                        ->label('Check-in QR')
-                        ->icon('heroicon-o-qr-code')
-                        ->color('success')
-                        ->modalHeading('Check-in QR Code')
-                        ->modalContent(fn($record) => view('filament.event.quick-register-qr', [
-                            'event' => $record,
-                            'url' => Helper::quickCheckinUrl($record)
-                        ]))
-                        ->modalSubmitAction(false)
-                        ->modalCancelAction(fn(Action $action) => $action->label(__('common.common_success.close'))),
                 ])
             ])
             ->toolbarActions([
