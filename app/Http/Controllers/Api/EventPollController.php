@@ -3,9 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\EventPollQuestionResource;
+use App\Http\Resources\EventPollResource;
 use App\Models\EventPoll;
 use App\Services\EventPollService;
+use App\Utils\Constants\CommonStatus;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -81,12 +85,61 @@ class EventPollController extends Controller
                     ];
                 }),
             ],
-            'user' => auth()->user()
+            'user' => Auth::user()
                 ? [
-                    'email' => auth()->user()->email,
-                    'phone' => auth()->user()->phone,
+                    'email' => Auth::user()->email,
+                    'phone' => Auth::user()->phone,
                 ]
                 : null,
         ])->rootView('layout.app');
+    }
+
+    public function getQuestions($pollId)
+    {
+        $poll = $this->eventPollService->getPoll((int) $pollId);
+
+        if (!$poll) {
+            Log::warning('Poll not found', ['poll_id' => $pollId]);
+            abort(404, __('poll.validation.invalid_poll'));
+        }
+
+        if (!$poll->is_active) {
+            Log::warning('Poll inactive', ['poll_id' => $poll->id]);
+            abort(403, __('poll.validation.poll_inactive'));
+        }
+
+        if ($poll->end_time && $poll->end_time < now()) {
+            Log::info('Poll expired', [
+                'poll_id' => $poll->id,
+                'end_time' => $poll->end_time,
+                'now' => now(),
+            ]);
+            abort(403, __('poll.validation.poll_expired'));
+        }
+        if ($poll->event->organizer->status != CommonStatus::ACTIVE->value) {
+            Log::warning('Organizer inactive', [
+                'organizer_id' => $poll->event->organizer->id,
+                'status' => $poll->event->organizer->status
+            ]);
+            abort(403, __('poll.validation.organizer_inactive'));
+        }
+
+        return response()->json([
+            'survey' => EventPollResource::make($poll),
+        ]);
+    }
+
+    public function submitAnswers(Request $request, $pollId)
+    {
+        $data = $request->all();
+        $result = $this->eventPollService->submitAnswersPoll((int) $pollId, $data['answers']);
+
+        if (!$result['status']) {
+            return response()->json([
+                'message' => $result['message']
+            ], 404);
+        }
+
+        return response()->json($result['data']);
     }
 }
