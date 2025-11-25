@@ -69,7 +69,6 @@ class EventForm
                             ->multiple()
                             ->storeFiles(false)
                             ->disk('public')
-                            ->helperText(__('admin.events.form.banner_images_help'))
                             ->imageEditor()
                             ->maxSize(10240)
                             ->maxFiles(10)

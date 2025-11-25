@@ -207,6 +207,7 @@ return [
             'loading_map' => 'Đang tải bản đồ...',
             'drag_marker_title' => 'Kéo marker để thay đổi vị trí',
             'google_maps_error' => 'Không thể tải Google Maps API',
+            'banner_images' => 'Ảnh banner',
             'validation' => [
                 'image_required' => 'Vui lòng chọn ảnh đại diện cho sự kiện.',
                 'image_invalid' => 'Tệp tải lên phải là hình ảnh hợp lệ (JPG, PNG).',
