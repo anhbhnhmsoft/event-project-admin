@@ -128,7 +128,7 @@ class EventsTable
                     Action::make('speaker-screen')
                         ->label(__('admin.events.table.event_screen'))
                         ->icon('heroicon-o-cube')
-                        ->url(fn($record) => EventResource::getUrl('speaker-screen', ['record' => $record]))
+                        ->url(fn($record) => route('event.screen', ['id' => $record->id]))
                         ->openUrlInNewTab()
                         ->color('primary'),
                     Action::make('check-in')
