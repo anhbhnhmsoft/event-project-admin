@@ -39,7 +39,7 @@ Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
         Route::delete('/delete-avatar', [AuthController::class, 'deleteAvatar']);
         Route::post('/set-lang', [AuthController::class, 'setLang']);
         Route::get('/gift', [GameEventController::class, 'listUserGift']);
-        Route::get('/link-support',[AuthController::class, 'supportLink']);
+        Route::get('/link-support', [AuthController::class, 'supportLink']);
     });
 
     Route::prefix('/event')->group(function () {
@@ -79,6 +79,11 @@ Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
         Route::post('/document/register', [TransactionController::class, 'registerDocument']);
         Route::get('/document/{id}', [EventController::class, 'getDetailScheduleDocument']);
         Route::get('/{id}', [EventController::class, 'getDetailSchedule']);
+    });
+
+    Route::prefix('/poll')->group(function () {
+        Route::get('/{pollId}/questions', [EventPollController::class, 'getQuestions']);
+        Route::post('/{pollId}/submit', [EventPollController::class, 'submitAnswersPoll']);
     });
 });
 
