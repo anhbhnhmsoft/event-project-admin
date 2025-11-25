@@ -115,4 +115,9 @@ return [
         'delete_failed' => 'Delete failed!',
         'area_updated' => 'Area updated!',
     ],
+    'label' => [
+        'name' => 'Name',
+        'image' => 'Image',
+        'description' => 'Description',
+    ],
 ];

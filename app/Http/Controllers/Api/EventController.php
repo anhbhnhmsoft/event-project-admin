@@ -512,12 +512,6 @@ class EventController extends Controller
     {
         $event = $this->eventService->getEventDetail($id);
 
-        $user = Auth::user();
-
-        if ($event['event']->organizer_id !== $user->organizer_id) {
-            abort(403);
-        }
-
         return view('event.screen', [
             'event' => $event['event'],
         ]);

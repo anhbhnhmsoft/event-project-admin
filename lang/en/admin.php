@@ -2,16 +2,16 @@
 
 return [
     'organizers' => [
-        'label'  => 'Organizers',
+        'label' => 'Organizers',
         'label_admin_organizer' => 'Organizers (Administrator)',
-        'list'   => 'List of organizers',
+        'list' => 'List of organizers',
         'create' => 'Create organizer',
-        'edit'   => 'Edit organizer',
+        'edit' => 'Edit organizer',
         'model_label' => 'Organizer',
         'pages' => [
             'create_title' => 'Create Organizer',
             'list_title' => 'Organizer List',
-            'edit_title' => 'Edit Organizer'
+            'edit_title' => 'Edit Organizer',
         ],
         'form' => [
             'name' => 'Organizer name',
@@ -25,11 +25,13 @@ return [
             'status' => 'Status',
             'active' => 'Active',
             'inactive' => 'Inactive',
-            'created_at' => 'Created At'
+            'created_at' => 'Created At',
         ],
         'notifications' => [
-            'create_failed' => 'Failed to create organizer!'
-        ]
+            'create_failed' => 'Failed to create organizer!',
+            'delete_file_success' => 'Xóa file thành công!',
+            'delete_file_error' => 'Lỗi khi xóa file!',
+        ],
     ],
     'general' => [
         'organizer_id_required' => 'Organizer ID is required',
@@ -71,7 +73,11 @@ return [
         'pages' => [
             'edit_title' => 'Edit User',
             'create_title' => 'Create User',
-            'list_title' => 'User List'
+            'list_title' => 'User List',
+            'import_title' => 'Import người dùng',
+            'import_file' => 'File import',
+            'import_success' => 'Import thành công',
+            'import_failed' => 'Import thất bại',
         ],
         'table' => [
             'avatar' => 'Avatar',
@@ -80,7 +86,7 @@ return [
             'organizer' => 'Organizer',
             'role' => 'Role',
             'all_roles' => 'All Roles',
-            'all_organizers' => 'All Organizers'
+            'all_organizers' => 'All Organizers',
         ],
         'form' => [
             'name' => 'Username',
@@ -102,17 +108,19 @@ return [
                 'email_required' => 'Please enter email.',
                 'email_invalid' => 'Invalid email format.',
                 'email_unique' => 'Email already exists.',
-                'organizer_required' => 'Please select organizer.'
-            ]
-        ]
+                'organizer_required' => 'Please select organizer.',
+            ],
+        ],
+        'import_hint' => 'File mẫu import',
+        'import_success' => 'Import thành công',
+        'import_failed' => 'Import thất bại',
     ],
     'events' => [
         'model_label' => 'Event',
         'navigation_label' => 'Events',
-        'model_label' => 'Event',
         'plural_model_label' => 'Events',
         'general' => [
-            'create_event' => 'Create Event'
+            'create_event' => 'Create Event',
         ],
         'validation' => [
             'free_to_join' => 'Event is free to join.',
@@ -129,7 +137,7 @@ return [
             'area_not_found' => 'Area not found.',
             'payment_success' => 'Payment successful! Seat has been booked.',
             'cannot_create_ticket' => 'Cannot create ticket.',
-            'free_to_join' => 'Free to join',
+            'free_to_join' => 'Free to join event',
             'manager_area' => 'Manage areas and seats',
             'add_area' => 'Add area',
             'add_area_modal_title' => 'Add new area',
@@ -138,7 +146,7 @@ return [
             'no_area_description' => 'Click "Add Area" to start creating seating layout',
             'seat' => 'Seat',
             'ticket_price' => 'Ticket price',
-            'seat_comment' => "If set to 0, ticket will be free",
+            'seat_comment' => 'If set to 0, ticket will be free',
             'free' => 'Free',
             'phone' => 'Phone',
             'already_has_seat' => 'Already has seat',
@@ -168,18 +176,17 @@ return [
             'booked' => 'Booked',
             'available' => 'Available',
             'detail_seat' => 'Seat information',
-            "seat_code" => "Seat code",
-            "status" => "Status",
-            "change_seat_name" => "Change seat name",
-            "user_seat" => "Seat occupant",
-            "name" => "Name",
-            "remove_user_from_seat" => "Remove user from seat",
-            "assign_user_to_seat" => "Assign user to seat",
-            "search_user_by_name_email_phone" => "Search by name, email or phone...",
+            'seat_code' => 'Seat code',
+            'status' => 'Status',
+            'change_seat_name' => 'Change seat name',
+            'user_seat' => 'Seat occupant',
+            'name' => 'Event name',
+            'remove_user_from_seat' => 'Remove user from seat',
+            'assign_user_to_seat' => 'Assign user to seat',
+            'search_user_by_name_email_phone' => 'Search by name, email or phone...',
             'info' => 'Event information',
             'image' => 'Event image',
             'image_help' => 'Please select an image for the event. Valid formats: JPG, PNG. Maximum size 10MB.',
-            'name' => 'Event name',
             'name_placeholder' => 'Minimum 10 characters, maximum 255 characters',
             'organizer' => 'Organizer',
             'loading' => 'Please wait...',
@@ -192,9 +199,7 @@ return [
             'time_placeholder' => 'HH:MM',
             'short_description' => 'Short description',
             'description' => 'Description',
-            'free_to_join' => 'Free to join event',
             'free_to_join_help' => 'If enabled, areas will not require ticket price input.',
-            'status' => 'Status',
             'private_comment_price' => 'Private comment price',
             'private_comment_help' => 'If value = 0, no comment classification',
             'participants' => 'Participants',
@@ -262,11 +267,12 @@ return [
                 'schedule_time_invalid' => 'Schedule #:index has invalid time.',
                 'schedule_end_after_start' => 'Schedule #:index end time must be after start time.',
                 'schedule_outside_event' => 'Schedule #:index is outside event time frame.',
-                'schedule_total_exceeds' => 'Total duration of schedules exceeds event duration.'
-            ]
+                'schedule_total_exceeds' => 'Total duration of schedules exceeds event duration.',
+            ],
+            'duration_minutes' => '%d phút',
         ],
         'comments' => [
-            'title' => 'Event comments'
+            'title' => 'Event comments',
         ],
         'games' => [
             'title' => 'Event games',
@@ -309,6 +315,104 @@ return [
             'file' => 'file',
             'view_download' => 'View / Download',
             'delete' => 'Delete',
+            'qr' => [
+                'participation_link' => 'Link tham dự',
+                'download_qr' => 'Tải xuống Mã QR',
+                'download_error' => 'Lỗi khi tải xuống',
+            ],
+            'poll' => [
+                'no_participants' => 'Chưa có người tham gia nào',
+                'total' => 'Tổng',
+                'people' => 'người',
+            ],
+            'votes' => [
+                'title' => 'Tiêu đề',
+                'start_time' => 'Bắt đầu',
+                'end_time' => 'Kết thúc',
+                'questions_count' => 'Số câu hỏi',
+                'is_active' => 'Kích hoạt',
+                'status' => 'Trạng thái',
+                'create_new_poll' => 'Tạo khảo sát mới',
+                'create_success' => 'Tạo khảo sát mới thành công!',
+                'create_failed' => 'Có lỗi xảy ra, tạo khảo sát không thành công!',
+                'edit' => 'Chỉnh sửa',
+                'update_success' => 'Sửa khảo sát mới thành công!',
+                'update_failed' => 'Có lỗi xảy ra, sửa khảo sát không thành công!',
+                'manage_questions' => 'Quản lý câu hỏi',
+                'manage_questions_success' => 'Tạo khảo sát mới thành công!',
+                'delete' => 'Xóa',
+                'delete_success' => 'Xóa khảo sát thành công!',
+                'delete_failed' => 'Xóa khảo sát không thành công!',
+                'get_link' => 'Lấy link khảo sát',
+                'view_results' => 'Xem kết quả',
+                'poll_results' => 'Kết quả khảo sát',
+                'poll_title' => 'Tiêu đề',
+                'start_time_label' => 'Thời gian bắt đầu',
+                'duration_unit' => 'Đơn vị thời lượng',
+                'duration' => 'Thời lượng',
+                'is_active_label' => 'Kích hoạt',
+                'questions' => 'Câu hỏi',
+                'question_type' => 'Loại câu hỏi',
+                'question_content' => 'Nội dung câu hỏi',
+                'order' => 'Thứ tự',
+                'options' => 'Tùy chọn / Đáp án',
+                'option_content' => 'Nội dung tùy chọn',
+                'add_option' => 'Thêm tùy chọn',
+                'options_helper' => 'Tối thiểu 2 tùy chọn cho câu hỏi trắc nghiệm',
+                'add_question' => 'Thêm câu hỏi',
+                'new_question' => 'Câu hỏi mới',
+                'overview' => 'Tổng quan',
+                'total_responses' => 'Tổng số người tham gia',
+                'total_questions' => 'Tổng số câu hỏi',
+                'question_type_label' => 'Loại câu hỏi',
+                'answer_count' => 'Số câu trả lời',
+                'answers' => 'câu trả lời',
+                'recent_answers' => 'Một số câu trả lời (tối đa 10 câu gần nhất)',
+                'question' => 'Câu',
+                'votes' => 'phiếu',
+            ],
+            'notifications' => [
+                'user' => 'Người dùng',
+                'status' => 'Trạng thái',
+                'time' => 'Thời gian',
+                'no_recipients' => 'Chưa có người nhận',
+            ],
+            'signup' => [
+                'step_choose_plan' => 'Chọn gói',
+                'step_register' => 'Đăng ký',
+                'step_payment' => 'Thanh toán',
+                'step_complete' => 'Hoàn tất',
+                'choose_service_plan' => 'Chọn Gói Dịch Vụ',
+                'choose_service_plan_description' => 'Lựa chọn gói dịch vụ phù hợp để bắt đầu hành trình của bạn.',
+                'no_service_plans' => 'Hiện chưa có gói dịch vụ nào.',
+                'please_come_back_later' => 'Vui lòng quay lại sau.',
+                'vnd' => 'VND',
+                'duration' => 'Thời hạn',
+                'months' => 'tháng',
+                'selected' => 'Đã Chọn',
+                'choose_this_plan' => 'Chọn Gói Này',
+                'continue_registration' => 'Tiếp Tục Đăng Ký',
+            ],
+            'event_progress' => 'Tiến độ sự kiện',
+            'current_time' => 'Thời gian hiện tại',
+            'ongoing' => 'ĐANG DIỄN RA',
+            'time_remaining' => 'Còn :time',
+            'documents_count' => 'Tài liệu (:count)',
+            'free' => 'Miễn phí',
+            'vnd' => 'VNĐ',
+            'next' => 'TIẾP THEO',
+            'full_schedule' => 'Toàn bộ lịch trình',
+            'to' => 'đến',
+            'passed' => 'Đã qua',
+            'upcoming' => 'Sắp tới',
+            'participants_count' => 'Người tham gia (:count)',
+            'no_participants' => 'Chưa có người tham gia',
+            'event_info' => 'Thông tin sự kiện',
+            'organizer' => 'Nhà tổ chức',
+            'status' => 'Trạng thái',
+            'ticket_type' => 'Loại vé',
+            'paid' => 'Có phí',
+            'description' => 'Mô tả',
         ],
         'poll' => [
             'no_participants' => 'No participants yet',
@@ -362,10 +466,8 @@ return [
             'votes' => 'votes',
         ],
         'notifications' => [
-            'user' => 'User',
-            'status' => 'Status',
-            'time' => 'Time',
-            'no_recipients' => 'No recipients',
+            'delete_file_success' => 'File deleted successfully!',
+            'delete_file_error' => 'Error deleting file!',
         ],
         'signup' => [
             'step_choose_plan' => 'Choose Plan',
@@ -403,7 +505,7 @@ return [
             'status' => 'Status',
             'ticket_type' => 'Ticket type',
             'paid' => 'Paid',
-            'description' => 'Description'
+            'description' => 'Description',
         ],
         'pages' => [
             'seats_title' => 'Manage Areas & Seats',
@@ -411,9 +513,6 @@ return [
             'edit_title' => 'Edit Event',
             'comments_title' => 'Event Comments',
             'games_title' => 'Event Games',
-            'edit_title' => 'Edit Event',
-            'create_title' => 'Create Event',
-            'list_title' => 'Event List'
         ],
         'table' => [
             'image' => 'Image',
@@ -433,42 +532,8 @@ return [
             'event_screen' => 'Event Screen',
             'force_delete' => 'Force Delete',
             'restore' => 'Restore',
-            'start_date' => 'Start Date',
-            'end_date' => 'End Date',
-            'status' => 'Status',
-            'created_at' => 'Created At',
-            'updated_at' => 'Updated At',
         ],
-        'pages' => [
-            'seats_title' => 'Manage Areas & Seats',
-            'create_title' => 'Create Event',
-            'edit_title' => 'Edit Event',
-            'comments_title' => 'Event Comments',
-            'games_title' => 'Event Games'
-        ],
-        'table' => [
-            'image' => 'Image',
-            'name' => 'Event Name',
-            'organizer' => 'Organizer',
-            'start_time' => 'Start Time',
-            'end_time' => 'End Time',
-            'status' => 'Status',
-            'province' => 'Province/City',
-            'created_at' => 'Created Date',
-            'unknown' => 'Unknown',
-            'quick_register' => 'Quick Register',
-            'qr_code_heading' => 'QR Code Quick Register',
-            'manage_comments' => 'Manage Comments',
-            'manage_games' => 'Manage Games',
-            'manage_votes' => 'Manage Surveys/Votes',
-            'event_screen' => 'Event Screen',
-            'force_delete' => 'Force Delete',
-            'restore' => 'Restore'
-        ],
-        'notifications' => [
-            'delete_file_success' => 'File deleted successfully!',
-            'delete_file_error' => 'Error deleting file!'
-        ]
+        'schedule' => 'Lịch trình',
     ],
     'config' => [
         'CLIENT_ID_APP' => 'PayOS Client ID App',
@@ -479,7 +544,7 @@ return [
         'super_admin_description' => 'This is where all system configurations are stored. Each configuration below affects the system, so please edit carefully!',
         'organizer_description' => 'Organizer settings',
         'note' => 'Note',
-        'system_config' => 'System configuration'
+        'system_config' => 'System configuration',
     ],
     'service_plan' => [
         'no_plans' => 'No service plans have been set up yet.',
@@ -533,8 +598,8 @@ return [
             'cancel_transaction' => 'Cancel Transaction',
             'confirm_description' => 'Are you sure you want to perform this action?',
             'empty_heading' => 'No transactions yet',
-            'empty_description' => 'No transactions have been made yet. Please come back later.'
-        ]
+            'empty_description' => 'No transactions have been made yet. Please come back later.',
+        ],
     ],
     'memberships' => [
         'navigation_label' => 'Membership Packages',
@@ -543,7 +608,7 @@ return [
         'pages' => [
             'list_title' => 'Membership Packages List',
             'create_title' => 'Create Membership Package',
-            'edit_title' => 'Edit Membership Package'
+            'edit_title' => 'Edit Membership Package',
         ],
         'form' => [
             'package_info' => 'Package Information',
@@ -563,7 +628,7 @@ return [
             'status' => 'Activation Status',
             'customer_type' => 'Customer Type',
             'customer_type_placeholder' => 'Customer using package',
-            'permission_config' => 'Permission Configuration'
+            'permission_config' => 'Permission Configuration',
         ],
         'table' => [
             'name' => 'Package Name',
@@ -571,8 +636,8 @@ return [
             'price' => 'Price',
             'status' => 'Active Status',
             'duration' => 'Package Duration',
-            'type' => 'Type'
-        ]
+            'type' => 'Type',
+        ],
     ],
     'notifications' => [
         'title' => 'Notifications',
@@ -583,12 +648,12 @@ return [
         'pages' => [
             'list_title' => 'Notifications List',
             'create_title' => 'Create Notification',
-            'view_title' => 'View Notification'
+            'view_title' => 'View Notification',
         ],
         'form' => [
             'steps' => [
                 'select_organizer' => 'Select Organizer',
-                'recipients_content' => 'Recipients & Content'
+                'recipients_content' => 'Recipients & Content',
             ],
             'organizer' => 'Organizer',
             'send_mode' => 'Send Mode',
@@ -603,8 +668,8 @@ return [
                 'recipients_required' => 'Please select recipients.',
                 'notification_type_required' => 'Please select notification type.',
                 'title_required' => 'Please enter title.',
-                'description_required' => 'Please enter description.'
-            ]
+                'description_required' => 'Please enter description.',
+            ],
         ],
         'table' => [
             'user' => 'User',
@@ -615,8 +680,8 @@ return [
             'notification_type' => 'Notification Type',
             'recipients' => 'Recipients',
             'from_date' => 'From Date',
-            'to_date' => 'To Date'
-        ]
+            'to_date' => 'To Date',
+        ],
     ],
     'game' => [
         'error' => [
@@ -628,25 +693,25 @@ return [
             'gift_not_found' => 'Gift not found.',
             'gift_out_of_stock' => 'Gift out of stock.',
             'no_valid_gifts' => 'No valid gifts remaining.',
-            'cannot_select_gift' => 'Cannot select gift.'
+            'cannot_select_gift' => 'Cannot select gift.',
         ],
         'success' => [
-            'gift_history_saved' => 'Gift history saved successfully.'
-        ]
+            'gift_history_saved' => 'Gift history saved successfully.',
+        ],
     ],
     'organizer' => [
         'error' => [
             'init_failed' => 'Error during organizer and configuration initialization.',
-            'register_failed' => 'An error occurred during registration. Please try again later.'
+            'register_failed' => 'An error occurred during registration. Please try again later.',
         ],
         'success' => [
-            'register_success' => 'Registration successful! Please check your email to verify your account.'
-        ]
+            'register_success' => 'Registration successful! Please check your email to verify your account.',
+        ],
     ],
     'casso' => [
         'error' => [
-            'organizer_not_found' => 'Cannot determine organizer to create payment transaction.'
-        ]
+            'organizer_not_found' => 'Cannot determine organizer to create payment transaction.',
+        ],
     ],
     'transaction' => [
         'validation' => [
@@ -654,12 +719,16 @@ return [
             'cannot_cancel_completed' => 'Cannot cancel completed or already cancelled transaction',
             'invalid_type' => 'Invalid transaction type',
             'cancel_success' => 'Transaction cancelled successfully',
-            'seat_info_not_found' => 'Seat information not found in transaction'
-        ]
+            'seat_info_not_found' => 'Seat information not found in transaction',
+        ],
     ],
     'navigation' => [
         'system' => 'System',
         'user_management' => 'User Management',
         'event_management' => 'Event Management',
-    ]
+        'organizer_management' => 'Quản lý nhà tổ chức',
+        'ticket_management' => 'Quản lý vé',
+        'payment_management' => 'Quản lý thanh toán',
+        'report_management' => 'Quản lý báo cáo',
+    ],
 ];

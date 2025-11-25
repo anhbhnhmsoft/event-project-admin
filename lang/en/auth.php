@@ -29,6 +29,11 @@ return [
         'unauthorized' => 'Unauthorized',
         'unauthorized_access' => 'Your account does not have access to the admin system',
         'email_not_verified' => 'Email not verified, please check your email to verify your account',
+        'validation_failed' => 'Invalid data',
+        'server_error' => 'Server error',
+        'unverified_email' => 'Email not verified, please check your email to verify your account',
+        'logout_failed' => 'Logout failed',
+        'failed' => 'These credentials do not match our records.',
         // BỔ SUNG: Hết hạn mật khẩu và không tìm thấy
         'password_expired' => 'Password has expired, please set a new password',
         'not_found' => 'Object not found',
@@ -56,6 +61,9 @@ return [
         'locate_in' => 'Invalid language',
         'email_error' => 'Email does not exist in the system',
         'email_unique' => 'Email already exists',
+        'email_exists' => 'Email already exists',
+        'confirm_password_required' => 'Password confirmation is required',
+        'confirm_password_same' => 'Password confirmation does not match',
         // BỔ SUNG: Các quy tắc validation chi tiết
         'password_regex' => 'Password must be at least 8 characters long and contain uppercase, lowercase letters, numbers, and special characters',
         'phone_required' => 'Phone number is required',

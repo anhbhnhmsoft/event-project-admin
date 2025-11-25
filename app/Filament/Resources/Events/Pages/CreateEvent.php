@@ -88,6 +88,7 @@ class CreateEvent extends CreateRecord
                 'longitude' => $longitude,
                 'status' => $data['status'],
                 'free_to_join' => $data['free_to_join'],
+                'images' => $data['images'],
             ];
 
             if (isset($data['image_represent_path']) && $data['image_represent_path'] instanceof TemporaryUploadedFile) {
@@ -97,6 +98,18 @@ class CreateEvent extends CreateRecord
                 );
                 $create['image_represent_path'] = $imageRepresentPath;
             }
+
+            if (isset($data['images']) && is_array($data['images'])) {
+                foreach($data['images'] as $image) {
+                    if ($image instanceof TemporaryUploadedFile) {
+                        $filePath = $image->store(
+                            StoragePath::makePathById(StoragePath::EVENT_PATH, $create['id']),
+                            'public'
+                        );
+                        $create['images'][] = $filePath;
+                    }
+                }
+            }   
 
             $event = Event::query()->create($create);
 

@@ -20,6 +20,7 @@ return [
         'booked' => 'Đã đặt vé',
         'participated' => 'Đã tham gia',
         'cancelled' => 'Đã hủy',
+        'payment_pending' => 'Chờ thanh toán',
     ],
     'transaction_status' => [
         'waiting' => 'Đang chờ xử lý',
@@ -33,6 +34,7 @@ return [
         'buy_document' => 'Mua tài liệu sự kiện',
         'buy_comment' => 'Mua quyền bình luận',
         'event_seat' => 'Thanh toán ghế sự kiện',
+        'upgrade_membership' => 'Nâng cấp thành viên',
     ],
     'role_user' => [
         'super_admin' => 'Super Admin',
@@ -68,6 +70,9 @@ return [
         'membership_approved' => 'Duyệt thành viên',
         'system_announcement' => 'Thông báo hệ thống',
         'membership_expire_reminder' => 'Thông báo hết hạn gói thành viên',
+        'member_near_expire' => 'Thành viên sắp hết hạn',
+        'member_expired' => 'Thành viên đã hết hạn',
+        'event_starting' => 'Sự kiện sắp bắt đầu',
     ],
     'config_membership' => [
         'allow_comment' => 'Cho phép bình luận',
