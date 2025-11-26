@@ -646,11 +646,12 @@ return [
             'recipients' => 'Danh sách người nhận',
             'from_date' => 'Từ ngày',
             'to_date' => 'Đến ngày',
+            'time' => 'Thời gian gửi',
         ],
-        'title' => 'Notifications',
-        'read_all' => 'Mark all as read',
-        'no_notifications' => 'You have no notifications',
-        'view_all' => 'View all notifications',
+        'title' => 'Thông báo',
+        'read_all' => 'Đánh dấu tất cả đã đọc',
+        'no_notifications' => 'Bạn không có thông báo',
+        'view_all' => 'Xem tất cả thông báo',
     ],
     'game' => [
         'error' => [

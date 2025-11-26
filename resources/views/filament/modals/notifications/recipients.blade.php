@@ -2,9 +2,9 @@
     <table class="w-full text-sm">
         <thead>
             <tr class="text-left border-b">
-                <th class="py-2 pr-2">{{ __('admin.notifications.user') }}</th>
-                <th class="py-2 pr-2">{{ __('admin.notifications.status') }}</th>
-                <th class="py-2 pr-2">{{ __('admin.notifications.time') }}</th>
+                <th class="py-2 pr-2">{{ __('admin.notifications.table.user') }}</th>
+                <th class="py-2 pr-2">{{ __('admin.notifications.table.status') }}</th>
+                <th class="py-2 pr-2">{{ __('admin.notifications.table.time') }}</th>
             </tr>
         </thead>
         <tbody>
