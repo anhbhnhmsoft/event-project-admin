@@ -12,5 +12,7 @@ return [
         'invalid_question' => 'Invalid question.',
         'invalid_type' => 'Invalid question type.',
         'submit_failed' => 'Failed to submit answer, please try again later.',
+        'user_already_voted' => 'You have already voted.',
+        'invalid_answer' => 'Invalid answer.',
     ],
 ];
