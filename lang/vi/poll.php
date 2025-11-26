@@ -12,5 +12,7 @@ return [
         'invalid_question' => 'Câu hỏi không hợp lệ.',
         'invalid_type' => 'Loại câu hỏi không hợp lệ.',
         'submit_failed' => 'Gửi câu trả lời thất bại, vui lòng thử lại sau.',
+        'user_already_voted' => 'Bạn đã khảo sát rồi.',
+        'invalid_answer' => 'Câu trả lời không hợp lệ.',
     ],
 ];

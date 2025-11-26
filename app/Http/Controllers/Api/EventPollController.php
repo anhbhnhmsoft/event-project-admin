@@ -5,13 +5,12 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\EventPollQuestionResource;
 use App\Http\Resources\EventPollResource;
-use App\Models\EventPoll;
 use App\Services\EventPollService;
 use App\Utils\Constants\CommonStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 
 class EventPollController extends Controller
@@ -49,20 +48,25 @@ class EventPollController extends Controller
         ]);
     }
 
-    public function submit(Request $request, $idcode)
+    public function submit(Request $request)
     {
-        $data = $request->validate([
-            'email' => 'required|email',
-            'phone' => 'nullable|string',
-            'answers' => 'required|array',
+        $validator = Validator::make($request->all(), [
+            'poll_id' => 'required|exists:event_polls,id',
+            'questions' => 'required|array|min:1',
         ]);
-        $result = $this->eventPollService->submitAnswers($idcode, $data['email'], $data['answers']);
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => __('common.common_error.validate_error'),
+                'errors' => $validator->errors()->toArray()
+            ], 422);
+        }
 
-        return response()->json(
-            [
-                'message' => $result['message']
-            ]
-        );
+        $data = $validator->getData();
+        $result = $this->eventPollService->submitAnswers($data);
+        if (!$result['status']) {
+            return response()->json(['message' => $result['message']], 422);
+        }
+        return response()->json(['message' => $result['message']]);
     }
 
     public function show($idcode)
