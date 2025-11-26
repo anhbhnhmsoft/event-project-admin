@@ -2,8 +2,8 @@
 
 return [
     'action' => [
-        'dowload_template' => '[VI] Tải xuống mẫu',
-        'upload_excel' => '[VI] Upload Excel',
+        'dowload_template' => 'Download Template',
+        'upload_excel' => 'Upload Excel',
     ],
     'common_error' => [
         'api_error' => 'An error occurred, please try again.',
