@@ -13,19 +13,22 @@
                 <div class="absolute -top-20 -left-20 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
                 <div class="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
 
-                <div class="relative z-10 max-w-6xl w-full mx-auto px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="relative z-10 max-w-6xl w-full mx-auto px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
                     <!-- Left: Text Content -->
-                    <div class="text-white space-y-8 text-center lg:text-left">
+                    <div class="text-white space-y-6 text-center lg:text-left">
                         @if($event->image_represent_path)
                         <div class="lg:hidden mb-8 flex justify-center">
                             <div class="relative w-48 h-48 rounded-full p-1 bg-gradient-to-tr from-blue-400 to-purple-500 shadow-2xl">
-                                <img src="{{ asset('storage/' . $event->image_represent_path) }}" class="w-full h-full object-cover rounded-full border-4 border-[#0f172a]" />
+                                <img loading="lazy" src="{{ asset('storage/' . $event->image_represent_path) }}" class="w-full h-full object-cover rounded-full border-4 border-[#0f172a]" />
                             </div>
                         </div>
                         @endif
 
                         <div>
-                            <h1 class="text-5xl lg:text-7xl font-black leading-tight tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-blue-200 drop-shadow-sm">
+                            {{-- Limit heading growth so it doesn't push other elements down.
+                                 Use single-line truncation and show full name on hover (title). --}}
+                            <h1 title="{{ $event->name }}"
+                                class="text-xl lg:text-5xl font-black leading-tight tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-blue-200 drop-shadow-sm  max-w-full lg:max-w-[44rem]">
                                 {{ $event->name }}
                             </h1>
                         </div>
@@ -40,8 +43,8 @@
                             <div class="flex items-center gap-3 bg-white/5 border border-white/10 px-5 py-3 rounded-2xl backdrop-blur-md hover:bg-white/10 transition-colors">
                                 <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-300">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" [...]
+                                            </svg>
                                 </div>
                                 <div class="text-left">
                                     <p class="text-xs text-blue-200/60 uppercase tracking-wider">Date</p>
@@ -80,28 +83,34 @@
                     @if($event->image_represent_path)
                     <div class="hidden lg:flex justify-center relative">
                         <div class="absolute inset-0 bg-gradient-to-tr from-blue-500 to-purple-600 blur-[100px] opacity-40 rounded-full"></div>
-                        <div class="relative w-[450px] h-[450px] rounded-[2rem] p-2 bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-sm border border-white/20 shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-700 ease-out">
-                            <img src="{{ asset('storage/' . $event->image_represent_path) }}" class="w-full h-full object-cover rounded-[1.5rem] shadow-inner" />
+                        <div class="relative w-[450px] h-[450px] rounded-[2rem] p-2 bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-sm border border-white/20 shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-500">
+                            <img loading="lazy" src="{{ asset('storage/' . $event->image_represent_path) }}" class="w-full h-full object-cover rounded-[1.5rem] shadow-inner" />
                         </div>
                     </div>
                     @endif
                 </div>
+
+                {{-- Participants: add spacing between items so they aren't cramped --}}
                 <div class="relative z-10 max-w-6xl w-full mx-auto px-6 py-6">
-                    @foreach($event->participants as $participant)
-                    <div class="flex items-center gap-2">
-                        @if($participant->avatar_path)
-                        <img src="{{ asset('storage/' . $participant->avatar_path) }}" class="w-12 h-12 rounded-full" />
-                        @else
-                        <div class="w-12 h-12 rounded-full bg-gray-500/20 flex items-center justify-center text-gray-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7-7h14a7 7 0 00-7 7z" />
-                            </svg>
+                    <div class="space-y-4">
+                        @foreach($event->participants as $participant)
+                        <div class="flex items-center gap-3">
+                            @if($participant->avatar_path)
+                            <img loading="lazy" src="{{ asset('storage/' . $participant->avatar_path) }}" class="w-12 h-12 rounded-full" />
+                            @else
+                            <div class="w-12 h-12 rounded-full bg-gray-500/20 flex items-center justify-center text-gray-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7-7h14a7 7 0 00-7 7z" />
+                                </svg>
+                            </div>
+                            @endif
+                            <div class="min-w-0">
+                                <p class="text-lg text-white font-bold truncate">{{ $participant->user->name }}</p>
+                                <p class="text-sm text-gray-300 truncate">{{ App\Utils\Constants\EventUserRole::label($participant->role) }}</p>
+                            </div>
                         </div>
-                        @endif
-                        <p class="text-lg text-white font-bold">{{ $participant->user->name }}</p>
-                        <p class="text-lg text-gray-300">{{ App\Utils\Constants\EventUserRole::label($participant->role) }}</p>
+                        @endforeach
                     </div>
-                    @endforeach
                 </div>
 
             </div>
@@ -121,15 +130,35 @@
                     </div>
 
                     <!-- Schedule Grid -->
-                    <div class="overflow-y-auto max-h-[calc(100vh-280px)] pr-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 content-start scrollbar-thin scrollbar-thumb-indigo-500/30 scrollbar-track-transparent hover:scrollbar-thumb-indigo-500/50">
+                    <div class="overflow-y-auto max-h-[calc(100vh-280px)] pr-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 content-start scrollbar-thin scrollbar-thumb-indigo-500/30">
 
                         @forelse($event->schedules()->orderBy('start_time')->get() as $schedule)
 
-                        <div class="group relative bg-gradient-to-br from-white/5 to-white/[0.02] hover:from-white/10 hover:to-white/5 border border-white/10 rounded-2xl p-5 transition-all duration-300 hover:border-indigo-400/40 hover:shadow-xl hover:shadow-indigo-500/20 transform hover:-translate-y-1 backdrop-blur-sm flex flex-col h-full">
+                        @php
+                        $files = $schedule->files ?? collect();
+                        // payload for modal (sanitized)
+                        $payload = [
+                        'title' => $schedule->title,
+                        'description' => strip_tags($schedule->description ?? ''),
+                        'speaker' => $schedule->speaker,
+                        'start_time' => $schedule->start_time,
+                        'end_time' => $schedule->end_time,
+                        'files' => $files->map(function($f){
+                        return [
+                        'name' => $f->file_name,
+                        'path' => asset('storage/' . $f->file_path),
+                        'ext' => $f->file_extension,
+                        ];
+                        })->values(),
+                        ];
+                        @endphp
 
+                        {{-- Make the whole card clickable to open modal --}}
+                        <div role="button" tabindex="0" class="js-schedule-card group relative cursor-pointer bg-gradient-to-br from-white/5 to-white/[0.02] hover:from-white/10 hover:to-white/5 border border-white/10 rounded-2xl p-5 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                            data-schedule='@json($payload)'>
                             <!-- Time Badge -->
                             <div class="mb-4">
-                                <div class="inline-flex items-center gap-2 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-400/30 rounded-xl px-4 py-2.5 group-hover:border-indigo-400/50 transition-all duration-300 group-hover:shadow-lg group-hover:shadow-indigo-500/20">
+                                <div class="inline-flex items-center gap-2 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-400/30 rounded-xl px-4 py-2.5 group-hover:border-indigo-300/60">
                                     <svg class="w-4 h-4 text-indigo-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
@@ -175,7 +204,6 @@
 
                             <!-- Files Section -->
                             @php
-                            $files = $schedule->files ?? collect();
                             $fileCount = $files->count();
                             @endphp
 
@@ -184,11 +212,11 @@
                                 <div class="flex items-center justify-between mb-2">
                                     <div class="flex items-center gap-2">
                                         <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a[...]
                                         </svg>
-                                        <span class="text-xs text-gray-400 font-medium">
-                                            {{ $fileCount }} {{ $fileCount === 1 ? 'file' : 'files' }}
-                                        </span>
+                                        <span class=" text-xs text-gray-400 font-medium">
+                                                {{ $fileCount }} {{ $fileCount === 1 ? 'file' : 'files' }}
+                                                </span>
                                     </div>
                                 </div>
 
@@ -197,7 +225,7 @@
                                     <a href="{{ asset('storage/' . $file->file_path) }}"
                                         download="{{ $file->file_name }}"
                                         class="flex items-center gap-2 p-2 rounded-lg bg-white/5 hover:bg-emerald-500/10 border border-white/5 hover:border-emerald-500/30 transition-all duration-200 group/file">
-                                        <div class="w-7 h-7 rounded bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center flex-shrink-0 border border-emerald-400/20 group-hover/file:border-emerald-400/40 transition-colors">
+                                        <div class="w-7 h-7 rounded bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center flex-shrink-0 border border-emerald-400/20 group-hover/file:border-emerald-500/30">
                                             <span class="text-emerald-300 text-[10px] font-bold uppercase">
                                                 {{ $file->file_extension }}
                                             </span>
@@ -233,7 +261,7 @@
                             </div>
 
                             <!-- Decorative gradient line -->
-                            <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-b-2xl"></div>
+                            <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                         </div>
 
                         @empty
@@ -262,12 +290,42 @@
             @if($event->images && is_array($event->images) && count($event->images) > 0)
 
             @foreach($event->images as $image)
-            <div class="swiper-slide relative flex items-center justify-center overflow-hidden">
-                <div class="relative aspect-square overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-2xl">
-                    <img src="{{ asset('storage/' . $image) }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                    <div class="absolute inset-0 bg-black/0 transition-colors duration-300"></div>
+            <div class="swiper-slide relative flex items-center justify-center overflow-hidden p-3 sm:p-4 md:p-6 lg:p-8">
+                <!-- Background Effects -->
+                <div class="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#334155] z-0"></div>
+                <div class="absolute inset-0 opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] z-0"></div>
+
+                <!-- Image Container with Responsive Sizing -->
+                <div class="relative z-10 w-full max-w-7xl mx-auto h-full flex items-center justify-center">
+                    <div class="relative w-full h-full max-h-[85vh] aspect-auto overflow-hidden rounded-xl sm:rounded-2xl lg:rounded-3xl border border-white/10 bg-white/5 shadow-2xl backdrop-blur-sm group">
+
+                        <!-- Image -->
+                        <img loading="lazy"
+                            src="{{ asset('storage/' . $image) }}"
+                            alt="Event Gallery Image"
+                            class="w-full h-full object-contain sm:object-cover transition-all duration-700 group-hover:scale-105" />
+
+                        <!-- Overlay on Hover -->
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
+
+                        <!-- Image Controls (Optional) -->
+                        <div class="absolute bottom-4 left-4 right-4 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <div class="bg-black/60 backdrop-blur-md rounded-full px-4 py-2">
+                                <p class="text-white text-xs sm:text-sm font-medium">Ảnh sự kiện</p>
+                            </div>
+
+                            <!-- Zoom/Download Button (Optional) -->
+                            <button onclick="window.open('{{ asset('storage/' . $image) }}', '_blank')"
+                                class="bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-full p-2 sm:p-3 transition-all duration-200">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
+
             @endforeach
             @endif
 
@@ -279,6 +337,29 @@
         <!-- Navigation -->
         <div class="swiper-button-next !text-white/50 hover:!text-white transition-colors !w-12 !h-12 after:!text-2xl"></div>
         <div class="swiper-button-prev !text-white/50 hover:!text-white transition-colors !w-12 !h-12 after:!text-2xl"></div>
+    </div>
+</div>
+
+{{-- Schedule modal --}}
+<div id="schedule-modal" class="fixed inset-0 z-50 hidden items-center justify-center">
+    <div id="schedule-modal-overlay" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+    <div class="relative z-10 max-w-3xl w-full mx-6">
+        <div class="bg-[#0b1220] rounded-2xl border border-white/10 p-6 shadow-2xl">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h3 id="modal-title" class="text-2xl font-bold text-white"></h3>
+                    <p id="modal-time" class="text-sm text-gray-400 mt-1"></p>
+                    <p id="modal-speaker" class="text-sm text-indigo-300 mt-2"></p>
+                </div>
+                <div>
+                    <button id="modal-close" class="text-gray-300 bg-white/5 hover:bg-white/10 px-3 py-2 rounded-md">Close</button>
+                </div>
+            </div>
+
+            <div id="modal-body" class="mt-4 text-gray-200 text-sm leading-relaxed"></div>
+
+            <div id="modal-files" class="mt-4 space-y-2"></div>
+        </div>
     </div>
 </div>
 
@@ -299,4 +380,82 @@
         /* Indigo 500 */
     }
 </style>
+
+<script>
+    (function() {
+        // Modal helpers
+        const modal = document.getElementById('schedule-modal');
+        const overlay = document.getElementById('schedule-modal-overlay');
+        const closeBtn = document.getElementById('modal-close');
+        const titleEl = document.getElementById('modal-title');
+        const timeEl = document.getElementById('modal-time');
+        const speakerEl = document.getElementById('modal-speaker');
+        const bodyEl = document.getElementById('modal-body');
+        const filesEl = document.getElementById('modal-files');
+
+        function openModal(payload) {
+            titleEl.textContent = payload.title || '';
+            timeEl.textContent = (payload.start_time ? payload.start_time : '') + (payload.end_time ? (' — ' + payload.end_time) : '');
+            speakerEl.textContent = payload.speaker ? ('Speaker: ' + payload.speaker) : '';
+            // Convert plain description with newlines to paragraphs
+            bodyEl.innerHTML = payload.description ? ('<div>' + payload.description.replace(/\n/g, '<br/>') + '</div>') : '<div class="text-gray-400">No description</div>';
+
+            // files
+            filesEl.innerHTML = '';
+            if (payload.files && payload.files.length) {
+                payload.files.forEach(function(f) {
+                    const a = document.createElement('a');
+                    a.href = f.path;
+                    a.download = f.name;
+                    a.className = 'inline-flex items-center gap-2 px-3 py-2 rounded bg-white/5 hover:bg-emerald-500/10 border border-white/5 text-sm';
+                    a.innerHTML = '<strong class="mr-2 text-emerald-300 text-xs uppercase">' + (f.ext || '') + '</strong><span class="truncate">' + f.name + '</span>';
+                    filesEl.appendChild(a);
+                });
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            // trap focus, simple approach
+            closeBtn.focus();
+        }
+
+        function closeModal() {
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+            titleEl.textContent = '';
+            timeEl.textContent = '';
+            speakerEl.textContent = '';
+            bodyEl.innerHTML = '';
+            filesEl.innerHTML = '';
+        }
+
+        // Attach click handlers to schedule cards
+        document.querySelectorAll('.js-schedule-card').forEach(function(el) {
+            el.addEventListener('click', function() {
+                try {
+                    const payload = JSON.parse(el.getAttribute('data-schedule') || '{}');
+                    openModal(payload);
+                } catch (e) {
+                    console.error('Invalid schedule payload', e);
+                }
+            });
+            // allow keyboard "Enter" to open
+            el.addEventListener('keydown', function(ev) {
+                if (ev.key === 'Enter' || ev.key === ' ') {
+                    ev.preventDefault();
+                    el.click();
+                }
+            });
+        });
+
+        // Close handlers
+        closeBtn.addEventListener('click', closeModal);
+        overlay.addEventListener('click', closeModal);
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                closeModal();
+            }
+        });
+    })();
+</script>
 @endsection
