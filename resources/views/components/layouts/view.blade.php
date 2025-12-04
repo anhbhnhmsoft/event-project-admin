@@ -16,14 +16,14 @@
     <meta property="og:description"
         content="{{ __('app.meta.og_description') }}">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://michec.vn/">
-    <meta property="og:image" content="/logo-michec.png">
+    <meta property="og:url" content="@yield('og_url', 'https://michec.vn')">
+    <meta property="og:image" content="@yield('og_image', asset('images/logo-michec.jpg'))">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="@michec">
     <meta name="twitter:title" content="{{ __('app.meta.twitter_title') }}">
     <meta name="twitter:description"
         content="{{ __('app.meta.twitter_description') }}">
-    <meta name="twitter:image" content="/logo-michec.png">
+    <meta name="twitter:image" content="@yield('og_image', asset('images/logo-michec.jpg'))">
     <link rel="stylesheet" href="/vendor/filament/filament/app.css">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link rel="icon" href="/images/logo-michec-icon.png" sizes="32x32">

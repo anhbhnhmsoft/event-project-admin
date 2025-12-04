@@ -1,5 +1,8 @@
 @extends('components.layouts.view')
 
+@section('og_url', 'https://michec.vn')
+@section('og_image', asset('storage/' . $event->image_represent_path))
+
 @section('content')
 <div class="relative w-screen h-screen overflow-hidden font-['Inter']">
 
