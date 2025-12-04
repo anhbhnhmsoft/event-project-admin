@@ -133,17 +133,20 @@ return new class extends Migration
             $table->tinyInteger('status')->comment('Trạng thái giao dịch trong enum TransactionStatus');
             $table->text('metadata')->nullable()->comment('Dữ liệu bổ sung liên quan đến giao dịch, có thể là thông tin bổ sung từ hệ thống thanh toán');
             $table->unique(['type_trans', 'transaction_id']);
-            $table->foreignId('user_id')
-                ->nullable()
-                ->onUpdate('cascade')
-                ->onDelete('cascade')
-                ->constrained('users');
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->foreign('user_id')
+                ->references('id')
+                ->on('users')
+                ->cascadeOnUpdate()
+                ->cascadeOnDelete();
             $table->timestamp('expired_at')->nullable();
             $table->json('config_pay')->nullable();
-            $table->foreignId('organizer_id')
-                ->constrained('organizers')
-                ->onUpdate('cascade')
-                ->onDelete('cascade');
+            $table->unsignedBigInteger('organizer_id');
+            $table->foreign('organizer_id')
+                ->references('id')
+                ->on('organizers')
+                ->cascadeOnUpdate()
+                ->cascadeOnDelete();
             $table->softDeletes();
             $table->timestamps();
         });
@@ -511,6 +514,9 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // Disable foreign key checks to avoid constraint errors during rollback
+        Schema::disableForeignKeyConstraints();
+
         Schema::dropIfExists('event_schedule_document_user');
         Schema::dropIfExists('event_user_gift');
         Schema::dropIfExists('event_user_histories');
@@ -549,5 +555,8 @@ return new class extends Migration
 
         Schema::dropIfExists('users');
         Schema::dropIfExists('organizers');
+
+        // Re‑enable foreign key checks after rollback
+        Schema::enableForeignKeyConstraints();
     }
 };

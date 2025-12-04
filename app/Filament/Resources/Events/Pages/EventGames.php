@@ -126,16 +126,6 @@ class EventGames extends Page implements HasTable
                                         ->label(__('admin.events.games.user_rate_label'))
                                         ->default([])
                                         ->schema([
-                                            Select::make("user_id")
-                                                ->label(__('admin.events.games.player'))
-                                                ->options(
-                                                    function ($record) {
-                                                        $event = Event::find($record->event_id);
-                                                        return $event->users()->wherePivot('status', EventUserHistoryStatus::PARTICIPATED->value)->select('users.id', 'users.name')->get();
-                                                    }
-                                                )
-                                                ->searchable()
-                                                ->required(),
                                             Repeater::make("rates")
                                                 ->label(__('admin.events.games.gift_rate'))
                                                 ->schema([
@@ -237,14 +227,18 @@ class EventGames extends Page implements HasTable
                                                 __('admin.events.games.user_rate_label')
                                             )
                                             ->schema([
-                                                Select::make("user_id")
+                                                Select::make('user_id')
                                                     ->label(__('admin.events.games.player'))
-                                                    ->options(
-                                                        function ($record) {
-                                                            $event = Event::find($record->event_id);
-                                                            return $event->users()->wherePivot('status', EventUserHistoryStatus::PARTICIPATED->value)->select('users.id', 'users.name')->get()->pluck('name', 'id')->toArray();
+                                                    ->options(function () {
+                                                        $event = $this->record;
+                                                        if (! $event) {
+                                                            return [];
                                                         }
-                                                    )
+                                                        return $event->users()
+                                                            ->wherePivot('status', EventUserHistoryStatus::PARTICIPATED->value)
+                                                            ->pluck('users.name', 'users.id')
+                                                            ->toArray();
+                                                    })
                                                     ->searchable()
                                                     ->required(),
                                                 Repeater::make("rates")
@@ -364,14 +358,18 @@ class EventGames extends Page implements HasTable
                                                 __('admin.events.games.user_rate_label')
                                             )
                                             ->schema([
-                                                Select::make("user_id")
+                                                Select::make('user_id')
                                                     ->label(__('admin.events.games.player'))
-                                                    ->options(
-                                                        function ($record) {
-                                                            $event = Event::find($record->event_id);
-                                                            return $event->users()->wherePivot('status', EventUserHistoryStatus::PARTICIPATED->value)->select('users.id', 'users.name')->get()->pluck('name', 'id')->toArray();
+                                                    ->options(function () {
+                                                        $event = $this->record;
+                                                        if (! $event) {
+                                                            return [];
                                                         }
-                                                    )
+                                                        return $event->users()
+                                                            ->wherePivot('status', EventUserHistoryStatus::PARTICIPATED->value)
+                                                            ->pluck('users.name', 'users.id')
+                                                            ->toArray();
+                                                    })
                                                     ->searchable()
                                                     ->required(),
                                                 Repeater::make("rates")
