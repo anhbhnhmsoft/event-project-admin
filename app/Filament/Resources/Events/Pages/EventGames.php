@@ -236,7 +236,7 @@ class EventGames extends Page implements HasTable
                                                         }
                                                         return $event->users()
                                                             ->wherePivot('status', EventUserHistoryStatus::PARTICIPATED->value)
-                                                            ->pluck('name', 'id')
+                                                            ->pluck('users.name', 'users.id')
                                                             ->toArray();
                                                     })
                                                     ->searchable()
@@ -367,7 +367,7 @@ class EventGames extends Page implements HasTable
                                                         }
                                                         return $event->users()
                                                             ->wherePivot('status', EventUserHistoryStatus::PARTICIPATED->value)
-                                                            ->pluck('name', 'id')
+                                                            ->pluck('users.name', 'users.id')
                                                             ->toArray();
                                                     })
                                                     ->searchable()
