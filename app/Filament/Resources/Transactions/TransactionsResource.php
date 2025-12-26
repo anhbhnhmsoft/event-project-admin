@@ -5,12 +5,12 @@ namespace App\Filament\Resources\Transactions;
 use App\Filament\Resources\Transactions\Pages\ListTransactions;
 use App\Filament\Resources\Transactions\Tables\TransactionsTable;
 use App\Models\Transactions;
-use App\Utils\Constants\RoleUser;
 use App\Utils\Helper;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
 class TransactionsResource extends Resource
@@ -49,5 +49,10 @@ class TransactionsResource extends Resource
         return [
             'index' => ListTransactions::route('/'),
         ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->where('organizer_id', Auth::user()->organizer_id);
     }
 }

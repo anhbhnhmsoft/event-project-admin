@@ -21,24 +21,24 @@ trait CheckPlanBeforeAccess
 
             $organizerService = app(OrganizerService::class);
             $organizer = $organizerService->getOrganizer($user->organizer_id);
-    
+
             if (!$organizer) {
                 Notification::make()
-                    ->title('Không tìm thấy thông tin tổ chức.')
+                    ->title(__('admin.organizers.notifications.plan_not_found'))
                     ->danger()
                     ->send();
                 Auth::logout();
                 throw new HttpResponseException(new RedirectResponse(ServicePlan::getUrl()));
             }
-    
+
             $plan = $organizer->plansActive->first();
-    
+
             if (!$plan || $plan->pivot->end_date < now()) {
                 Notification::make()
-                    ->title('Gói dịch vụ của tổ chức bạn đã hết hạn hoặc chưa kích hoạt.')
+                    ->title(__('admin.organizers.notifications.plan_expired'))
                     ->danger()
                     ->send();
-    
+
                 throw new HttpResponseException(new RedirectResponse(ServicePlan::getUrl()));
             }
         }

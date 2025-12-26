@@ -1,25 +1,4 @@
 import  {Expo} from "expo-server-sdk";
-/**
- * bắn notification
- * Data dạng như sau
- * {
- *     "common_payload":{
- *         "title":"Chào bạn",
- *         "description":"Xin chào bạn",
- *         "data":{
- *
- *         },
- *         "notification_type": 1
- *     },
- *     "batch" : [
- *         {
- *             "notification_id":1235466,
- *             "user_id":"250916103637537458",
- *             "tokens":["ExponentPushToken[kIM5owAK3eLF84ac_dY0Zy]"]
- *         }
- *     ]
- * }
- */
 export default async function sendNotification(common_payload, batch){
     const expo = new Expo();
     const expoMessages = [];

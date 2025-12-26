@@ -23,7 +23,6 @@ class TransactionsTable
     {
         $user = Auth::user();
         return $table
-            ->query(fn() => Transactions::query()->where('organizer_id', $user->organizer_id))
             ->columns([
                 TextColumn::make('transaction_code')
                     ->label(__('admin.transactions.table.transaction_code'))

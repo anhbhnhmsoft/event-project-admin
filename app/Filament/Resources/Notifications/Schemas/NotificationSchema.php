@@ -51,6 +51,31 @@ class NotificationSchema
 
         $steps[] = Step::make(__('admin.notifications.form.steps.recipients_content'))
             ->schema([
+                Select::make('template_id')
+                    ->label(__('admin.notifications.form.use_template'))
+                    ->placeholder(__('admin.notifications.form.use_template_placeholder'))
+                    ->options(function (Get $get) use ($user) {
+                        $organizerId = $get('organizer_id') ?: ($user->organizer_id ?? null);
+                        return \App\Models\NotificationTemplate::query()
+                            ->when($organizerId, fn($q) => $q->where('organizer_id', $organizerId))
+                            ->active()
+                            ->orderBy('created_at', 'desc')
+                            ->pluck('name', 'id');
+                    })
+                    ->searchable()
+                    ->live()
+                    ->afterStateUpdated(function ($state, callable $set) {
+                        if ($state) {
+                            $template = \App\Models\NotificationTemplate::find($state);
+                            if ($template) {
+                                $set('notification_type', $template->notification_type);
+                                $set('title', $template->title);
+                                $set('description', $template->description);
+                            }
+                        }
+                    })
+                    ->dehydrated(false)
+                    ->columnSpanFull(),
                 Radio::make('mode')
                     ->label(__('admin.notifications.form.send_mode'))
                     ->options(TypeSendNotification::getOptions())
@@ -100,6 +125,21 @@ class NotificationSchema
                         'required' => __('admin.notifications.form.validation.description_required'),
                     ])
                     ->extraAttributes(['style' => 'min-height: 300px;']),
+                \Filament\Forms\Components\Checkbox::make('save_as_template')
+                    ->label(__('admin.notifications.form.save_as_template'))
+                    ->default(false)
+                    ->live()
+                    ->columnSpanFull(),
+                \Filament\Forms\Components\TextInput::make('template_name')
+                    ->label(__('admin.notifications.form.template_name'))
+                    ->visible(fn(Get $get) => $get('save_as_template') === true)
+                    ->required(fn(Get $get) => $get('save_as_template') === true)
+                    ->maxLength(255)
+                    ->placeholder(__('admin.notifications.form.template_name_placeholder'))
+                    ->columnSpanFull()
+                    ->validationMessages([
+                        'required' => __('admin.notifications.form.validation.template_name_required'),
+                    ]),
             ]);
 
         if ($user->role == RoleUser::SUPER_ADMIN->value) {
@@ -116,6 +156,31 @@ class NotificationSchema
                 Hidden::make('organizer_id')
                     ->default(fn() => $user->organizer_id ?? null)
                     ->dehydrated(),
+                Select::make('template_id')
+                    ->label(__('admin.notifications.form.use_template'))
+                    ->placeholder(__('admin.notifications.form.use_template_placeholder'))
+                    ->options(function (Get $get) use ($user) {
+                        $organizerId = $get('organizer_id') ?: ($user->organizer_id ?? null);
+                        return \App\Models\NotificationTemplate::query()
+                            ->when($organizerId, fn($q) => $q->where('organizer_id', $organizerId))
+                            ->active()
+                            ->orderBy('created_at', 'desc')
+                            ->pluck('name', 'id');
+                    })
+                    ->searchable()
+                    ->live()
+                    ->afterStateUpdated(function ($state, callable $set) {
+                        if ($state) {
+                            $template = \App\Models\NotificationTemplate::find($state);
+                            if ($template) {
+                                $set('notification_type', $template->notification_type);
+                                $set('title', $template->title);
+                                $set('description', $template->description);
+                            }
+                        }
+                    })
+                    ->dehydrated(false)
+                    ->columnSpanFull(),
                 Radio::make('mode')
                     ->label(__('admin.notifications.form.send_mode'))
                     ->options(TypeSendNotification::getOptions())
@@ -165,6 +230,21 @@ class NotificationSchema
                         'required' => __('admin.notifications.form.validation.description_required'),
                     ])
                     ->extraAttributes(['style' => 'min-height: 300px;']),
+                \Filament\Forms\Components\Checkbox::make('save_as_template')
+                    ->label(__('admin.notifications.form.save_as_template'))
+                    ->default(false)
+                    ->live()
+                    ->columnSpanFull(),
+                \Filament\Forms\Components\TextInput::make('template_name')
+                    ->label(__('admin.notifications.form.template_name'))
+                    ->visible(fn(Get $get) => $get('save_as_template') === true)
+                    ->required(fn(Get $get) => $get('save_as_template') === true)
+                    ->maxLength(255)
+                    ->placeholder(__('admin.notifications.form.template_name_placeholder'))
+                    ->columnSpanFull()
+                    ->validationMessages([
+                        'required' => __('admin.notifications.form.validation.template_name_required'),
+                    ]),
             ])
             ->columns(null)
             ->statePath('data');

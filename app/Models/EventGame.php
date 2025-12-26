@@ -46,4 +46,9 @@ class EventGame extends Model
     {
         return $this->hasMany(EventGameGift::class, 'event_game_id');
     }
+
+    public function giftRates(): HasMany
+    {
+        return $this->hasMany(EventGameGiftRate::class, 'event_game_id');
+    }
 }

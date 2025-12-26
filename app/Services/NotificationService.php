@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\NotificationTemplate;
 use App\Models\UserNotification;
 use App\Models\UserDevice;
 use App\Utils\Constants\UserNotificationStatus;
@@ -15,7 +16,7 @@ class NotificationService
         try {
             return UserNotification::filter($filters)->sortBy($sortBy)
                 ->paginate(perPage: $limit, page: $page);
-        }  catch (\Exception $e) {
+        } catch (\Exception $e) {
             return new LengthAwarePaginator([], 0, $limit, $page);
         }
     }
@@ -85,7 +86,7 @@ class NotificationService
                 'message' => __('common.push_token_saved'),
             ];
         } catch (\Exception $e) {
-            Log::error('error save token',['ex' => $e->getMessage()]);
+            Log::error('error save token', ['ex' => $e->getMessage()]);
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),
@@ -93,6 +94,30 @@ class NotificationService
         }
     }
 
+    public function saveTemplate(array $data): array
+    {
+        try {
+
+            if (!$data['name'] || !isset($data['name']) || !$data['title'] || !$data['description'] || !$data['notification_type']) {
+                return [
+                    'status' => false,
+                    'message' => __('common.common_error.validation_failed'),
+                ];
+            }
+
+            NotificationTemplate::query()->create($data);
+            return [
+                'status' => true,
+                'message' => __('common.template_saved'),
+            ];
+        } catch (\Exception $e) {
+            Log::error('error save template', ['ex' => $e->getMessage()]);
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
+        }
+    }
 }
 
 

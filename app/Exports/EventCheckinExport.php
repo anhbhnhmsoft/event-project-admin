@@ -45,16 +45,16 @@ class EventCheckinExport implements FromCollection, WithHeadings, WithMapping
     public function headings(): array
     {
         return [
-            'Tên',
-            'Email',
-            'Số điện thoại',
-            'Giá vé',
-            'Mã vé',
-            'Mã ghế',
-            'Khu vực',
-            'Vip',
-            'Trạng thái',
-            'Thời gian đăng ký',
+            __('constants.event_export.user_name'),
+            __('constants.event_export.email'),
+            __('constants.event_export.phone'),
+            __('constants.event_export.ticket_price'),
+            __('constants.event_export.ticket_code'),
+            __('constants.event_export.seat_code'),
+            __('constants.event_export.area_name'),
+            __('constants.event_export.vip'),
+            __('constants.event_export.status'),
+            __('constants.event_export.created_at'),
         ];
     }
 

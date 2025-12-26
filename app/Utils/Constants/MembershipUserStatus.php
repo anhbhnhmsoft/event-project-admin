@@ -16,4 +16,16 @@ enum MembershipUserStatus: int
             self::EXPIRED => __('constants.membership_user_status.expired'),
         };
     }
+
+    public static function toOptions(): array
+    {
+        return collect(self::cases())
+            ->mapWithKeys(fn (self $status) => [$status->value => self::getLabel($status->value)])
+            ->toArray();
+    }
+
+    public static function getLabel(int $value): string
+    {
+        return self::tryFrom($value)?->label() ;
+    }
 }
