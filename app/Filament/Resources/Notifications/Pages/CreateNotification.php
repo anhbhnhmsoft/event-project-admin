@@ -44,8 +44,8 @@ class CreateNotification extends CreateRecord
     public function getBreadcrumbs(): array
     {
         return [
-            url()->previous() => 'Thông báo',
-            '' => 'Tạo thông báo',
+            url()->previous() => __('admin.notifications.pages.list_title'),
+            '' => __('admin.notifications.pages.create_title'),
         ];
     }
 
@@ -67,8 +67,8 @@ class CreateNotification extends CreateRecord
         $description = $data['description'];
         $customData = $data['data'] ?? [];
 
-        $successMessage = 'Thông báo đã được đưa vào hàng đợi để gửi thành công.';
-        $errorMessage = 'Lỗi! Không thể đưa thông báo vào hàng đợi.';
+        $successMessage = __('admin.notifications.pages.create_success');
+        $errorMessage =__('admin.notifications.pages.create_error');
 
         try {
             if ($mode == TypeSendNotification::ALL_USERS->value) {
@@ -88,6 +88,19 @@ class CreateNotification extends CreateRecord
                 notificationType: $notificationType,
             );
 
+            // Lưu template nếu người dùng chọn
+            if (!empty($data['save_as_template']) && !empty($data['template_name'])) {
+
+                $dataSaveTemplate = [
+                    'name' => $data['template_name'],
+                    'title' => $title,
+                    'description' => $description,
+                    'notification_type' => $notificationType->value,
+                    'organizer_id' => $organizerId,
+                    'is_active' => true,
+                ];
+                $this->notificationService->saveTemplate($dataSaveTemplate);
+            }
             //Chia nhỏ user để tránh quá tải
             $chunkSize = 500;
             foreach (array_chunk($userIds, $chunkSize) as $chunk) {
@@ -95,7 +108,7 @@ class CreateNotification extends CreateRecord
             }
 
             Notification::make()
-                ->title('Thành công')
+                ->title(__("admin.notifications.pages.create_success"))
                 ->body($successMessage)
                 ->success()
                 ->send();
@@ -106,7 +119,7 @@ class CreateNotification extends CreateRecord
             ]);
 
             Notification::make()
-                ->title('Lỗi')
+                ->title(__("admin.notifications.pages.create_error"))
                 ->body($errorMessage)
                 ->danger()
                 ->send();

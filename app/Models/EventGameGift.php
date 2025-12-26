@@ -6,6 +6,7 @@ use App\Utils\Helper;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class EventGameGift extends Model
@@ -32,5 +33,10 @@ class EventGameGift extends Model
     public function eventGame(): BelongsTo
     {
         return $this->belongsTo(EventGame::class);
+    }
+
+    public function rates(): HasMany
+    {
+        return $this->hasMany(EventGameGiftRate::class, 'event_game_gift_id');
     }
 }

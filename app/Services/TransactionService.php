@@ -44,7 +44,7 @@ class TransactionService
 
             Log::info('  Type  ' . $record->type);
             $result = match ($record->type) {
-                TransactionType::MEMBERSHIP->value   => $this->confirmMembershipTransaction($status, $record),
+                TransactionType::MEMBERSHIP->value => $this->confirmMembershipTransaction($status, $record),
                 TransactionType::PLAN_SERVICE->value => $this->confirmPlanServiceTransaction($status, $record),
                 TransactionType::BUY_DOCUMENT->value => $this->confirmDocumentTransaction($status, $record),
                 TransactionType::BUY_COMMENT->value => $this->confirmDocumentTransaction($status, $record),
@@ -75,6 +75,7 @@ class TransactionService
             ];
         }
     }
+
     private function confirmPlanServiceTransaction(TransactionStatus $status, Transactions $record): array
     {
         Log::debug($record);
@@ -698,6 +699,34 @@ class TransactionService
         } catch (Exception $e) {
             Log::error("Error cancelling EventSeat transaction: " . $e->getMessage());
             throw $e;
+        }
+    }
+
+    public function getTransactionExport(int $organizerId, ?string $startDate, ?string $endDate, bool $allTime): array
+    {
+        try {
+            if (!$startDate || !$endDate) {
+                $allTime = true;
+            }
+            $startDate = $startDate ? Carbon::parse($startDate)->startOfDay() : null;
+            $endDate = $endDate ? Carbon::parse($endDate)->endOfDay() : null;
+
+            $query = Transactions::query()
+                ->where('organizer_id', $organizerId);
+
+            if (!$allTime) {
+                $query->whereBetween('created_at', [$startDate, $endDate]);
+            }
+            return [
+                'transactions' => $query->get(),
+                'status' => true,
+            ];
+        } catch (Exception $e) {
+            Log::error("Error get transaction export: " . $e->getMessage());
+            return [
+                'status' => false,
+                'transactions' => [],
+            ];
         }
     }
 }

@@ -11,12 +11,12 @@ class Config extends Page
 {
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-cog-6-tooth';
 
-    public static function navigationLabel(): string
+    public static function getNavigationLabel(): string
     {
         return __('common.resource.setting.name');
     }
 
-    public static function title(): string
+    public function getTitle(): string
     {
         return __('common.resource.setting.name');
     }

@@ -60,7 +60,7 @@ class GameEventController extends Controller
         }
 
         if ($event->status != EventStatus::ACTIVE->value) {
-            return abort(403, __('event.error.Event_not_to_organizer'));
+            return abort(403, __('event.error.event_not_active'));
         }
 
         return Inertia::render('GamePlay', [
@@ -157,6 +157,77 @@ class GameEventController extends Controller
         ]);
     }
 
+    /**
+     * Initiate spin - returns spin_id without revealing the prize
+     */
+    public function initiateSpin(Request $request, $gameId)
+    {
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status'  => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $result = $this->eventGameService->initiateSpin($gameId, $request->user_id);
+
+        if (!$result['status']) {
+            return response()->json([
+                'status'  => false,
+                'message' => $result['message'] ?? __('game.error.cannot_spin'),
+            ], 500);
+        }
+
+        return response()->json([
+            'status' => true,
+            'data'   => [
+                'spin_id' => $result['spin_id'],
+                'gift_id' => $result['gift_id'],
+                'gift'    => (new EventGameGiftDetailResource($result['gift']))->resolve(),
+            ],
+        ]);
+    }
+    /**
+     * Reveal prize - returns the actual prize after wheel animation
+     */
+    public function revealPrize(Request $request, $gameId)
+    {
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required|exists:users,id',
+            'spin_id' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status'  => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $result = $this->eventGameService->revealPrize($gameId, $request->user_id, $request->spin_id);
+
+        if (!$result['status']) {
+            return response()->json([
+                'status'  => false,
+                'message' => $result['message'] ?? __('game.error.cannot_reveal'),
+            ], 500);
+        }
+
+        return response()->json([
+            'status' => true,
+            'data'   => [
+                'gift' => new EventGameGiftDetailResource($result['gift']),
+            ],
+        ]);
+    }
+
+    /**
+     * @deprecated Use initiateSpin and revealPrize instead
+     */
     public function spin(Request $request, $gameId)
     {
         $validator = Validator::make($request->all(), [

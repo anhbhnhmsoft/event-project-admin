@@ -14,12 +14,15 @@ return [
         'notification_desc_event_start' => 'The event you registered for has started. Join now!',
         'success' => 'Success',
         'payment_success' => 'Payment successful',
+        'notification_title_expired' => 'Membership Expiration Notice',
+        'notification_desc_expired' => 'Your membership has expired. Please renew to continue using the service!',
     ],
     'error' => [
         'get_failed' => 'Get data failed: :error',
         'filter_failed' => 'Filter failed',
         'Event_not_to_organizer' => 'Event does not belong to your organizer',
         'payment_seat_required' => 'Please pay to book a seat',
+        'event_not_active' => 'Event is not active',
     ],
     'validation' => [
         'event_id_required' => 'Event ID is required',

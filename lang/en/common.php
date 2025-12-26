@@ -94,10 +94,10 @@ return [
             ],
         ],
         'setting' => [
-            'name' => '[VI] Cấu hình',
+            'name' => 'System Configuration',
         ],
     ],
-    'save' => '[VI] Lưu',
+    'save' => 'Save',
     'validation' => [
         'answer_already_exists' => 'You have already submitted an answer to this question.',
         'answers_required' => 'Please submit at least one answer.',

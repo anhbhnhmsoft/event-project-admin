@@ -34,6 +34,8 @@ Route::middleware(['auth:web'])->prefix('/event-game')->group(function () {
     Route::get('/history-gifts/{gameId}', [GameEventController::class, 'getHistoryGifts']);
     Route::get('/users/{gameId}', [GameEventController::class, 'getUsers']);
     Route::post('/spin/{gameId}', [GameEventController::class, 'spin']);
+    Route::post('/initiate-spin/{gameId}', [GameEventController::class, 'initiateSpin']);
+    Route::post('/reveal-prize/{gameId}', [GameEventController::class, 'revealPrize']);
 });
 
 Route::get('lang/{locale}', [App\Http\Controllers\LanguageController::class, 'switch'])->name('lang.switch');

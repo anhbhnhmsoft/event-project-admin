@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Transactions extends Model
 {
-    use HasFactory, SoftDeletes;
+    use SoftDeletes;
 
     /**
      * The attributes that are mass assignable.

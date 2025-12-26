@@ -14,12 +14,15 @@ return [
         'notification_desc_event_start' => 'Sự kiện bạn đã đăng ký đã bắt đầu. Hãy tham gia ngay!',
         'success' => 'Thành công',
         'payment_success' => 'Thanh toán thành công',
+        'notification_title_expired' => 'Cảnh báo hết hạn!',
+        'notification_desc_expired' => 'Gói thành viên của bạn đã hết hạn. Vui lòng gia hạn để tiếp tục sử dụng dịch vụ.',
     ],
     'error' => [
         'get_failed' => 'Lấy dữ liệu thất bại: :error',
         'filter_failed' => 'Lọc thất bại',
         'Event_not_to_organizer' => 'Sự kiện không thuộc về nhà tổ chức của bạn',
         'payment_seat_required' => 'Vui lòng thanh toán để đặt ghế',
+        'event_not_active' => 'Sự kiện không hoạt động',
     ],
     'validation' => [
         'event_id_required' => 'ID sự kiện là bắt buộc',
