@@ -41,6 +41,13 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
         'phone_verified_at',
         'organizer_id',
         'lang',
+        'inactive'
+    ];
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'phone_verified_at' => 'datetime',
+        'inactive' => 'boolean'
     ];
 
     /**

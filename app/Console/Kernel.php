@@ -20,7 +20,7 @@ class Kernel extends ConsoleKernel
 
         $schedule->command('app:notification-time-event')->dailyAt('06:00');
 
-        $schedule->command('zalo:refresh-token')->everyFiveMinutes()->withoutOverlapping();
+        $schedule->command('zalo:refresh-token')->everyFourHours()->withoutOverlapping();
     }
 
     /**

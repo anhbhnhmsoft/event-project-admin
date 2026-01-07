@@ -17,6 +17,7 @@ return [
         'user_info' => 'Lấy thông tin người dùng thành công',
         'set_lang_success' => 'Cài đặt ngôn ngữ thành công',
         'logout_success' => 'Đăng xuất thành công',
+        'lock_account_success' => 'Tài khoản đã bị khóa, vui lòng liên hệ quản trị viên để được trợ giúp',
     ],
     'error' => [
         'invalid_credentials' => 'Email hoặc mật khẩu không đúng',
@@ -35,6 +36,8 @@ return [
         'failed' => 'Những thông tin này không khớp với hồ sơ của chúng tôi.',
         'password_expired' => 'Mật khẩu đã hết hạn, vui lòng đặt mật khẩu mới',
         'not_found' => 'Không tìm thấy đối tượng',
+        'account_already_locked' => 'Tài khoản đã bị khóa, vui lòng liên hệ quản trị viên để được trợ giúp',
+        'account_inactivated' => 'Tài khoản đã bị vô hiệu hóa, vui lòng liên hệ quản trị viên để được trợ giúp',
     ],
     'validation' => [
         'email_required' => 'Email là bắt buộc',

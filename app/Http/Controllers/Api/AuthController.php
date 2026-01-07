@@ -400,4 +400,21 @@ class AuthController extends Controller
             'message' => __('auth.success.logout_success'),
         ], 200);
     }
+
+    /**
+     * -- Khóa tài khỏan của người dùng
+     * @return JsonResponse
+     */
+    public function lockAccount()
+    {
+        $result = $this->authService->lockAccount();
+        if (isset($result['status']) && $result['status'] === false) {
+            return response()->json([
+                'message' => $result['message'],
+            ], 422);
+        }
+        return response()->json([
+            'message' => __('auth.success.lock_account_success'),
+        ], 200);
+    }
 }

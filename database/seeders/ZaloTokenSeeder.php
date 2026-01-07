@@ -29,7 +29,7 @@ class ZaloTokenSeeder extends Seeder
         }
 
         try {
-            $this->zaloService->setTokens($accessToken, $refreshToken, 3600);
+            $this->zaloService->setTokens($accessToken, $refreshToken, 60 * 60 * 5);
             $this->command->info('Zalo tokens seeded successfully!');
         } catch (\Throwable $e) {
             $this->command->error('Failed to seed Zalo tokens: ' . $e->getMessage());
