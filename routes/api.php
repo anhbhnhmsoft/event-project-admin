@@ -18,6 +18,7 @@ Route::prefix('auth')->middleware(['set-locale', 'throttle:5,1'])->group(functio
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
     Route::post('/confirm-password', [AuthController::class, 'confirmPassword']);
+    Route::middleware(['auth:sanctum'])->delete('/lock-account ',[AuthController::class, 'lockAccount']);
 });
 
 Route::middleware('set-locale')->group(function () {
