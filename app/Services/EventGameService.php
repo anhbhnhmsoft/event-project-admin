@@ -12,7 +12,7 @@ use App\Jobs\SendNotifications;
 use App\Utils\Constants\RoleUser;
 use App\Utils\DTO\NotificationPayload;
 use App\Utils\Constants\UserNotificationType;
-use Carbon\Carbon;
+use App\Utils\Constants\EventUserHistoryStatus;
 
 class EventGameService
 {
@@ -146,6 +146,36 @@ class EventGameService
             ];
         }
     }
+
+    public function getCheckintUserEvent($game, int $perPage = 20): array
+    {
+        try {
+            $eventId = $game->event_id ?? null;
+            if (!$eventId) {
+                return [
+                    'status' => false,
+                    'message' => __('common.common_error.data_not_found'),
+                ];
+            }
+
+            $users = \App\Models\User::whereHas('eventUserHistories', function ($query) use ($eventId) {
+                $query->where('event_id', $eventId)
+                    ->where('status', EventUserHistoryStatus::PARTICIPATED->value);
+            })->paginate($perPage);
+
+            return [
+                'status' => true,
+                'data' => $users,
+            ];
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
+        }
+    }
+
 
     public function createGiftHistory(int $userId, int $giftId): array
     {

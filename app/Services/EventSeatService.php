@@ -18,6 +18,7 @@ use Exception;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class EventSeatService
 {
@@ -193,7 +194,7 @@ class EventSeatService
                 $expiredAt,
                 TransactionType::EVENT_SEAT->value
             );
-
+            Log::info('Register seat payment response', $response);
 
             if ($response['code'] !== '00') {
                 DB::rollBack();
@@ -338,8 +339,7 @@ class EventSeatService
                     'message' => __('event.validation.area_not_found'),
                 ];
             }
-
-            if ($area->price === 0) {
+            if ($area->price == 0) {
                 return [
                     'status' => true,
                     'payment_required' => false,

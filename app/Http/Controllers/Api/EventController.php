@@ -23,6 +23,7 @@ use App\Utils\Constants\EventCommentType;
 use App\Utils\Constants\EventDocumentUserStatus;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use App\Utils\Constants\EventUserHistoryStatus;
@@ -217,6 +218,7 @@ class EventController extends Controller
 
         $user = $request->user();
         $data = $validator->getData();
+        $eventSeatService = app(EventSeatService::class);
 
         // kiểm tra xem có quyền membership chọn chỗ ngồi không
         $checkPermission = $this->membershipService->getMembershipUser($user->id);
@@ -226,7 +228,6 @@ class EventController extends Controller
         ) {
             // nếu là đặt chỗ thì kiểm tra thanh toán
             if ($data['status'] === EventUserHistoryStatus::BOOKED->value && isset($data['event_seat_id'])) {
-                $eventSeatService = app(EventSeatService::class);
                 $paymentResult = $eventSeatService->checkAndCreatePayment($data['event_id'], $data['event_seat_id']);
 
                 if ($paymentResult['status'] && $paymentResult['payment_required']) {

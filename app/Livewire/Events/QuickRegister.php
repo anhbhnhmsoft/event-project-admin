@@ -234,6 +234,22 @@ class QuickRegister extends Component
         $this->ticketCode = $result['data']['ticket_code'] ?? null;
         $this->seatName = $result['data']['seat_name'] ?? null;
         $this->isUserExist = $result['data']['user_exists'] ?? null;
+
+        // Send Email Notification
+        try {
+            $emailData = [
+                'user_name' => $this->name,
+                'event_name' => $this->event['name'] ?? 'Event',
+                'ticket_code' => $this->ticketCode,
+                'seat_name' => $this->seatName,
+                'lang' => $this->lang,
+            ];
+
+            \Illuminate\Support\Facades\Mail::to($this->email)->queue(new \App\Mail\QuickRegisterSuccessMail($emailData));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to send quick register email: ' . $e->getMessage());
+        }
+
         $this->reset(['name', 'phone']);
         $this->resetValidation();
 

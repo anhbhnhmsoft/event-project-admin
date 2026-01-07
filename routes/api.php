@@ -96,3 +96,5 @@ Route::prefix('common')->middleware('set-locale')->group(function () {
 
 Route::post('/webhook/payos', [WebhookCassoController::class, 'handle']);
 Route::post('/webhook/event-seat-payment', [EventController::class, 'handleSeatPaymentWebhook']);
+
+Route::post('/webhook/zalo', [App\Http\Controllers\ZaloController::class, 'hook'])->name('zalo.webhook');

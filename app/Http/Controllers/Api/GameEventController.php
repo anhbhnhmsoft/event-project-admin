@@ -134,7 +134,7 @@ class GameEventController extends Controller
         }
 
         $perPage = $request->input('per_page', 20);
-        $usersResult = $this->eventGameService->getEligibleUsers($game, $perPage);
+        $usersResult = $this->eventGameService->getCheckintUserEvent($game, $perPage);
 
         if (!$usersResult['status']) {
             return response()->json([

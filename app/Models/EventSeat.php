@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Utils\Helper;
 class EventSeat extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'event_area_id',
@@ -38,7 +38,7 @@ class EventSeat extends Model
         return $this->hasMany(EventUserHistory::class, 'event_seat_id');
     }
 
-    public function user () : BelongsTo 
+    public function user () : BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }

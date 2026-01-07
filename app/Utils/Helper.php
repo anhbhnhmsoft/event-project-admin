@@ -237,4 +237,22 @@ final class Helper
 
         return false;
     }
+
+    public static function formatPhone($phone): string
+    {
+        $phone = preg_replace('/[^0-9]/', '', $phone);
+        if (str_starts_with($phone, '0')) {
+            $phone = '84' . substr($phone, 1);
+        }
+        if (!str_starts_with($phone, '84')) {
+            $phone = '84' . $phone;
+        }
+        return $phone;
+    }
+
+    public static function isValidPhone($phone): bool
+    {
+        $phone = self::formatPhone($phone);
+        return preg_match('/^84\d{9}$/', $phone);
+    }
 }

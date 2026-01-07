@@ -41,5 +41,17 @@ return [
     'node_server' => [
         'access_token' => env('APP_KEY_NODE_SERVER'),
         'notification_url' => env('APP_URL_NODE') . 'send-notification',
+    ],
+    'zalo' => [
+        'app_id' => env('ZALO_APP_ID'),
+        'app_secret' => env('ZALO_APP_SECRET'),
+        'redirect_uri' => env('ZALO_REDIRECT_URI'),
+        'oa_id' => env('ZALO_OA_ID'),
+        'otp_templates' => [
+            'otp' => env('ZALO_OTP_TEMPLATE'),
+            'register' => env('ZALO_OTP_TEMPLATE_REGISTER', env('ZALO_OTP_TEMPLATE')),
+            'forgot_password' => env('ZALO_OTP_TEMPLATE_FORGOT_PASSWORD', env('ZALO_OTP_TEMPLATE')),
+            'verify_phone' => env('ZALO_OTP_TEMPLATE_VERIFY_PHONE', env('ZALO_OTP_TEMPLATE')),
+        ]
     ]
 ];
