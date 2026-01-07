@@ -18,7 +18,6 @@ Route::prefix('auth')->middleware(['set-locale', 'throttle:5,1'])->group(functio
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
     Route::post('/confirm-password', [AuthController::class, 'confirmPassword']);
-    Route::middleware(['auth:sanctum'])->delete('/lock-account ',[AuthController::class, 'lockAccount']);
 });
 
 Route::middleware('set-locale')->group(function () {
@@ -45,12 +44,12 @@ Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
         Route::post('/set-lang', [AuthController::class, 'setLang']);
         Route::get('/gift', [GameEventController::class, 'listUserGift']);
         Route::get('/link-support', [AuthController::class, 'supportLink']);
+        Route::delete('delete-account', [AuthController::class, 'lockAccount']);
     });
 
     Route::prefix('/event')->group(function () {
         Route::post('/history', [EventController::class, 'eventUserHistory']);
         Route::post('/history_register', [EventController::class, 'createEventUserHistory']);
-        Route::post('/document/register', [TransactionController::class, 'registerComment']);
         Route::post('/comment', [EventController::class, 'createEventComment']);
         Route::get('/list-comment', [EventController::class, 'listComment']);
         Route::get('/{id}', [EventController::class, 'show']);
@@ -65,12 +64,10 @@ Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
         Route::get('/', [MembershipController::class, 'listMembership']);
         Route::get('/account', [MembershipController::class, 'listAccountMembership']);
         Route::post('/register', [MembershipController::class, 'membershipRegister']);
-        Route::get('/{id}', [MembershipController::class, 'show']);
     });
 
     Route::prefix('/transaction')->group(function () {
         Route::get('/check-payment/{id}', [TransactionController::class, 'checkPayment']);
-        Route::get('/{id}', [TransactionController::class, 'show']);
     });
 
 
@@ -99,6 +96,5 @@ Route::prefix('common')->middleware('set-locale')->group(function () {
 });
 
 Route::post('/webhook/payos', [WebhookCassoController::class, 'handle']);
-Route::post('/webhook/event-seat-payment', [EventController::class, 'handleSeatPaymentWebhook']);
-
+Route::post('/webhook/revenuecat', [EventController::class, 'handleRevenueCatWebhook']);
 Route::post('/webhook/zalo', [App\Http\Controllers\ZaloController::class, 'hook'])->name('zalo.webhook');

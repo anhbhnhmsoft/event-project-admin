@@ -46,7 +46,8 @@ class EventController extends Controller
         EventCommentService     $eventCommentService,
         MemberShipService       $membershipService,
         EventScheduleService    $eventScheduleService,
-    ) {
+    )
+    {
         $this->eventService = $eventService;
         $this->eventUserHistoryService = $eventUserHistoryService;
         $this->eventCommentService = $eventCommentService;
@@ -64,7 +65,7 @@ class EventController extends Controller
         // điều kiện kiên quyết
         $user = auth('sanctum')->user();
         // nếu đăng nhập thì sẽ lọc theo organizer_id và user_id
-        if ($user){
+        if ($user) {
             $filters['organizer_id'] = $user->organizer_id;
             $filters['user_id'] = $user->id;
         }
@@ -275,8 +276,8 @@ class EventController extends Controller
             $request->all(),
             [
                 'event_id' => ['required', 'exists:events,id'],
-                'content'  => ['required', 'string', 'max:1000'],
-                'type'     => ['required', 'numeric']
+                'content' => ['required', 'string', 'max:1000'],
+                'type' => ['required', 'numeric']
             ],
             [
                 'event_id.required' => __('event.validation.event_id_exists'),
@@ -315,10 +316,10 @@ class EventController extends Controller
         }
 
         $newComment = [
-            'user_id'  => $user->id,
+            'user_id' => $user->id,
             'event_id' => $validated['event_id'],
-            'content'  => $validated['content'],
-            'type'     => $validated['type']
+            'content' => $validated['content'],
+            'type' => $validated['type']
         ];
 
         if ($validated['type'] == EventCommentType::PRIVATE->value) {
@@ -450,7 +451,7 @@ class EventController extends Controller
 
         $data = [
             'user_id' => $user->id,
-            'event_schedule_document_id' =>  $document['document']->id,
+            'event_schedule_document_id' => $document['document']->id,
             'status' => EventDocumentUserStatus::ACTIVE->value
         ];
 
@@ -520,5 +521,9 @@ class EventController extends Controller
         return view('event.screen', [
             'event' => $event['event'],
         ]);
+    }
+
+    public final function handleRevenueCatWebhook(Request $request)
+    {
     }
 }

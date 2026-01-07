@@ -660,6 +660,7 @@ class AuthService
     public function lockAccount(): array
     {
         try {
+            DB::beginTransaction();
             $user = Auth::user();
             if($user->inactive) {
                 return [
@@ -670,12 +671,13 @@ class AuthService
             $user->inactive = true;
             $user->save();
             $user->currentAccessToken()->delete();
-            Auth::logout();
+            DB::commit();
             return [
                 'status' => true,
                 'message' => __('auth.success.lock_account_success'),
             ];
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('Lock account failed: ' . $e->getMessage());
             return [
                 'status' => false,
