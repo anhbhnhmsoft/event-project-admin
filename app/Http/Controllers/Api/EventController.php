@@ -62,8 +62,12 @@ class EventController extends Controller
         $limit = $request->integer('limit', 10);
 
         // điều kiện kiên quyết
-        $filters['organizer_id'] = $request->user()->organizer_id;
-        $filters['user_id'] = $request->user()->id;
+        $user = auth('sanctum')->user();
+        // nếu đăng nhập thì sẽ lọc theo organizer_id và user_id
+        if ($user){
+            $filters['organizer_id'] = $user->organizer_id;
+            $filters['user_id'] = $user->id;
+        }
 
         $events = $this->eventService->eventPaginator($filters, $sortBy, $page, $limit);
 

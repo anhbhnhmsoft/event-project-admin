@@ -20,10 +20,12 @@ class EventListResource extends JsonResource
         /**
          * @var $this Event
          */
-        $status_history = $this->eventUserHistories()
-            ->where('user_id',$request->user()->id)
+        $user = auth('sanctum')->user();
+        // nếu đăng nhập thì sẽ lấy status_history của user đó
+        $status_history = $user ? $this->eventUserHistories()
+            ->where('user_id',$user->id)
             ->select('status')
-            ->value('status');
+            ->value('status') : null;
         return [
             'id' => (string)$this->id,
             'name' => $this->name,
