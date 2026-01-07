@@ -19,6 +19,8 @@ class Kernel extends ConsoleKernel
         $schedule->command('app:check-expires-at-user')->dailyAt('01:30');
 
         $schedule->command('app:notification-time-event')->dailyAt('06:00');
+
+        $schedule->command('zalo:refresh-token')->everyFiveMinutes()->withoutOverlapping();
     }
 
     /**
@@ -26,7 +28,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands(): void
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
     }

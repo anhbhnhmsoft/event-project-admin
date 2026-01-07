@@ -47,9 +47,6 @@ class TransactionService
                 TransactionType::MEMBERSHIP->value => $this->confirmMembershipTransaction($status, $record),
                 TransactionType::PLAN_SERVICE->value => $this->confirmPlanServiceTransaction($status, $record),
                 TransactionType::BUY_DOCUMENT->value => $this->confirmDocumentTransaction($status, $record),
-                TransactionType::BUY_COMMENT->value => $this->confirmDocumentTransaction($status, $record),
-                TransactionType::MEMBERSHIP->value => $this->confirmMembershipTransaction($status, $record->transaction_id),
-                TransactionType::PLAN_SERVICE->value => $this->confirmPlanServiceTransaction($status, $record),
                 TransactionType::EVENT_SEAT->value => $this->confirmEventSeatTransaction($status, $record->transaction_id),
                 default => [
                     'status' => false,

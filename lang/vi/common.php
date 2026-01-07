@@ -4,6 +4,7 @@ return [
     'action' => [
         'dowload_template' => 'Tải xuống mẫu',
         'upload_excel' => 'Upload Excel',
+        'delete' => 'Xóa',
     ],
     'common_error' => [
         'api_error' => 'Có lỗi xảy ra vui lòng thử lại.',

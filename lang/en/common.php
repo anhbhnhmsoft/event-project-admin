@@ -4,6 +4,7 @@ return [
     'action' => [
         'dowload_template' => 'Download Template',
         'upload_excel' => 'Upload Excel',
+        'delete' => 'Delete',
     ],
     'common_error' => [
         'api_error' => 'An error occurred, please try again.',

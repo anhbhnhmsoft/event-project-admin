@@ -4,6 +4,7 @@ import { Gift, Users, Trophy, Sparkles, Award, Loader2 } from "lucide-react";
 import { usePage } from "@inertiajs/react";
 import PaginationControls from "../Components/PaginationControls";
 import axios from "axios";
+import useGameLogic from "../lib/hooks/use-game-logic";
 
 // --- Translation System ---
 const translations = {
@@ -12,8 +13,8 @@ const translations = {
         spinError: "Không thể quay, vui lòng thử lại!",
         spinStartTitle: "🎰 Đang quay...",
         spinStartBtn: "🎯 QUAY NGAY!",
-        playerTitle: "Người chơi",
-        giftTitle: "Phần quà",
+        playerTitle: "Người chơi đã check-in",
+        giftTitle: "Giải thưởng",
         historyTitle: "Lịch sử quay",
         congratsTitle: "🎉 CHÚC MỪNG! 🎉",
         wonMessage: "Đã trúng: {gift}",
@@ -31,7 +32,7 @@ const translations = {
         spinError: "Cannot spin, please try again!",
         spinStartTitle: "🎰 Spinning...",
         spinStartBtn: "🎯 SPIN NOW!",
-        playerTitle: "Players",
+        playerTitle: "Checked-in Players",
         giftTitle: "Prizes",
         historyTitle: "History",
         congratsTitle: "🎉 CONGRATULATIONS! 🎉",
@@ -183,112 +184,6 @@ const useGameData = (gameId, csrfToken) => {
     };
 };
 
-// Hook for Game Logic
-const useGameLogic = (game, csrfToken, wheelItems, setWheelItems, t) => {
-    const [selectedUser, setSelectedUser] = useState(null);
-    const [mustSpin, setMustSpin] = useState(false);
-    const [prizeNumber, setPrizeNumber] = useState(null);
-    const [result, setResult] = useState(null);
-    const [currentSpinId, setCurrentSpinId] = useState(null);
-
-    const initiateSpin = async () => {
-        if (!selectedUser) return alert(t("selectUser"));
-        if (mustSpin) return;
-
-        setResult(null); // Clear previous result
-        try {
-            const { data } = await axios.post(
-                `/event-game/initiate-spin/${game.id}`,
-                { user_id: selectedUser.id },
-                { headers: { "X-CSRF-TOKEN": csrfToken } }
-            );
-
-            if (!data.status || !data.data?.spin_id) {
-                return alert(data.message || t("spinFailed"));
-            }
-
-            console.log("Initiate Spin Data:", data.data); // Debugging Log
-
-            const { spin_id, gift_id, gift } = data.data; // Now we have full gift object
-            setCurrentSpinId(spin_id);
-
-            // Find index of the winning gift
-            // Use String comparison to be safe with BigInt IDs
-            let index = wheelItems.findIndex(
-                (w) => String(w.gift.id) === String(gift_id)
-            );
-
-            if (index === -1) {
-                // AUTO RECOVERY: If gift not found in wheel items, add it dynamically
-                if (gift) {
-                    const newItem = {
-                        option: gift.name,
-                        style: {
-                            backgroundColor:
-                                COLORS[wheelItems.length % COLORS.length],
-                            textColor: "white",
-                        },
-                        gift: gift,
-                    };
-
-                    // Add to wheel items and update index
-                    setWheelItems((prev) => {
-                        const newItems = [...prev, newItem];
-                        return newItems;
-                    });
-
-                    index = wheelItems.length;
-                } else {
-                    // Fallback error if no gift data delivered
-                    alert(t("giftGone", { gift: "Unknown" }));
-                    return;
-                }
-            }
-
-            setPrizeNumber(index);
-            setMustSpin(true);
-        } catch (err) {
-            console.error("Initiate spin error:", err);
-            alert(t("spinError"));
-        }
-    };
-
-    const revealPrize = async (onSuccess) => {
-        if (!currentSpinId || !selectedUser) return;
-
-        try {
-            const { data } = await axios.post(
-                `/event-game/reveal-prize/${game.id}`,
-                { user_id: selectedUser.id, spin_id: currentSpinId },
-                { headers: { "X-CSRF-TOKEN": csrfToken } }
-            );
-
-            if (data.status && data.data?.gift) {
-                setResult({ user: selectedUser, gift: data.data.gift });
-                onSuccess(); // Refresh data
-            } else {
-                alert(data.message || t("revealFailed"));
-            }
-        } catch (err) {
-            console.error("Reveal prize error:", err);
-        } finally {
-            setMustSpin(false);
-            setCurrentSpinId(null);
-            setTimeout(() => setSelectedUser(null), 1000);
-        }
-    };
-
-    return {
-        selectedUser,
-        setSelectedUser,
-        mustSpin,
-        prizeNumber,
-        result,
-        initiateSpin,
-        revealPrize,
-    };
-};
-
 export default function GamePlay() {
     const { props } = usePage();
     const { game, csrf_token } = props;
@@ -338,7 +233,7 @@ export default function GamePlay() {
                 <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
                     <div className="flex items-center gap-3 py-3 h-12">
                         <Sparkles className="text-yellow-500" size={32} />
-                        <p className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                        <p className="text-3xl font-bold from-purple-600 to-pink-600 bg-clip-text text-transparent">
                             {game.name}
                         </p>
                     </div>
@@ -346,82 +241,52 @@ export default function GamePlay() {
                 </div>
 
                 <div className="grid lg:grid-cols-12 gap-6">
-                    {/* Left Panel: Users */}
+                    {/* Left Panel: Prizes */}
                     <div className="lg:col-span-3 bg-white rounded-2xl shadow-xl p-6">
                         <div className="flex items-center gap-2 mb-4">
-                            <Users className="text-blue-500" size={24} />
+                            <Gift className="text-pink-500" size={24} />
                             <h2 className="text-xl font-bold text-gray-800">
-                                {t("playerTitle")}
+                                {t("giftTitle")}
                             </h2>
-                            <span className="ml-auto bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
-                                {meta.users.total}
-                            </span>
                         </div>
-
-                        {loading.users ? (
-                            <div className="flex justify-center py-8">
-                                <Loader2 className="animate-spin text-purple-500" />
-                            </div>
-                        ) : (
-                            <>
-                                <div className="space-y-2 max-h-[500px] overflow-y-auto">
-                                    {users.map((user) => (
-                                        <button
-                                            key={user.id}
-                                            onClick={() =>
-                                                !mustSpin &&
-                                                setSelectedUser(user)
-                                            }
-                                            disabled={mustSpin}
-                                            className={`w-full text-left p-3 rounded-xl transition-all cursor-pointer ${
-                                                selectedUser?.id === user.id
-                                                    ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg"
-                                                    : "bg-gray-50 hover:bg-gray-100 border-2 border-gray-200 hover:border-purple-300"
-                                            } ${
-                                                mustSpin
-                                                    ? "opacity-50 cursor-not-allowed"
-                                                    : ""
-                                            }`}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                {user.avatar_url ? (
-                                                    <img
-                                                        src={user.avatar_url}
-                                                        alt={user.name}
-                                                        className="w-10 h-10 rounded-full object-cover"
-                                                    />
-                                                ) : (
-                                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold">
-                                                        {user.name
-                                                            .charAt(0)
-                                                            .toUpperCase()}
-                                                    </div>
+                        <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                            {gifts.map((gift) => (
+                                <div
+                                    key={gift.id}
+                                    className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border-2 border-gray-200 hover:border-pink-300 transition-colors"
+                                >
+                                    <div className="flex items-start gap-3">
+                                        {gift.image && (
+                                            <img
+                                                src={`/document/${gift.image}`}
+                                                alt={gift.name}
+                                                className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                                            />
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="font-bold text-gray-800 mb-1">
+                                                {gift.name}
+                                            </h3>
+                                            <p className="text-xs text-gray-500 line-clamp-2 mb-2">
+                                                {gift.description}
+                                            </p>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs text-purple-600 font-medium">
+                                                    {t("quantity", {
+                                                        qty: gift.quantity,
+                                                    })}
+                                                </span>
+                                                {gift.rate && (
+                                                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
+                                                        {gift.rate}%
+                                                    </span>
                                                 )}
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="font-semibold truncate">
-                                                        {user.name}
-                                                    </div>
-                                                    {user.membership && (
-                                                        <div className="text-xs mt-1 font-medium flex items-center gap-1">
-                                                            <Award size={12} />{" "}
-                                                            {
-                                                                user.membership
-                                                                    .name
-                                                            }
-                                                        </div>
-                                                    )}
-                                                </div>
                                             </div>
-                                        </button>
-                                    ))}
+                                        </div>
+                                    </div>
                                 </div>
-                                <PaginationControls
-                                    meta={meta.users}
-                                    onPageChange={fetchUsers}
-                                    loading={loading.users}
-                                />
-                            </>
-                        )}
+                            ))}
+                        </div>
                     </div>
 
                     {/* Center Panel: Wheel */}
@@ -516,100 +381,82 @@ export default function GamePlay() {
                         )}
                     </div>
 
-                    {/* Right Panel: Gifts & History */}
-                    <div className="lg:col-span-3 space-y-6">
-                        {/* Gifts List */}
-                        <div className="bg-white rounded-2xl shadow-xl p-6">
-                            <div className="flex items-center gap-2 mb-4">
-                                <Gift className="text-pink-500" size={24} />
-                                <h2 className="text-xl font-bold text-gray-800">
-                                    {t("giftTitle")}
-                                </h2>
-                            </div>
-                            <div className="space-y-3 max-h-[400px] overflow-y-auto">
-                                {gifts.map((gift) => (
-                                    <div
-                                        key={gift.id}
-                                        className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border-2 border-gray-200 hover:border-pink-200 transition-colors"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            {gift.image && (
-                                                <img
-                                                    src={`/document/${gift.image}`}
-                                                    alt={gift.name}
-                                                    className="w-12 h-12 rounded-lg object-cover"
-                                                />
-                                            )}
-                                            <div className="flex-1">
-                                                <h3 className="font-bold text-gray-800">
-                                                    {gift.name}
-                                                </h3>
-                                                <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-                                                    {gift.description}
-                                                </p>
-                                                <p className="text-xs text-purple-600 font-medium mt-1">
-                                                    {t("quantity", {
-                                                        qty: gift.quantity,
-                                                    })}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                    {/* Right Panel: Checked-in Users */}
+                    <div className="lg:col-span-3 bg-white rounded-2xl shadow-xl p-6">
+                        <div className="flex items-center gap-2 mb-4">
+                            <Users className="text-blue-500" size={24} />
+                            <h2 className="text-xl font-bold text-gray-800">
+                                {t("playerTitle")}
+                            </h2>
+                            <span className="ml-auto bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
+                                {meta.users.total}
+                            </span>
                         </div>
 
-                        {/* History List */}
-                        <div className="bg-white rounded-2xl shadow-xl p-6">
-                            <div className="flex items-center gap-2 mb-4">
-                                <Trophy className="text-yellow-500" size={24} />
-                                <h2 className="text-xl font-bold text-gray-800">
-                                    {t("historyTitle")}
-                                </h2>
+                        {loading.users ? (
+                            <div className="flex justify-center py-8">
+                                <Loader2 className="animate-spin text-purple-500" />
                             </div>
-
-                            {loading.history ? (
-                                <div className="flex justify-center py-8">
-                                    <Loader2 className="animate-spin text-purple-500" />
-                                </div>
-                            ) : history.length > 0 ? (
-                                <>
-                                    <div className="space-y-2 max-h-80 overflow-y-auto">
-                                        {history.map((item) => (
-                                            <div
-                                                key={item.id}
-                                                className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-3 border border-purple-200 hover:shadow-sm transition-shadow"
-                                            >
-                                                <div className="flex items-center justify-between">
-                                                    <div>
-                                                        <p className="font-semibold text-sm text-gray-800">
-                                                            {item.user.name}
-                                                        </p>
-                                                        <p className="text-xs text-purple-600">
-                                                            → {item.gift.name}
-                                                        </p>
+                        ) : (
+                            <>
+                                <div className="space-y-2 max-h-[600px] overflow-y-auto">
+                                    {users.map((user) => (
+                                        <button
+                                            key={user.id}
+                                            onClick={() =>
+                                                !mustSpin &&
+                                                setSelectedUser(user)
+                                            }
+                                            disabled={mustSpin}
+                                            className={`w-full text-left p-3 rounded-xl transition-all cursor-pointer ${
+                                                selectedUser?.id === user.id
+                                                    ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg"
+                                                    : "bg-gray-50 hover:bg-gray-100 border-2 border-gray-200 hover:border-purple-300"
+                                            } ${
+                                                mustSpin
+                                                    ? "opacity-50 cursor-not-allowed"
+                                                    : ""
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                {user.avatar_url ? (
+                                                    <img
+                                                        src={user.avatar_url}
+                                                        alt={user.name}
+                                                        className="w-10 h-10 rounded-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold">
+                                                        {user.name
+                                                            .charAt(0)
+                                                            .toUpperCase()}
                                                     </div>
-                                                    <span className="text-xs text-gray-500">
-                                                        {formatTime(
-                                                            item.created_at
-                                                        )}
-                                                    </span>
+                                                )}
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="font-semibold truncate">
+                                                        {user.name}
+                                                    </div>
+                                                    {user.membership && (
+                                                        <div className="text-xs mt-1 font-medium flex items-center gap-1">
+                                                            <Award size={12} />{" "}
+                                                            {
+                                                                user.membership
+                                                                    .name
+                                                            }
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
-                                        ))}
-                                    </div>
-                                    <PaginationControls
-                                        meta={meta.history}
-                                        onPageChange={fetchHistory}
-                                        loading={loading.history}
-                                    />
-                                </>
-                            ) : (
-                                <p className="text-center text-gray-500 py-4">
-                                    {t("noHistory")}
-                                </p>
-                            )}
-                        </div>
+                                        </button>
+                                    ))}
+                                </div>
+                                <PaginationControls
+                                    meta={meta.users}
+                                    onPageChange={fetchUsers}
+                                    loading={loading.users}
+                                />
+                            </>
+                        )}
                     </div>
                 </div>
             </div>

@@ -80,5 +80,7 @@ class DatabaseSeeder extends Seeder
 
 
         Config::insert($configs);
+
+        $this->call(ZaloTokenSeeder::class);
     }
 }

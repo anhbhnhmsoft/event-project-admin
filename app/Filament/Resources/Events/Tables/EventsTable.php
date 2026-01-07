@@ -5,10 +5,12 @@ namespace App\Filament\Resources\Events\Tables;
 use App\Filament\Resources\Events\EventResource;
 use App\Models\Organizer;
 use App\Utils\Constants\EventStatus;
+use App\Utils\Constants\RoleUser;
 use App\Utils\Helper;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
@@ -19,11 +21,13 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class EventsTable
 {
     public static function configure(Table $table): Table
     {
+        $user =  Auth::user();
         return $table
             ->columns([
                 ImageColumn::make('image_represent_path')
@@ -31,11 +35,11 @@ class EventsTable
                     ->disk('public')
                     ->imageSize(60)
                     ->visibility('public'),
-                TextColumn::make('name')
-                    ->label(__('admin.events.table.name'))
-                    ->searchable()
-                    ->sortable()
-                    ->weight('bold'),
+                    TextColumn::make('name')
+                        ->label(__('admin.events.table.name'))
+                        ->searchable()
+                        ->sortable()
+                        ->weight('bold'),
                 TextColumn::make('organizer.name')
                     ->label(__('admin.events.table.organizer'))
                     ->searchable()
@@ -79,6 +83,10 @@ class EventsTable
                         ->label(__('common.common_success.view')),
                     EditAction::make()
                         ->label(__('common.common_success.edit')),
+                    DeleteAction::make()
+                        ->label(__('common.common_success.delete'))
+                        ->requiresConfirmation(true)
+                        ->hidden(fn()=> $user->role != RoleUser::SUPER_ADMIN->value),
                     Action::make('seats-manager')
                         ->label(__('admin.events.pages.seats_title'))
                         ->icon('heroicon-o-building-office')
