@@ -25,6 +25,13 @@ class ZaloService
         $this->appSecret = config('services.zalo.app_secret');
         $this->oaId = config('services.zalo.oa_id');
 
+        // Validate required configs
+        if (empty($this->appId) || empty($this->appSecret) || empty($this->oaId)) {
+            throw new \RuntimeException(
+                'Zalo configuration is missing. Please check services.zalo config.'
+            );
+        }
+
         $this->zalo = new Zalo([
             'app_id' => $this->appId,
             'app_secret' => $this->appSecret,
@@ -157,15 +164,16 @@ class ZaloService
                 }
                 $refreshToken = $tokenRecord->refresh_token;
             }
-
-            $response = Http::asForm()->post(ZaloEndPointExtends::API_REFRESH_TOKEN, [
+            $response = Http::withHeaders([
+                'secret_key' => $this->appSecret,
+                'Content-Type' => 'application/x-www-form-urlencoded',
+            ])->asForm()->post(ZaloEndPointExtends::API_REFRESH_TOKEN, [
                 'app_id' => $this->appId,
                 'grant_type' => 'refresh_token',
                 'refresh_token' => $refreshToken,
             ]);
 
             $data = $response->json();
-
             if (isset($data['error']) && $data['error'] !== 0) {
                 Log::error('ZaloService::refreshAccessToken failed', [
                     'error' => $data['error'],

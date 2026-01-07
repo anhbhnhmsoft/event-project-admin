@@ -48,6 +48,9 @@ class AuthService
                 ->where('email', $data['email'])
                 ->whereHasActiveOrganizer((int) $data['organizer_id'])
                 ->first();
+            if($user->inactive) {
+                throw new ServiceException(__('auth.error.account_inactivated'));
+            }
             if (!$user || ! Hash::check($data['password'], $user->password)) {
                 throw new ServiceException(__('auth.error.invalid_credentials'));
             }
@@ -646,6 +649,37 @@ class AuthService
                 'status' => false,
                 'title' => __('event.messages.checkin_failed_title'),
                 'message' => __('event.messages.checkin_failed_message'),
+            ];
+        }
+    }
+
+    /**
+     * -- Khóa tài khỏan của người dùng
+     * @return array
+     */
+    public function lockAccount(): array
+    {
+        try {
+            $user = Auth::user();
+            if($user->inactive) {
+                return [
+                    'status' => true,
+                    'message' => __('auth.error.account_already_locked'),
+                ];
+            }
+            $user->inactive = true;
+            $user->save();
+            $user->currentAccessToken()->delete();
+            Auth::logout();
+            return [
+                'status' => true,
+                'message' => __('auth.success.lock_account_success'),
+            ];
+        } catch (\Throwable $e) {
+            Log::error('Lock account failed: ' . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
             ];
         }
     }

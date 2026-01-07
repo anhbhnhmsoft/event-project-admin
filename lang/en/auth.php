@@ -18,6 +18,7 @@ return [
         'logout_success' => 'Logout successful',
         // BỔ SUNG: Cài đặt ngôn ngữ
         'set_lang_success' => 'Language setting successful',
+        'lock_account_success' => 'Account locked successfully',
     ],
     'error' => [
         'invalid_credentials' => 'Invalid email or password',
@@ -37,6 +38,8 @@ return [
         // BỔ SUNG: Hết hạn mật khẩu và không tìm thấy
         'password_expired' => 'Password has expired, please set a new password',
         'not_found' => 'Object not found',
+        'account_already_locked' => 'Account already locked, please contact the administrator for help',
+        'account_inactivated' => 'Account has been inactivated, please contact the administrator for help',
     ],
     'validation' => [
         'password_required' => 'Password is required',

@@ -40,17 +40,6 @@ class RefreshZaloAccessToken extends Command
     public function handle(): int
     {
         $this->info('Starting Zalo access token refresh...');
-
-        // Check if access token exists and is still valid
-        if (!$this->option('force')) {
-            $currentAccessToken = Cache::get('zalo_access_token');
-            if ($currentAccessToken) {
-                $this->info('Access token is still valid in cache');
-                $this->info('Use --force option to refresh anyway');
-                return Command::SUCCESS;
-            }
-        }
-
         $this->info('Attempting to refresh token...');
 
         // Refresh token (Service handles fetching from DB if not passed
