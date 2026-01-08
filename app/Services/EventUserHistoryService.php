@@ -87,8 +87,16 @@ class EventUserHistoryService
                 ];
             }
 
-            $user = User::find($userId);
-            $canChooseSeat = $user->activeMemberships()->get()->first(fn($m) => $m->allowChooseSeat()) !== null;
+            $user = User::query()->find($userId);
+            $hasMembershipPermission = $user->activeMemberships()->get()->first(fn($m) => $m->allowChooseSeat()) !== null;
+
+            $seat = null;
+            if (!empty($data['event_seat_id'])) {
+                $seat = EventSeat::with('area')->find($data['event_seat_id']);
+            }
+
+            // Allow if has membership OR selecting a free seat
+            $canChooseSeat = $hasMembershipPermission || ($seat && $seat->area?->price <= 0);
 
             if ($canChooseSeat) {
                 if (empty($data['event_seat_id'])) {
@@ -97,7 +105,10 @@ class EventUserHistoryService
                         'message' => __('event.validation.event_seat_id_required'),
                     ];
                 }
-                $seat = EventSeat::with('area')->find($data['event_seat_id']);
+                // $seat is already fetched above
+                if (!$seat) {
+                    $seat = EventSeat::with('area')->find($data['event_seat_id']);
+                }
                 if (!$seat) {
                     return [
                         'status' => false,

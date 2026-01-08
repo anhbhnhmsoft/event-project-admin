@@ -53,5 +53,12 @@ return [
             'forgot_password' => env('ZALO_OTP_TEMPLATE_FORGOT_PASSWORD', env('ZALO_OTP_TEMPLATE')),
             'verify_phone' => env('ZALO_OTP_TEMPLATE_VERIFY_PHONE', env('ZALO_OTP_TEMPLATE')),
         ]
-    ]
+    ],
+
+    'revenuecat' => [
+        'api_key' => env('REVENUECAT_API_KEY'),
+        'webhook_secret' => env('REVENUECAT_WEBHOOK_SECRET'),
+        'public_sdk_key' => env('REVENUECAT_PUBLIC_SDK_KEY'),
+        'project_id' => env('REVENUECAT_PROJECT_ID'),
+    ],
 ];

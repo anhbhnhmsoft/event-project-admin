@@ -48,6 +48,10 @@ class MembershipSchema
                             ->integer()
                             ->minValue(0)
                             ->required(),
+                        TextInput::make('product_id')
+                            ->label(__('admin.memberships.form.product_id'))
+                            ->helperText(__('admin.memberships.form.product_id_help'))
+                            ->visible(fn(Get $get) => (int) $get('type') === MembershipType::FOR_CUSTOMER->value),
                         Textarea::make('description')
                             ->required()
                             ->label(__('admin.memberships.form.description'))
