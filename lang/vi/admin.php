@@ -605,6 +605,8 @@ return [
             'customer_type' => 'Khách hàng sử dụng',
             'customer_type_placeholder' => 'Khách hàng sử dụng gói',
             'permission_config' => 'Cấu hình quyền',
+            'product_id' => 'Product ID (RevenueCat/Store)',
+            'product_id_help' => 'Nhập ID sản phẩm từ Apple Store / Google Play để đồng bộ với RevenueCat',
         ],
         'table' => [
             'name' => 'Tên gói',

@@ -339,7 +339,7 @@ class EventSeatService
                     'message' => __('event.validation.area_not_found'),
                 ];
             }
-            if ($area->price == 0) {
+            if ($area->price <= 0) {
                 return [
                     'status' => true,
                     'payment_required' => false,

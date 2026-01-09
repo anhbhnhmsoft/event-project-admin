@@ -35,7 +35,8 @@ class Membership extends Model
         'badge_color_text',
         'config',
         'status',
-        'organizer_id'
+        'organizer_id',
+        'product_id' // RevenueCat product identifier ~ id google/apple store 
     ];
 
     /**
