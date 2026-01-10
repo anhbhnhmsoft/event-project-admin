@@ -25,8 +25,15 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withSchedule(function (Schedule $schedule): void {
-        $schedule->command('app:check-expires-at-user')->monthly();
-        $schedule->command('app:check-time-event')->everyTwoMinutes();
-        $schedule->command('app:check-expire-membership')->everyTwoHours();
+
+        $schedule->command('app:check-expire-membership')->dailyAt('01:00');
+
+        $schedule->command('app:check-time-event')->everyMinute();
+
+        $schedule->command('app:check-expires-at-user')->dailyAt('01:30');
+
+        $schedule->command('app:notification-time-event')->dailyAt('06:00');
+
+        $schedule->command('zalo:refresh-token')->everyFourHours();
     })
     ->create();

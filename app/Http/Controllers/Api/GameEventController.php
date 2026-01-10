@@ -54,7 +54,6 @@ class GameEventController extends Controller
         $game = $result['game'];
         $user = $request->user();
         $event = $game->event;
-
         if (!$this->eventGameService->checkGameAccess($game, $user)) {
             return abort(403, __('common.common_error.permission_error'));
         }
@@ -196,10 +195,19 @@ class GameEventController extends Controller
      */
     public function revealPrize(Request $request, $gameId)
     {
-        $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,id',
-            'spin_id' => 'required|string',
-        ]);
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'user_id' => 'required|exists:users,id',
+                'spin_id' => 'required|string',
+            ],
+            [
+                'user_id.required' => __('game.error.user_id_required'),
+                'user_id.exists'   => __('game.error.user_id_exists'),
+                'spin_id.required' => __('game.error.spin_id_required'),
+                'spin_id.string'   => __('game.error.spin_id_string'),
+            ]
+        );
 
         if ($validator->fails()) {
             return response()->json([
@@ -232,6 +240,9 @@ class GameEventController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'user_id' => 'required|exists:users,id',
+        ], [
+            'user_id.required' => __('game.error.user_id_required'),
+            'user_id.exists'   => __('game.error.user_id_exists'),
         ]);
 
         if ($validator->fails()) {
@@ -256,5 +267,53 @@ class GameEventController extends Controller
                 'gift' => new EventGameGiftDetailResource($result['gift']),
             ],
         ]);
+    }
+
+    /**
+     * Initiate spin User - returns user_id and wheel items
+     */
+    public function initiateSpinUser(Request $request, $gameId)
+    {
+        $validator = Validator::make($request->all(), [
+            'gift_id' => 'required|exists:event_game_gifts,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status'  => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $result = $this->eventGameService->spinUserPrize($gameId, $request->gift_id);
+
+        if (!$result['status']) {
+            return response()->json([
+                'status'  => false,
+                'message' => $result['message'] ?? __('game.error.cannot_spin'),
+            ], 400);
+        }
+
+        // Return user resource with extra info
+        return response()->json([
+            'status' => true,
+            'data'   => [
+                'user_id' => $result['user_id'],
+                'user'    => (new UserResource($result['user']))->resolve(),
+                'gift'    => new EventGameGiftDetailResource($result['gift']),
+                'wheel_items' => $result['wheel_items'],
+            ],
+        ]);
+    }
+
+    /**
+     * @deprecated No longer needed - spinUserPrize handles everything
+     */
+    public function revealUserPrize(Request $request, $gameId)
+    {
+        return response()->json([
+            'status'  => false,
+            'message' => __('game.error.deprecated_method'),
+        ], 410);
     }
 }

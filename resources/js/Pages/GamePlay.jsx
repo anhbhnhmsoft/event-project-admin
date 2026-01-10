@@ -4,7 +4,6 @@ import { Gift, Users, Trophy, Sparkles, Award, Loader2 } from "lucide-react";
 import { usePage } from "@inertiajs/react";
 import PaginationControls from "../Components/PaginationControls";
 import axios from "axios";
-import useGameLogic from "../lib/hooks/use-game-logic";
 
 // --- Translation System ---
 const translations = {
@@ -126,6 +125,7 @@ const useGameData = (gameId, csrfToken) => {
                 });
                 if (res.data?.status) {
                     setUsers(res.data.data || []);
+                    console.log(res.data);
                     setMeta((prev) => ({ ...prev, users: res.data.meta }));
                 }
             } catch (e) {
@@ -191,7 +191,6 @@ export default function GamePlay() {
 
     const {
         gifts,
-        wheelItems,
         users,
         history,
         loading,
@@ -199,24 +198,91 @@ export default function GamePlay() {
         fetchGifts,
         fetchUsers,
         fetchHistory,
-        setWheelItems,
     } = useGameData(game.id, csrf_token);
 
-    const {
-        selectedUser,
-        setSelectedUser,
-        mustSpin,
-        prizeNumber,
-        result,
-        initiateSpin,
-        revealPrize,
-    } = useGameLogic(game, csrf_token, wheelItems, setWheelItems, t);
+    // Game Logic State
+    const [selectedGift, setSelectedGift] = useState(null);
+    const [wheelItems, setWheelItems] = useState([]);
+    const [mustSpin, setMustSpin] = useState(false);
+    const [prizeNumber, setPrizeNumber] = useState(null);
+    const [result, setResult] = useState(null);
+    const [currentSpinId, setCurrentSpinId] = useState(null);
 
-    const handleStopSpinning = () => {
-        revealPrize(() => {
+    const initiateSpin = async () => {
+        if (!selectedGift) {
+            alert("Vui lòng chọn phần thưởng trước!");
+            return;
+        }
+
+        if (mustSpin) return;
+
+        setResult(null);
+        setWheelItems([]); // Clear previous items
+
+        try {
+            const { data } = await axios.post(
+                `/event-game/initiate-spin-user/${game.id}`,
+                { gift_id: selectedGift.id },
+                { headers: { "X-CSRF-TOKEN": csrf_token } }
+            );
+
+            if (!data.status) {
+                alert(data.message || t("spinFailed"));
+                return;
+            }
+
+            const { user_id, user, gift, wheel_items } = data.data;
+
+            // Setup Wheel Items from Candidates
+            const items = wheel_items.map((u) => ({
+                option: u.option || u.name,
+                style: u.style || {
+                    backgroundColor:
+                        COLORS[Math.floor(Math.random() * COLORS.length)],
+                    textColor: "white",
+                },
+                image: u.image, // Avatar if available
+            }));
+
+            setWheelItems(items);
+
+            // Find winner index
+            const winnerIndex = wheel_items.findIndex(
+                (w) => String(w.id) === String(user_id)
+            );
+
+            if (winnerIndex === -1) {
+                console.error("Winner not found in candidates");
+                alert("Lỗi dữ liệu vòng quay");
+                return;
+            }
+
+            setPrizeNumber(winnerIndex);
+            setMustSpin(true);
+
+            // Store the result for display after animation
+            setCurrentSpinId({ user, gift });
+        } catch (err) {
+            console.error("Initiate spin error:", err);
+            alert(err.response.data.message || t("spinError"));
+        }
+    };
+
+    const handleStopSpinning = async () => {
+        if (!currentSpinId) return;
+
+        try {
+            // Result is already determined, just display it
+            setResult(currentSpinId);
             fetchGifts();
             fetchHistory();
-        });
+            fetchUsers(); // Refresh user list to update gift status
+        } catch (err) {
+            console.error("Display result error:", err);
+        } finally {
+            setMustSpin(false);
+            setCurrentSpinId(null);
+        }
     };
 
     const formatTime = (timeStr) =>
@@ -237,7 +303,6 @@ export default function GamePlay() {
                             {game.name}
                         </p>
                     </div>
-                    <p className="text-gray-600 text-lg">{game.description}</p>
                 </div>
 
                 <div className="grid lg:grid-cols-12 gap-6">
@@ -253,7 +318,20 @@ export default function GamePlay() {
                             {gifts.map((gift) => (
                                 <div
                                     key={gift.id}
-                                    className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border-2 border-gray-200 hover:border-pink-300 transition-colors"
+                                    onClick={() =>
+                                        !mustSpin &&
+                                        gift.quantity > 0 &&
+                                        setSelectedGift(gift)
+                                    }
+                                    className={`rounded-xl p-4 border-2 transition-all cursor-pointer ${
+                                        selectedGift?.id === gift.id
+                                            ? "bg-purple-50 border-purple-500 shadow-md transform scale-105"
+                                            : "bg-white border-gray-100 hover:border-pink-300"
+                                    } ${
+                                        mustSpin || gift.quantity <= 0
+                                            ? "opacity-60 cursor-not-allowed"
+                                            : ""
+                                    }`}
                                 >
                                     <div className="flex items-start gap-3">
                                         {gift.image && (
@@ -267,20 +345,18 @@ export default function GamePlay() {
                                             <h3 className="font-bold text-gray-800 mb-1">
                                                 {gift.name}
                                             </h3>
-                                            <p className="text-xs text-gray-500 line-clamp-2 mb-2">
-                                                {gift.description}
-                                            </p>
                                             <div className="flex items-center justify-between">
-                                                <span className="text-xs text-purple-600 font-medium">
+                                                <span
+                                                    className={`text-xs font-medium px-2 py-1 rounded-full ${
+                                                        gift.quantity > 0
+                                                            ? "bg-green-100 text-green-700"
+                                                            : "bg-red-100 text-red-700"
+                                                    }`}
+                                                >
                                                     {t("quantity", {
                                                         qty: gift.quantity,
                                                     })}
                                                 </span>
-                                                {gift.rate && (
-                                                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
-                                                        {gift.rate}%
-                                                    </span>
-                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -290,46 +366,70 @@ export default function GamePlay() {
                     </div>
 
                     {/* Center Panel: Wheel */}
-                    <div className="lg:col-span-6 bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center justify-center relative">
-                        <div className="mb-6">
-                            {wheelItems.length > 0 ? (
+                    <div className="lg:col-span-6 bg-white rounded-2xl shadow-xl p-8 flex flex-col items-center justify-center relative min-h-[600px]">
+                        {!selectedGift && !result && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-white z-10 rounded-2xl opacity-90">
+                                <p className="text-2xl text-gray-400 font-bold animate-pulse">
+                                    ⬅️ Chọn giải thưởng để bắt đầu
+                                </p>
+                            </div>
+                        )}
+
+                        {selectedGift && (
+                            <div className="mb-4 text-center animate-fade-in">
+                                <p className="text-gray-500 mb-1">
+                                    Đang quay giải thưởng:
+                                </p>
+                                <h3 className="text-2xl font-bold text-purple-600">
+                                    {selectedGift.name}
+                                </h3>
+                            </div>
+                        )}
+
+                        <div className="mb-6 relative">
+                            {/* Show Wheel only when prepared or spinning */}
+                            {wheelItems.length > 0 && prizeNumber !== null ? (
                                 <Wheel
                                     mustStartSpinning={mustSpin}
                                     prizeNumber={prizeNumber}
                                     data={wheelItems}
                                     onStopSpinning={handleStopSpinning}
-                                    backgroundColors={[
-                                        "#FF6B6B",
-                                        "#4ECDC4",
-                                        "#FFD93D",
-                                        "#6BCF7F",
-                                        "#A78BFA",
-                                        "#FB923C",
-                                    ]}
-                                    textColors={["#fff"]}
+                                    backgroundColors={COLORS}
+                                    textColors={["#ffffff"]}
                                     outerBorderColor="#333"
-                                    outerBorderWidth={5}
+                                    outerBorderWidth={3}
                                     innerBorderColor="#f0f0f0"
                                     radiusLineColor="#fff"
-                                    radiusLineWidth={2}
-                                    fontSize={16}
-                                    perpendicularText={false}
+                                    radiusLineWidth={1}
+                                    fontSize={14}
+                                    perpendicularText={true}
                                     textDistance={60}
                                 />
                             ) : (
-                                <div className="p-6 text-center text-sm text-gray-500">
-                                    {t("loadingWheel")}
-                                </div>
+                                selectedGift && (
+                                    <div className="w-[300px] h-[300px] rounded-full border-4 border-dashed border-gray-200 flex items-center justify-center bg-gray-50">
+                                        <Users
+                                            className="text-gray-300"
+                                            size={64}
+                                        />
+                                    </div>
+                                )
                             )}
                         </div>
 
                         <button
                             onClick={initiateSpin}
-                            disabled={!selectedUser || mustSpin}
+                            disabled={
+                                !selectedGift ||
+                                mustSpin ||
+                                selectedGift.quantity <= 0
+                            }
                             className={`px-12 py-4 rounded-xl font-bold text-xl transition-all transform duration-200 ${
-                                mustSpin || !selectedUser
+                                mustSpin ||
+                                !selectedGift ||
+                                selectedGift.quantity <= 0
                                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                    : "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+                                    : "bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
                             }`}
                         >
                             {mustSpin ? (
@@ -342,40 +442,61 @@ export default function GamePlay() {
                             )}
                         </button>
 
-                        {selectedUser && !result && (
-                            <div className="mt-6 text-center animate-fade-in">
-                                <p className="text-gray-600">
-                                    {t("playerLabel")}
-                                </p>
-                                <p className="text-xl font-bold text-purple-600">
-                                    {selectedUser.name}
-                                </p>
-                            </div>
-                        )}
-
                         {result && (
-                            <div className="mt-8 bg-gradient-to-r from-yellow-400 via-yellow-500 to-orange-500 rounded-2xl p-6 w-full max-w-md shadow-2xl animate-bounce z-10">
-                                <div className="text-center text-white">
+                            <div
+                                className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in zoom-in duration-300"
+                                onClick={() => setResult(null)}
+                            >
+                                <div
+                                    className="bg-white rounded-3xl p-8 max-w-lg w-full shadow-2xl relative overflow-hidden text-center"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-purple-500 via-pink-500 to-yellow-500"></div>
                                     <Trophy
-                                        size={48}
-                                        className="mx-auto mb-3"
+                                        size={64}
+                                        className="mx-auto text-yellow-500 mb-4 animate-bounce"
                                     />
-                                    <h3 className="text-2xl font-bold mb-2">
+
+                                    <h3 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 mb-2">
                                         {t("congratsTitle")}
                                     </h3>
-                                    <p className="text-lg mb-1">
-                                        {result.user.name}
-                                    </p>
-                                    <p className="text-xl font-bold">
-                                        {t("wonMessage", {
-                                            gift: result.gift.name,
-                                        })}
-                                    </p>
-                                    {result.gift.description && (
-                                        <p className="text-sm mt-2 opacity-90 text-white">
-                                            {result.gift.description}
-                                        </p>
-                                    )}
+
+                                    <div className="my-6 p-4 bg-purple-50 rounded-2xl border border-purple-100">
+                                        <div className="mb-4">
+                                            <p className="text-sm text-gray-500 uppercase tracking-wider mb-1">
+                                                Người trúng giải
+                                            </p>
+                                            {result.user.avatar_path ? (
+                                                <img
+                                                    src={`/document/${result.user.avatar_path}`}
+                                                    className="w-20 h-20 rounded-full mx-auto border-4 border-white shadow-md object-cover mb-2"
+                                                />
+                                            ) : (
+                                                <div className="w-20 h-20 rounded-full bg-purple-200 mx-auto flex items-center justify-center text-purple-700 font-bold text-2xl mb-2">
+                                                    {result.user.name.charAt(0)}
+                                                </div>
+                                            )}
+                                            <p className="text-2xl font-bold text-gray-800">
+                                                {result.user.name}
+                                            </p>
+                                        </div>
+
+                                        <div className="border-t border-purple-100 pt-4">
+                                            <p className="text-sm text-gray-500 uppercase tracking-wider mb-1">
+                                                Giải thưởng
+                                            </p>
+                                            <p className="text-xl font-bold text-pink-600">
+                                                {result.gift.name}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={() => setResult(null)}
+                                        className="w-full py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition-colors"
+                                    >
+                                        Đóng
+                                    </button>
                                 </div>
                             </div>
                         )}
@@ -401,53 +522,46 @@ export default function GamePlay() {
                             <>
                                 <div className="space-y-2 max-h-[600px] overflow-y-auto">
                                     {users.map((user) => (
-                                        <button
+                                        <div
                                             key={user.id}
-                                            onClick={() =>
-                                                !mustSpin &&
-                                                setSelectedUser(user)
-                                            }
-                                            disabled={mustSpin}
-                                            className={`w-full text-left p-3 rounded-xl transition-all cursor-pointer ${
-                                                selectedUser?.id === user.id
-                                                    ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg"
-                                                    : "bg-gray-50 hover:bg-gray-100 border-2 border-gray-200 hover:border-purple-300"
-                                            } ${
-                                                mustSpin
-                                                    ? "opacity-50 cursor-not-allowed"
-                                                    : ""
+                                            className={`w-full text-left p-3 rounded-xl border flex items-center gap-3 hover:shadow-sm transition-all ${
+                                                user.has_received_gift
+                                                    ? "bg-gray-100 border-gray-200 opacity-60"
+                                                    : "bg-white border-green-200 hover:bg-green-50"
                                             }`}
                                         >
-                                            <div className="flex items-center gap-3">
-                                                {user.avatar_url ? (
-                                                    <img
-                                                        src={user.avatar_url}
-                                                        alt={user.name}
-                                                        className="w-10 h-10 rounded-full object-cover"
-                                                    />
-                                                ) : (
-                                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold">
-                                                        {user.name
-                                                            .charAt(0)
-                                                            .toUpperCase()}
-                                                    </div>
-                                                )}
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="font-semibold truncate">
+                                            {user.avatar_url ? (
+                                                <img
+                                                    src={user.avatar_url}
+                                                    alt={user.name}
+                                                    className="w-10 h-10 rounded-full object-cover"
+                                                />
+                                            ) : (
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center text-white font-bold">
+                                                    {user.name
+                                                        .charAt(0)
+                                                        .toUpperCase()}
+                                                </div>
+                                            )}
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="font-semibold truncate text-gray-700">
                                                         {user.name}
                                                     </div>
-                                                    {user.membership && (
-                                                        <div className="text-xs mt-1 font-medium flex items-center gap-1">
-                                                            <Award size={12} />{" "}
-                                                            {
-                                                                user.membership
-                                                                    .name
-                                                            }
-                                                        </div>
+                                                    {user.has_received_gift && (
+                                                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium whitespace-nowrap">
+                                                            ✓ Đã nhận
+                                                        </span>
                                                     )}
                                                 </div>
+                                                {user.membership && (
+                                                    <div className="text-xs mt-1 font-medium flex items-center gap-1 text-blue-600">
+                                                        <Award size={12} />{" "}
+                                                        {user.membership.name}
+                                                    </div>
+                                                )}
                                             </div>
-                                        </button>
+                                        </div>
                                     ))}
                                 </div>
                                 <PaginationControls

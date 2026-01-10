@@ -37,34 +37,27 @@ class RefreshZaloAccessToken extends Command
     /**
      * Execute the console command.
      */
-    public function handle(): int
+    public function handle()
     {
-        $this->info('Starting Zalo access token refresh...');
-        $this->info('Attempting to refresh token...');
+        Log::info('Console Command: zalo:refresh-token started.');
 
         // Refresh token (Service handles fetching from DB if not passed
         $result = $this->zaloService->refreshAccessToken();
 
         if (!$result['success']) {
-            $this->error('Failed to refresh access token');
-            $this->error('Error: ' . $result['message']);
-
             Log::error('RefreshZaloAccessToken command failed', [
                 'error' => $result['message'],
             ]);
-
-            return Command::FAILURE;
+            return;
         }
 
-        $this->info('Access token refreshed successfully!');
-        $this->info('Expires in: ' . ($result['expires_in'] ?? 'unknown') . ' seconds');
+        Log::info('Access token refreshed successfully!');
+        Log::info('Expires in: ' . ($result['expires_in'] ?? 'unknown') . ' seconds');
 
         if (isset($result['refresh_token'])) {
-            $this->info('New refresh token also cached');
+            Log::info('New refresh token also cached');
         }
 
         Log::info('RefreshZaloAccessToken command completed successfully');
-
-        return Command::SUCCESS;
     }
 }

@@ -21,6 +21,7 @@ class UserResource extends JsonResource
             'organizer_id' => $this->organizer_id,
             'lang' => $this->lang,
             'membership' => optional($this->activeMemberships->first())->only(['id', 'name', 'config']),
+            'has_received_gift' => $this->has_received_gift ?? false,
         ];
     }
 }

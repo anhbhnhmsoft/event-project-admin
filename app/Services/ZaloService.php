@@ -297,4 +297,80 @@ class ZaloService
 
         Log::info('ZaloService::setTokens - Tokens saved to database and cached successfully');
     }
+
+    /**
+     * Get Zalo Authorization URL
+     *
+     * @param string $callbackUrl
+     * @param string $state
+     * @return string
+     */
+    public function getAuthorizationUrl(string $callbackUrl, string $state = ''): string
+    {
+        $queryParams = http_build_query([
+            'app_id' => $this->appId,
+            'redirect_uri' => $callbackUrl,
+            'state' => $state,
+        ]);
+
+        return "https://oauth.zaloapp.com/v4/permission?{$queryParams}";
+    }
+
+    /**
+     * Get Access Token from Authorization Code
+     *
+     * @param string $code
+     * @return array
+     */
+    public function getAccessTokenFromCode(string $code): array
+    {
+        try {
+            $response = Http::withHeaders([
+                'secret_key' => $this->appSecret,
+                'Content-Type' => 'application/x-www-form-urlencoded',
+            ])->asForm()->post(ZaloEndPointExtends::API_REFRESH_TOKEN, [ // Endpoint for access token is same base, but let's verify if ZaloEndPointExtends has it. Actually API_REFRESH_TOKEN is https://oauth.zaloapp.com/v4/access_token which is correct for both.
+                'app_id' => $this->appId,
+                'grant_type' => 'authorization_code',
+                'code' => $code,
+            ]);
+
+            $data = $response->json();
+
+            if (isset($data['error']) && $data['error'] !== 0) {
+                Log::error('ZaloService::getAccessTokenFromCode failed', [
+                    'error' => $data['error'],
+                    'message' => $data['message'] ?? 'Unknown error',
+                ]);
+
+                return [
+                    'success' => false,
+                    'message' => $data['message'] ?? 'Lấy access token thất bại',
+                ];
+            }
+
+            $accessToken = $data['access_token'];
+            $refreshToken = $data['refresh_token'];
+            $expiresIn = $data['expires_in'];
+
+            // Store tokens
+            $this->setTokens($accessToken, $refreshToken, $expiresIn);
+
+            return [
+                'success' => true,
+                'access_token' => $accessToken,
+                'refresh_token' => $refreshToken,
+                'expires_in' => $expiresIn,
+            ];
+
+        } catch (\Throwable $th) {
+            Log::error('ZaloService::getAccessTokenFromCode Exception', [
+                'error' => $th->getMessage(),
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Exception: ' . $th->getMessage(),
+            ];
+        }
+    }
 }
