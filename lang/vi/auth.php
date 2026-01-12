@@ -17,7 +17,9 @@ return [
         'user_info' => 'Lấy thông tin người dùng thành công',
         'set_lang_success' => 'Cài đặt ngôn ngữ thành công',
         'logout_success' => 'Đăng xuất thành công',
+        'authenticate' => 'Xác thực thành công',
         'lock_account_success' => 'Tài khoản đã bị khóa, vui lòng liên hệ quản trị viên để được trợ giúp',
+        'otp_verified' => 'OTP đã được xác thực thành công',
     ],
     'error' => [
         'invalid_credentials' => 'Email hoặc mật khẩu không đúng',
@@ -38,6 +40,13 @@ return [
         'not_found' => 'Không tìm thấy đối tượng',
         'account_already_locked' => 'Tài khoản đã bị khóa, vui lòng liên hệ quản trị viên để được trợ giúp',
         'account_inactivated' => 'Tài khoản đã bị vô hiệu hóa, vui lòng liên hệ quản trị viên để được trợ giúp',
+        'phone_already_registered' => 'Số điện thoại đã được đăng ký',
+        'too_many_attempts' => 'Quá nhiều lần thử, vui lòng thử lại sau',
+        'otp_sent' => 'OTP đã được gửi vào zalo của bạn',
+        'invalid_token' => 'Token không hợp lệ',
+        'user_not_found' => 'Người dùng không tồn tại',
+        'otp_not_found' => 'OTP không hợp lệ hoặc hết hạn',
+        'invalid_otp' => 'OTP không hợp lệ',
     ],
     'validation' => [
         'email_required' => 'Email là bắt buộc',
@@ -72,7 +81,7 @@ return [
         'address_invalid' => 'Địa chỉ không hợp lệ',
         'address_max' => 'Địa chỉ tối đa 255 kí tự',
         'introduce_invalid' => 'Giới thiệu bản thân không hợp lệ',
-        'avatar_invalid' => "Ảnh đại diện không hợp lệ"
+        'avatar_invalid' => "Ảnh đại diện không hợp lệ",
     ],
     'login' => [
         'heading'           => 'Đăng nhập',
