@@ -432,25 +432,29 @@ class EventGameService
             $wheelCandidates->push($selectedUserId);
         }
 
-        $wheelUsers = \App\Models\User::whereIn('id', $wheelCandidates)->get()
-            ->map(function ($u) {
-                return [
-                    'id' => (string)$u->id,
-                    'option' => $u->name,
-                    'image' => $u->avatar_url ? [
-                        'uri' => $u->avatar_url,
-                        'offsetX' => 0,
-                        'offsetY' => 0,
-                        'sizeMultiplier' => 0.5,
-                        'landscape' => true
-                    ] : null,
-                    'style' => [
-                        'backgroundColor' => '#' . substr(md5($u->name), 0, 6),
-                        'textColor' => 'white'
-                    ],
-                    'user' => $u
-                ];
-            });
+        // Get users and preserve the order of wheelCandidates
+        $usersById = \App\Models\User::whereIn('id', $wheelCandidates)->get()->keyBy('id');
+
+        $wheelUsers = $wheelCandidates->map(function ($userId) use ($usersById) {
+            $u = $usersById[$userId];
+            $avatarUrl = $u->avatar_path ? \App\Utils\Helper::generateURLImagePath($u->avatar_path) : null;
+            return [
+                'id' => (string)$u->id,
+                'option' => $u->name,
+                'image' => $avatarUrl ? [
+                    'uri' => $avatarUrl,
+                    'offsetX' => 0,
+                    'offsetY' => 0,
+                    'sizeMultiplier' => 0.5,
+                    'landscape' => true
+                ] : null,
+                'style' => [
+                    'backgroundColor' => '#' . substr(md5($u->name), 0, 6),
+                    'textColor' => 'white'
+                ],
+                'user' => $u
+            ];
+        });
 
         // Save history immediately
         $history = $this->createGiftHistory($selectedUserId, $giftId);
@@ -460,17 +464,17 @@ class EventGameService
 
         // Notify
         try {
-            $payload = new NotificationPayload(
-                title: __('event.success.congratulartion_prize'),
-                description: __('event.success.congratulartion_desc', ['gift_name' => $gift->name, 'game' => $game->name]),
-                data: [
-                    'game_id' => $gameId,
-                    'gift_id' => $gift->id,
-                    'history_id' => $history['data']->id,
-                ],
-                notificationType: UserNotificationType::SYSTEM_ANNOUNCEMENT,
-            );
-            SendNotifications::dispatch($payload, [$selectedUserId])->delay(now()->addSeconds(3))->onQueue('notifications');
+            //            $payload = new NotificationPayload(
+            //                title: __('event.success.congratulartion_prize'),
+            //                description: __('event.success.congratulartion_desc', ['gift_name' => $gift->name, 'game' => $game->name]),
+            //                data: [
+            //                    'game_id' => $gameId,
+            //                    'gift_id' => $gift->id,
+            //                    'history_id' => $history['data']->id,
+            //                ],
+            //                notificationType: UserNotificationType::SYSTEM_ANNOUNCEMENT,
+            //            );
+            //            SendNotifications::dispatch($payload, [$selectedUserId])->delay(now()->addSeconds(5))->onQueue('notifications');
         } catch (\Throwable $e) {
             Log::error('EventGameService::spinUserPrize - Notification failed', [
                 'error' => $e->getMessage(),

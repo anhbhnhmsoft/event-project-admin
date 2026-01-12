@@ -204,11 +204,13 @@ export default function GamePlay() {
     const [selectedGift, setSelectedGift] = useState(null);
     const [wheelItems, setWheelItems] = useState([]);
     const [mustSpin, setMustSpin] = useState(false);
+    const [disabledSpin, setDisabledSpin] = useState(false);
     const [prizeNumber, setPrizeNumber] = useState(null);
     const [result, setResult] = useState(null);
     const [currentSpinId, setCurrentSpinId] = useState(null);
 
     const initiateSpin = async () => {
+        setDisabledSpin(true);
         if (!selectedGift) {
             alert("Vui lòng chọn phần thưởng trước!");
             return;
@@ -218,7 +220,7 @@ export default function GamePlay() {
 
         setResult(null);
         setWheelItems([]); // Clear previous items
-
+        setPrizeNumber(null); // Reset prize number to prevent out-of-bounds error with new items
         try {
             const { data } = await axios.post(
                 `/event-game/initiate-spin-user/${game.id}`,
@@ -234,6 +236,7 @@ export default function GamePlay() {
             const { user_id, user, gift, wheel_items } = data.data;
 
             // Setup Wheel Items from Candidates
+            // Setup Wheel Items from Candidates
             const items = wheel_items.map((u) => ({
                 option: u.option || u.name,
                 style: u.style || {
@@ -241,7 +244,7 @@ export default function GamePlay() {
                         COLORS[Math.floor(Math.random() * COLORS.length)],
                     textColor: "white",
                 },
-                image: u.image, // Avatar if available
+                image: u.image, // Avatar object properly formatted by backend
             }));
 
             setWheelItems(items);
@@ -250,18 +253,25 @@ export default function GamePlay() {
             const winnerIndex = wheel_items.findIndex(
                 (w) => String(w.id) === String(user_id)
             );
+            console.log("Wheel items:", wheel_items);
+            console.log("User ID:", user_id);
+            console.log("Winner index:", winnerIndex);
 
             if (winnerIndex === -1) {
                 console.error("Winner not found in candidates");
                 alert("Lỗi dữ liệu vòng quay");
                 return;
             }
-
             setPrizeNumber(winnerIndex);
-            setMustSpin(true);
 
             // Store the result for display after animation
             setCurrentSpinId({ user, gift });
+
+            // Delay spinning slightly to allow component to mount with new data
+            setTimeout(() => {
+                setMustSpin(true);
+                setDisabledSpin(false);
+            }, 100);
         } catch (err) {
             console.error("Initiate spin error:", err);
             alert(err.response.data.message || t("spinError"));
@@ -285,6 +295,16 @@ export default function GamePlay() {
         }
     };
 
+    const handleCloseResult = () => {
+        setResult(null);
+        setSelectedGift(null);
+        setWheelItems([]);
+        setPrizeNumber(null);
+        setMustSpin(false);
+        fetchGifts(); // Ensure gift quantity is updated
+        fetchUsers(); // Ensure user status is updated
+    };
+
     const formatTime = (timeStr) =>
         new Date(timeStr).toLocaleTimeString("vi-VN", {
             hour: "2-digit",
@@ -299,7 +319,7 @@ export default function GamePlay() {
                 <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
                     <div className="flex items-center gap-3 py-3 h-12">
                         <Sparkles className="text-yellow-500" size={32} />
-                        <p className="text-3xl font-bold from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                        <p className="text-3xl text-gray-800 font-bold from-purple-600 to-pink-600 bg-clip-text">
                             {game.name}
                         </p>
                     </div>
@@ -387,9 +407,14 @@ export default function GamePlay() {
                         )}
 
                         <div className="mb-6 relative">
-                            {/* Show Wheel only when prepared or spinning */}
-                            {wheelItems.length > 0 && prizeNumber !== null ? (
+                            {/* Show Wheel only when gift selected AND wheel data ready */}
+                            {selectedGift &&
+                            wheelItems.length > 0 &&
+                            prizeNumber !== null ? (
                                 <Wheel
+                                    key={`wheel-${
+                                        currentSpinId?.user?.id || Date.now()
+                                    }`}
                                     mustStartSpinning={mustSpin}
                                     prizeNumber={prizeNumber}
                                     data={wheelItems}
@@ -408,10 +433,9 @@ export default function GamePlay() {
                             ) : (
                                 selectedGift && (
                                     <div className="w-[300px] h-[300px] rounded-full border-4 border-dashed border-gray-200 flex items-center justify-center bg-gray-50">
-                                        <Users
-                                            className="text-gray-300"
-                                            size={64}
-                                        />
+                                        <p className="text-gray-400 font-medium">
+                                            Đang chuẩn bị...
+                                        </p>
                                     </div>
                                 )
                             )}
@@ -422,6 +446,7 @@ export default function GamePlay() {
                             disabled={
                                 !selectedGift ||
                                 mustSpin ||
+                                disabledSpin ||
                                 selectedGift.quantity <= 0
                             }
                             className={`px-12 py-4 rounded-xl font-bold text-xl transition-all transform duration-200 ${
@@ -492,7 +517,7 @@ export default function GamePlay() {
                                     </div>
 
                                     <button
-                                        onClick={() => setResult(null)}
+                                        onClick={handleCloseResult}
                                         className="w-full py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition-colors"
                                     >
                                         Đóng
