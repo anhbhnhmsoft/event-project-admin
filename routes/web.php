@@ -33,9 +33,13 @@ Route::middleware(['auth:web'])->prefix('/event-game')->group(function () {
     Route::get('/gifts/{gameId}', [GameEventController::class, 'getGiftsEventGame']);
     Route::get('/history-gifts/{gameId}', [GameEventController::class, 'getHistoryGifts']);
     Route::get('/users/{gameId}', [GameEventController::class, 'getUsers']);
-    Route::post('/spin/{gameId}', [GameEventController::class, 'spin']);
     Route::post('/initiate-spin/{gameId}', [GameEventController::class, 'initiateSpin']);
     Route::post('/reveal-prize/{gameId}', [GameEventController::class, 'revealPrize']);
+    Route::post('/initiate-spin-user/{gameId}', [GameEventController::class, 'initiateSpinUser']);
 });
 
 Route::get('lang/{locale}', [App\Http\Controllers\LanguageController::class, 'switch'])->name('lang.switch');
+
+// Zalo Access Token Initialization Routes
+Route::get('/zalo/redirect', [App\Http\Controllers\ZaloController::class, 'redirect'])->name('zalo.redirect');
+Route::get('/zalo/callback', [App\Http\Controllers\ZaloController::class, 'callback'])->name('zalo.callback');

@@ -39,13 +39,7 @@ const useGameLogic = (game, csrfToken, wheelItems, setWheelItems, t) => {
                 { user_id: selectedUser.id },
                 { headers: { "X-CSRF-TOKEN": csrfToken } }
             );
-
-            if (!data.status || !data.data?.spin_id) {
-                alert(data.message || t("spinFailed"));
-                return;
-            }
-
-            console.log("Initiate Spin Data:", data.data);
+            console.log('Initiate Spin Data:', data);
 
             const { spin_id, gift_id, gift } = data.data;
             setCurrentSpinId(spin_id);
@@ -78,8 +72,8 @@ const useGameLogic = (game, csrfToken, wheelItems, setWheelItems, t) => {
             setPrizeNumber(index);
             setMustSpin(true);
         } catch (err) {
-            console.error("Initiate spin error:", err);
-            alert(t("spinError"));
+            console.error(err.response.data.message);
+            alert(err.response.data.message);
         }
     };
     const revealPrize = async (onSuccess) => {

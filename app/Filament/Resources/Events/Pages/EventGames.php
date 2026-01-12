@@ -65,6 +65,7 @@ class EventGames extends Page implements HasTable
                     ->action(function (array $data) {
                         $game = EventGame::create([
                             ...$data,
+                            'config_game' => json_encode($data['config_game'] ?? []),
                             "event_id" => $this->record->id,
                         ]);
 

@@ -127,7 +127,7 @@ class EventGameFormSchema
 
     /**
      * Generate complete form schema based on mode
-     * 
+     *
      * @param Event|null $event The event record
      * @param string $mode 'create', 'view', or 'edit'
      * @return array
@@ -150,11 +150,11 @@ class EventGameFormSchema
                             ->schema(static::giftsSchema($isDisabled, $record))
                             ->collapsible(),
 
-                        Repeater::make('config_game.custom_user_rates')
-                            ->label(__('admin.events.games.user_rate_label'))
-                            ->schema(static::customRatesSchema($event, $isDisabled, $record))
-                            ->columns(1)
-                            ->default([]),
+//                        Repeater::make('config_game.custom_user_rates')
+//                            ->label(__('admin.events.games.user_rate_label'))
+//                            ->schema(static::customRatesSchema($event, $isDisabled, $record))
+//                            ->columns(1)
+//                            ->default([]),
                     ]),
             ]),
         ];

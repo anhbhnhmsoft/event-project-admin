@@ -110,29 +110,25 @@ class EventGameService
     public function getEligibleUsers($game, int $perPage = 20): array
     {
         try {
-            $customRates = $game->config_game['custom_user_rates'] ?? [];
-            if (empty($customRates)) {
+            $eventId = $game->event_id ?? null;
+            if (!$eventId) {
                 return [
                     'status' => false,
-                    'message' => __('game.error.no_players_configured'),
+                    'message' => __('common.common_error.data_not_found'),
                 ];
             }
 
-            $userIds = collect($customRates)
-                ->pluck('user_id')
-                ->filter()
-                ->unique()
-                ->values();
+            $users = \App\Models\User::whereHas('eventUserHistories', function ($query) use ($eventId) {
+                $query->where('event_id', $eventId)
+                    ->where('status', \App\Utils\Constants\EventUserHistoryStatus::PARTICIPATED->value);
+            })->paginate($perPage);
 
-            if ($userIds->isEmpty()) {
+            if ($users->isEmpty()) {
                 return [
                     'status' => false,
-                    'message' => __('game.error.no_valid_players'),
+                    'message' => __('game.error.no_players'),
                 ];
             }
-
-            $users = \App\Models\User::whereIn('id', $userIds)
-                ->paginate($perPage);
 
             return [
                 'status' => true,
@@ -158,14 +154,44 @@ class EventGameService
                 ];
             }
 
+            // Get all gift IDs for this game
+            $gameGiftIds = $game->gifts->pluck('id');
+
+            // Get users who have won gifts in this game
+            $winnersUserIds = EventUserGift::whereIn('event_game_gift_id', $gameGiftIds)
+                ->pluck('user_id')
+                ->unique();
+
             $users = \App\Models\User::whereHas('eventUserHistories', function ($query) use ($eventId) {
                 $query->where('event_id', $eventId)
                     ->where('status', EventUserHistoryStatus::PARTICIPATED->value);
-            })->paginate($perPage);
+            })
+                ->get()
+                ->map(function ($user) use ($winnersUserIds) {
+                    // Add dynamic attribute and make it visible for serialization
+                    $user->setAttribute('has_received_gift', $winnersUserIds->contains($user->id));
+                    $user->append('has_received_gift');
+                    return $user;
+                })
+                ->sortBy('has_received_gift') // Non-winners first (false < true)
+                ->values();
+
+            // Paginate manually
+            $total = $users->count();
+            $page = request()->input('page', 1);
+            $paginatedUsers = $users->forPage($page, $perPage);
+
+            $paginator = new \Illuminate\Pagination\LengthAwarePaginator(
+                $paginatedUsers,
+                $total,
+                $perPage,
+                $page,
+                ['path' => request()->url(), 'query' => request()->query()]
+            );
 
             return [
                 'status' => true,
-                'data' => $users,
+                'data' => $paginator,
             ];
         } catch (\Exception $e) {
             Log::error($e->getMessage());
@@ -241,10 +267,10 @@ class EventGameService
     }
 
     /**
-     * Initiate spin - calculate prize based on rates and cache the result
-     * Returns spin_id for later retrieval, NOT the actual prize
+     * Spin prize - calculate and award prize immediately
+     * @deprecated The two-step flow (initiateSpin/revealPrize) is kept for backward compatibility
      */
-    public function initiateSpin($gameId, $userId)
+    public function spinPrize($gameId, $userId)
     {
         $game = EventGame::with('gifts')->find($gameId);
 
@@ -252,24 +278,8 @@ class EventGameService
             return ['status' => false, 'message' => __('game.error.game_not_found')];
         }
 
-        // Get gifts with rates for this user
-        $customRates = collect($game->config_game['custom_user_rates'] ?? []);
-        $userRate = $customRates->firstWhere('user_id', $userId);
-
-        if ($userRate && !empty($userRate['rates'])) {
-            $gifts = collect($userRate['rates'])
-                ->map(function ($r) use ($game) {
-                    $gift = $game->gifts->firstWhere('id', $r['gift_id']);
-                    if ($gift && $gift->quantity > 0) {
-                        $gift->rate = $r['rate'];
-                        return $gift;
-                    }
-                    return null;
-                })
-                ->filter();
-        } else {
-            $gifts = $game->gifts->filter(fn($g) => $g->quantity > 0 && $g->rate > 0);
-        }
+        // Get gifts with quantity > 0 and rate > 0
+        $gifts = $game->gifts->filter(fn($g) => $g->quantity > 0 && $g->rate > 0);
 
         if ($gifts->isEmpty()) {
             return ['status' => false, 'message' => __('game.error.no_valid_gifts')];
@@ -293,68 +303,27 @@ class EventGameService
             return ['status' => false, 'message' => __('game.error.cannot_select_gift')];
         }
 
-        // Generate unique spin ID and cache the result for 60 seconds
-        $spinId = uniqid('spin_', true);
-        $cacheKey = "game_spin_{$gameId}_{$userId}_{$spinId}";
-
-        cache()->put($cacheKey, [
-            'gift_id' => $selectedGift->id,
-            'user_id' => $userId,
-            'game_id' => $gameId,
-        ], now()->addSeconds(60));
-
-        return [
-            'status' => true,
-            'spin_id' => $spinId,
-            'gift_id' => (string) $selectedGift->id,
-            'gift' => $selectedGift,
-            'wheel_items' => $gifts->map(fn($g) => ['id' => (string) $g->id, 'name' => $g->name])->values(),
-        ];
-    }
-
-    /**
-     * Reveal prize - retrieve cached result and save to history
-     * Called after wheel animation completes
-     */
-    public function revealPrize($gameId, $userId, $spinId)
-    {
-        $cacheKey = "game_spin_{$gameId}_{$userId}_{$spinId}";
-        $cachedResult = cache()->get($cacheKey);
-
-        if (!$cachedResult) {
-            return ['status' => false, 'message' => __('game.error.spin_expired')];
-        }
-
-        // Delete cache to prevent reuse
-        cache()->forget($cacheKey);
-
-        $gift = EventGameGift::find($cachedResult['gift_id']);
-        if (!$gift) {
-            return ['status' => false, 'message' => __('game.error.gift_not_found')];
-        }
-
-        // Save history
-        $history = $this->createGiftHistory($userId, $gift->id);
+        // Save history immediately
+        $history = $this->createGiftHistory($userId, $selectedGift->id);
         if (!$history['status']) {
             return ['status' => false, 'message' => $history['message']];
         }
 
         // Send notification
         try {
-            $game = EventGame::find($gameId);
             $payload = new NotificationPayload(
                 title: __('event.success.congratulartion_prize'),
-                description: __('event.success.congratulartion_desc', ['gift_name' => $gift->name, 'game' => $game->name]),
+                description: __('event.success.congratulartion_desc', ['gift_name' => $selectedGift->name, 'game' => $game->name]),
                 data: [
                     'game_id' => $gameId,
-                    'gift_id' => $gift->id,
+                    'gift_id' => $selectedGift->id,
                     'history_id' => $history['data']->id,
                 ],
                 notificationType: UserNotificationType::SYSTEM_ANNOUNCEMENT,
             );
             SendNotifications::dispatch($payload, [$userId])->delay(now()->addSeconds(2))->onQueue('notifications');
         } catch (\Throwable $e) {
-            Log::error('EventGameService::revealPrize - Notification failed', [
+            Log::error('EventGameService::spinPrize - Notification failed', [
                 'error' => $e->getMessage(),
                 'user_id' => $userId,
                 'game_id' => $gameId,
@@ -363,25 +332,26 @@ class EventGameService
 
         return [
             'status' => true,
-            'gift' => $gift,
+            'gift' => $selectedGift,
             'history' => $history['data'],
         ];
     }
 
     /**
-     * @deprecated Use initiateSpin and revealPrize instead
+     * @deprecated Use spinPrize instead
      */
-    public function spinPrize($gameId, $userId)
+    public function initiateSpin($gameId, $userId)
     {
-        // Keep for backward compatibility, but log warning
-        Log::warning('EventGameService::spinPrize is deprecated, use initiateSpin/revealPrize instead');
+        return $this->spinPrize($gameId, $userId);
+    }
 
-        $initResult = $this->initiateSpin($gameId, $userId);
-        if (!$initResult['status']) {
-            return $initResult;
-        }
-
-        return $this->revealPrize($gameId, $userId, $initResult['spin_id']);
+    /**
+     * @deprecated Use spinPrize instead
+     */
+    public function revealPrize($gameId, $userId, $spinId)
+    {
+        // No-op since spinPrize handles everything
+        return ['status' => false, 'message' => __('game.error.deprecated_method')];
     }
 
     public function updateGameEvent(EventGame $record, $data)
@@ -405,5 +375,131 @@ class EventGameService
                 'status' => false,
             ];
         }
+    }
+
+    /**
+     * Spin for user - select random user for a specific gift and award immediately
+     */
+    public function spinUserPrize($gameId, $giftId)
+    {
+        $game = EventGame::find($gameId);
+        if (!$game) {
+            return ['status' => false, 'message' => __('game.error.game_not_found')];
+        }
+
+        $gift = EventGameGift::find($giftId);
+        if (!$gift || $gift->quantity <= 0) {
+            return ['status' => false, 'message' => __('game.error.gift_out_of_stock')];
+        }
+
+        // Find eligible users: those checked in but NOT received any gift yet for this game
+        $eventId = $game->event_id;
+
+        // 1. Get users participating in event
+        $participatingUserIds = \App\Models\EventUserHistory::where('event_id', $eventId)
+            ->where('status', EventUserHistoryStatus::PARTICIPATED->value)
+            ->pluck('user_id');
+
+        if ($participatingUserIds->isEmpty()) {
+            return ['status' => false, 'message' => __('game.error.no_players')];
+        }
+
+        // 2. Exclude users who already won in this game
+        $winningUserIds = EventUserGift::whereIn('event_game_gift_id', $game->gifts->pluck('id'))
+            ->pluck('user_id');
+
+        $eligibleUserIds = $participatingUserIds->diff($winningUserIds);
+
+        if ($eligibleUserIds->isEmpty()) {
+            return ['status' => false, 'message' => __('game.error.no_eligible_players')];
+        }
+
+        // Randomly select one user
+        $selectedUserId = $eligibleUserIds->random();
+        $selectedUser = \App\Models\User::find($selectedUserId);
+
+        if (!$selectedUser) {
+            return ['status' => false, 'message' => __('game.error.cannot_select_user')];
+        }
+
+        // Prepare Wheel Items: Candidates to show on the wheel
+        $wheelCandidates = $eligibleUserIds->count() > 20
+            ? $eligibleUserIds->random(20)
+            : $eligibleUserIds;
+
+        // Ensure winner is in the list
+        if (!$wheelCandidates->contains($selectedUserId)) {
+            $wheelCandidates->push($selectedUserId);
+        }
+
+        // Get users and preserve the order of wheelCandidates
+        $usersById = \App\Models\User::whereIn('id', $wheelCandidates)->get()->keyBy('id');
+
+        $wheelUsers = $wheelCandidates->map(function ($userId) use ($usersById) {
+            $u = $usersById[$userId];
+            $avatarUrl = $u->avatar_path ? \App\Utils\Helper::generateURLImagePath($u->avatar_path) : null;
+            return [
+                'id' => (string)$u->id,
+                'option' => $u->name,
+                'image' => $avatarUrl ? [
+                    'uri' => $avatarUrl,
+                    'offsetX' => 0,
+                    'offsetY' => 0,
+                    'sizeMultiplier' => 0.5,
+                    'landscape' => true
+                ] : null,
+                'style' => [
+                    'backgroundColor' => '#' . substr(md5($u->name), 0, 6),
+                    'textColor' => 'white'
+                ],
+                'user' => $u
+            ];
+        });
+
+        // Save history immediately
+        $history = $this->createGiftHistory($selectedUserId, $giftId);
+        if (!$history['status']) {
+            return ['status' => false, 'message' => $history['message']];
+        }
+
+        // Notify
+        try {
+            //            $payload = new NotificationPayload(
+            //                title: __('event.success.congratulartion_prize'),
+            //                description: __('event.success.congratulartion_desc', ['gift_name' => $gift->name, 'game' => $game->name]),
+            //                data: [
+            //                    'game_id' => $gameId,
+            //                    'gift_id' => $gift->id,
+            //                    'history_id' => $history['data']->id,
+            //                ],
+            //                notificationType: UserNotificationType::SYSTEM_ANNOUNCEMENT,
+            //            );
+            //            SendNotifications::dispatch($payload, [$selectedUserId])->delay(now()->addSeconds(5))->onQueue('notifications');
+        } catch (\Throwable $e) {
+            Log::error('EventGameService::spinUserPrize - Notification failed', [
+                'error' => $e->getMessage(),
+                'user_id' => $selectedUserId,
+                'game_id' => $gameId,
+            ]);
+        }
+
+        return [
+            'status' => true,
+            'user_id' => (string) $selectedUserId,
+            'user' => $selectedUser,
+            'gift' => $gift,
+            'history' => $history['data'],
+            'wheel_items' => $wheelUsers->values(),
+        ];
+    }
+
+
+    /**
+     * @deprecated Use spinUserPrize instead
+     */
+    public function revealUserPrize($gameId, $giftId, $spinId)
+    {
+        // No-op since spinUserPrize handles everything
+        return ['status' => false, 'message' => __('game.error.deprecated_method')];
     }
 }

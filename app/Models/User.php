@@ -61,6 +61,13 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
     ];
 
     /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = [];
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
