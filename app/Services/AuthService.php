@@ -31,6 +31,7 @@ use App\Utils\Constants\EventSeatStatus;
 use App\Utils\Helper;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class AuthService
 {
@@ -48,7 +49,10 @@ class AuthService
                 ->where('email', $data['email'])
                 ->whereHasActiveOrganizer((int) $data['organizer_id'])
                 ->first();
-            if($user->inactive) {
+            if (!$user) {
+                throw new ServiceException(__('auth.error.invalid_credentials'));
+            }
+            if ($user->inactive) {
                 throw new ServiceException(__('auth.error.account_inactivated'));
             }
             if (!$user || ! Hash::check($data['password'], $user->password)) {
@@ -72,7 +76,7 @@ class AuthService
                 'message' => $e->getMessage(),
             ];
         } catch (\Throwable $e) {
-            Log::debug($e->getMessage());
+            Log::debug('AuthService login error: ' . $e->getMessage());
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),
@@ -319,169 +323,6 @@ class AuthService
         }
     }
 
-    public function quickRegister(array $data): array
-    {
-        DB::beginTransaction();
-
-        try {
-            $userExists = true;
-            $seatWasUpdated = false;
-
-            $user = User::query()
-                ->where('email', $data['email'])
-                ->where('organizer_id', $data['organizer_id'])
-                ->first();
-
-            if (! $user) {
-                // TẠO MỚI USER
-                $user = User::query()->create([
-                    'name'              => trim($data['name']),
-                    'email'             => $data['email'],
-                    'password'          => Hash::make($data['phone']),
-                    'organizer_id'      => (int) $data['organizer_id'],
-                    'role'              => RoleUser::CUSTOMER->value,
-                    'lang'              => $data['lang'] ?? Language::VI->value,
-                    'phone'             => $data['phone'],
-                    'email_verified_at' => now(),
-                    'phone_verified_at' => now(),
-                ]);
-                $userExists = false; // Đánh dấu là user mới được tạo
-            } elseif (! $user->phone) {
-                // USER TỒN TẠI, CẬP NHẬT PHONE
-                $user->update(['phone' => $data['phone']]);
-            }
-
-            // Lấy event
-            $event = Event::query()->findOrFail($data['event_id']);
-
-            // Lấy vé cũ (history)
-            $history = EventUserHistory::query()
-                ->where('event_id', $event->id)
-                ->where('user_id', $user->id)
-                ->first();
-
-            // Xác định trạng thái vé
-            $status = $event->status === EventStatus::ACTIVE->value
-                ? EventUserHistoryStatus::PARTICIPATED->value
-                : EventUserHistoryStatus::BOOKED->value;
-
-            if (! $history) {
-
-                // Tìm ghế trống
-                $seat = EventSeat::query()
-                    ->whereHas('area', function (Builder $q) use ($event) {
-                        $q->where('event_id', $event->id)->where('vip', false);
-                    })
-                    ->where('status', EventSeatStatus::AVAILABLE->value)
-                    ->whereNull('user_id')
-                    ->orderBy('id')
-                    ->lockForUpdate()
-                    ->first();
-
-                if (! $seat) {
-                    DB::rollBack();
-                    return [
-                        'status'  => false,
-                        'message' => __('event.validation.no_available_seat'),
-                        'title'   => __('event.validation.register_fail_title'),
-                    ];
-                }
-
-                // Tạo ticket code mới
-                do {
-                    $ticketCode = 'TICKET-' . Helper::getTimestampAsId();
-                } while (EventUserHistory::where('ticket_code', $ticketCode)->exists());
-
-                // Tạo vé mới và GÁN GHẾ MỚI
-                EventUserHistory::query()->create([
-                    'event_id'      => $event->id,
-                    'user_id'       => $user->id,
-                    'status'        => $status,
-                    'event_seat_id' => $seat->id, // Gán ghế mới
-                    'ticket_code'   => $ticketCode,
-                ]);
-
-                $seatWasUpdated = true;
-
-                // Cập nhật ghế
-                $seat->update([
-                    'user_id' => $user->id,
-                    'status'  => EventSeatStatus::BOOKED->value,
-                ]);
-            } else {
-                $history->update(['status' => $status]);
-            }
-
-            DB::commit();
-
-            $finalHistory = EventUserHistory::query()
-                ->with('seat')
-                ->where('event_id', $event->id)
-                ->where('user_id', $user->id)
-                ->first();
-
-            $ticketCode = $finalHistory->ticket_code;
-            $seatName = $finalHistory->eventSeat->name ?? '';
-
-            $finalMessage = $this->generateFinalMessage(
-                !$userExists,
-                !$history, // !history = vé vừa được tạo
-                $seatWasUpdated
-            );
-
-            return [
-                'status'  => true,
-                'message' => $finalMessage['message'],
-                'title'   => $finalMessage['title'],
-                'data' => [
-                    'ticket_code' => $ticketCode,
-                    'seat_name' => $seatName,
-                    'user_exists' => $userExists,
-                ]
-            ];
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error("Quick register failed: " . $e->getMessage());
-
-            return [
-                'status' => false,
-                'message' => __('common.common_error.server_error'),
-                'title' => __('event.validation.register_fail_title'),
-            ];
-        }
-    }
-
-    private function generateFinalMessage(bool $isNewUser, bool $isNewTicket, bool $seatWasUpdated): array
-    {
-        if ($isNewUser) {
-            return [
-                'title' => __('event.messages.register_success_title'),
-                'message' => __('event.messages.new_user_new_ticket_message'),
-            ];
-        }
-
-        if ($isNewTicket && $seatWasUpdated) {
-            return [
-                'title' => __('event.messages.ticket_granted_title'),
-                'message' => __('event.messages.existing_user_new_ticket_message'),
-            ];
-        }
-
-        if (!$isNewTicket) {
-            return [
-                'title' => __('event.messages.ticket_confirmed_title'),
-                'message' => __('event.messages.existing_user_existing_ticket_message'),
-            ];
-        }
-
-        return [
-            'title' => __('common.messages.process_complete_title'),
-            'message' => __('common.messages.process_complete_message'),
-        ];
-    }
-
-
-
     public function registerOrganizer(array $data): array
     {
         DB::beginTransaction();
@@ -653,36 +494,568 @@ class AuthService
         }
     }
 
-    /**
-     * -- Khóa tài khỏan của người dùng
-     * @return array
-     */
-    public function lockAccount(): array
+    public function quickRegister(array $data): array
     {
+        DB::beginTransaction();
+
         try {
-            DB::beginTransaction();
-            $user = Auth::user();
-            if($user->inactive) {
-                return [
-                    'status' => true,
-                    'message' => __('auth.error.account_already_locked'),
-                ];
+            $userExists = true;
+            $seatWasUpdated = false;
+
+            $user = User::query()
+                ->where('email', $data['email'])
+                ->where('organizer_id', $data['organizer_id'])
+                ->first();
+
+            if (! $user) {
+                // TẠO MỚI USER
+                $user = User::query()->create([
+                    'name'              => trim($data['name']),
+                    'email'             => $data['email'],
+                    'password'          => Hash::make($data['phone']),
+                    'organizer_id'      => (int) $data['organizer_id'],
+                    'role'              => RoleUser::CUSTOMER->value,
+                    'lang'              => $data['lang'] ?? Language::VI->value,
+                    'phone'             => $data['phone'],
+                    'email_verified_at' => now(),
+                    'phone_verified_at' => now(),
+                ]);
+                $userExists = false; // Đánh dấu là user mới được tạo
+            } elseif (! $user->phone) {
+                // USER TỒN TẠI, CẬP NHẬT PHONE
+                $user->update(['phone' => $data['phone']]);
             }
-            $user->inactive = true;
-            $user->save();
-            $user->currentAccessToken()->delete();
+
+            // Lấy event
+            $event = Event::query()->findOrFail($data['event_id']);
+
+            // Lấy vé cũ (history)
+            $history = EventUserHistory::query()
+                ->where('event_id', $event->id)
+                ->where('user_id', $user->id)
+                ->first();
+
+            // Xác định trạng thái vé
+            $status = $event->status === EventStatus::ACTIVE->value
+                ? EventUserHistoryStatus::PARTICIPATED->value
+                : EventUserHistoryStatus::BOOKED->value;
+
+            if (! $history) {
+
+                // Tìm ghế trống
+                $seat = EventSeat::query()
+                    ->whereHas('area', function (Builder $q) use ($event) {
+                        $q->where('event_id', $event->id)->where('vip', false);
+                    })
+                    ->where('status', EventSeatStatus::AVAILABLE->value)
+                    ->whereNull('user_id')
+                    ->orderBy('id')
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $seat) {
+                    DB::rollBack();
+                    return [
+                        'status'  => false,
+                        'message' => __('event.validation.no_available_seat'),
+                        'title'   => __('event.validation.register_fail_title'),
+                    ];
+                }
+
+                // Tạo ticket code mới
+                do {
+                    $ticketCode = 'TICKET-' . Helper::getTimestampAsId();
+                } while (EventUserHistory::where('ticket_code', $ticketCode)->exists());
+
+                // Tạo vé mới và GÁN GHẾ MỚI
+                EventUserHistory::query()->create([
+                    'event_id'      => $event->id,
+                    'user_id'       => $user->id,
+                    'status'        => $status,
+                    'event_seat_id' => $seat->id, // Gán ghế mới
+                    'ticket_code'   => $ticketCode,
+                ]);
+
+                $seatWasUpdated = true;
+
+                // Cập nhật ghế
+                $seat->update([
+                    'user_id' => $user->id,
+                    'status'  => EventSeatStatus::BOOKED->value,
+                ]);
+            } else {
+                $history->update(['status' => $status]);
+            }
+
             DB::commit();
+
+            $finalHistory = EventUserHistory::query()
+                ->with('seat')
+                ->where('event_id', $event->id)
+                ->where('user_id', $user->id)
+                ->first();
+
+            $ticketCode = $finalHistory->ticket_code;
+            $seatName = $finalHistory->eventSeat->name ?? '';
+
+            $finalMessage = $this->generateFinalMessage(
+                !$userExists,
+                !$history, // !history = vé vừa được tạo
+                $seatWasUpdated
+            );
+
             return [
-                'status' => true,
-                'message' => __('auth.success.lock_account_success'),
+                'status'  => true,
+                'message' => $finalMessage['message'],
+                'title'   => $finalMessage['title'],
+                'data' => [
+                    'ticket_code' => $ticketCode,
+                    'seat_name' => $seatName,
+                    'user_exists' => $userExists,
+                ]
             ];
         } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error('Lock account failed: ' . $e->getMessage());
+            Log::error("Quick register failed: " . $e->getMessage());
+
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+                'title' => __('event.validation.register_fail_title'),
+            ];
+        }
+    }
+
+    /**
+     * Authenticate with phone number - Check if phone exists and send OTP if new
+     *
+     * @param string $phone
+     * @param int $organizerId
+     * @return array
+     */
+    public function authenticate(string $phone, int $organizerId): array
+    {
+        try {
+            // Check if user exists with this phone and organizer
+            $user = User::query()
+                ->where('phone', $phone)
+                ->where('organizer_id', $organizerId)
+                ->first();
+
+            if ($user) {
+                // User exists - send OTP for login
+                $cacheKey = "otp:login:{$phone}:{$organizerId}";
+
+                // Check if OTP already sent recently
+                if (Cache::has($cacheKey)) {
+                    return [
+                        'status' => false,
+                        'message' => __('auth.error.otp_already_sent'),
+                    ];
+                }
+
+                // Generate OTP
+                $otp = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
+
+                // Send OTP via Zalo
+                $zaloService = app(ZaloService::class);
+                $result = $zaloService->sendOTP($phone, $otp, \App\Utils\Constants\PurposeZNS::REGISTER); // Using REGISTER template for now as noted
+
+                if (!$result['success']) {
+                    return [
+                        'status' => false,
+                        'message' => $result['message'],
+                    ];
+                }
+
+                // Cache OTP for 5 minutes (login OTP usually shorter or same as register)
+                // Using 5 minutes as per user's previous manual edit pattern
+                Cache::put($cacheKey, [
+                    'otp' => $otp,
+                    'attempts' => 0,
+                    'ip_address' => request()->ip(),
+                ], now()->addMinutes(5));
+
+                return [
+                    'status' => true,
+                    'need_register' => false,
+                    'expire_minutes' => 5,
+                ];
+            }
+
+            // User doesn't exist - send OTP for registration
+            $cacheKey = "otp:register:{$phone}:{$organizerId}";
+
+            // Check if OTP already sent recently
+            if (Cache::has($cacheKey)) {
+                return [
+                    'status' => false,
+                    'message' => __('auth.error.otp_already_sent'),
+                ];
+            }
+
+            // Generate OTP
+            $otp = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
+
+            // Send OTP via Zalo
+            $zaloService = app(ZaloService::class);
+            $result = $zaloService->sendOTP($phone, $otp, \App\Utils\Constants\PurposeZNS::REGISTER);
+
+            if (!$result['success']) {
+                return [
+                    'status' => false,
+                    'message' => $result['message'],
+                ];
+            }
+
+            // Cache OTP for 10 minutes
+            Cache::put($cacheKey, [
+                'otp' => $otp,
+                'attempts' => 0,
+                'ip_address' => request()->ip(),
+            ], now()->addMinutes(10));
+
+            return [
+                'status' => true,
+                'need_register' => true,
+                'expire_minutes' => 10,
+            ];
+        } catch (\Throwable $e) {
+            Log::error('AuthService::authenticate failed', [
+                'phone' => $phone,
+                'error' => $e->getMessage(),
+            ]);
+
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),
             ];
         }
+    }
+
+    /**
+     * Verify OTP for registration and return registration token
+     *
+     * @param string $phone
+     * @param string $otp
+     * @param int $organizerId
+     * @return array
+     */
+    public function verifyOtpRegister(string $phone, string $otp, int $organizerId): array
+    {
+        try {
+            $cacheKey = "otp:register:{$phone}:{$organizerId}";
+            $data = Cache::get($cacheKey);
+
+            if (!$data) {
+                return [
+                    'status' => false,
+                    'message' => __('auth.error.otp_not_found'),
+                ];
+            }
+
+            // Check attempts
+            if ($data['attempts'] >= 5) {
+                Cache::forget($cacheKey);
+                return [
+                    'status' => false,
+                    'message' => __('auth.error.too_many_attempts'),
+                ];
+            }
+
+            // Verify OTP
+            if ($data['otp'] !== $otp) {
+                $data['attempts']++;
+                Cache::put($cacheKey, $data, now()->addMinutes(10));
+
+                return [
+                    'status' => false,
+                    'message' => __('auth.error.invalid_otp'),
+                ];
+            }
+
+            // OTP is valid - generate registration token
+            $token = Helper::generateTokenRandom();
+
+            // Cache registration token for 30 minutes
+            Cache::put("register:token:{$token}", [
+                'phone' => $phone,
+                'organizer_id' => $organizerId,
+            ], now()->addMinutes(30));
+
+            // Delete OTP cache
+            Cache::forget($cacheKey);
+
+            return [
+                'status' => true,
+                'token' => $token,
+            ];
+        } catch (\Throwable $e) {
+            Log::error('AuthService::verifyOtpRegister failed', [
+                'phone' => $phone,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
+        }
+    }
+
+    /**
+     * Resend OTP for registration
+     *
+     * @param string $phone
+     * @param int $organizerId
+     * @return array
+     */
+    public function resendOtpRegister(string $phone, int $organizerId): array
+    {
+        try {
+            $rateLimitKey = "otp:ratelimit:{$phone}";
+
+            // Check rate limit (max 3 sends per hour)
+            $sendCount = Cache::get($rateLimitKey, 0);
+            if ($sendCount >= 5) {
+                return [
+                    'status' => false,
+                    'message' => __('auth.error.otp_rate_limit'),
+                ];
+            }
+
+            // Generate new OTP
+            $otp = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
+
+            // Send OTP via Zalo
+            $zaloService = app(ZaloService::class);
+            $result = $zaloService->sendOTP($phone, $otp, \App\Utils\Constants\PurposeZNS::REGISTER);
+
+            if (!$result['success']) {
+                return [
+                    'status' => false,
+                    'message' => $result['message'],
+                ];
+            }
+
+            // Update cache
+            $cacheKey = "otp:register:{$phone}:{$organizerId}";
+            Cache::put($cacheKey, [
+                'otp' => $otp,
+                'attempts' => 0,
+                'ip_address' => request()->ip(),
+            ], now()->addMinutes(10));
+
+            // Increment rate limit counter
+            Cache::put($rateLimitKey, $sendCount + 1, now()->addHour());
+
+            return [
+                'status' => true,
+                'expire_minutes' => 10,
+            ];
+        } catch (\Throwable $e) {
+            Log::error('AuthService::resendOtpRegister failed', [
+                'phone' => $phone,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
+        }
+    }
+
+    /**
+     * Register new user with phone using registration token
+     *
+     * @param string $token
+     * @param array $data
+     * @return array
+     */
+    public function registerWithPhone(string $token, array $data): array
+    {
+        DB::beginTransaction();
+        try {
+            // Verify registration token
+            $tokenData = Cache::get("register:token:{$token}");
+
+            if (!$tokenData) {
+                return [
+                    'status' => false,
+                    'message' => __('auth.error.invalid_token'),
+                ];
+            }
+
+            $phone = $tokenData['phone'];
+            $organizerId = $tokenData['organizer_id'];
+
+            // Check if user already exists
+            $existingUser = User::query()
+                ->where('phone', $phone)
+                ->where('organizer_id', $organizerId)
+                ->first();
+
+            if ($existingUser) {
+                DB::rollBack();
+                return [
+                    'status' => false,
+                    'message' => __('auth.error.phone_already_registered'),
+                ];
+            }
+
+            // Create new user
+            $user = User::create([
+                'name' => $data['name'],
+                'phone' => $phone,
+                'email' => $data['email'] ?? null,
+                'password' => bcrypt($data['password']), // Default password is phone number
+                'organizer_id' => $organizerId,
+                'role' => \App\Utils\Constants\RoleUser::CUSTOMER->value,
+                'lang' => $data['lang'] ?? \App\Utils\Constants\Language::VI->value,
+                'phone_verified_at' => now(),
+                'address' => $data['address'] ?? null,
+            ]);
+
+            // Create auth token
+            $authToken = $user->createToken('api', expiresAt: now()->addDays(30))->plainTextToken;
+
+            // Delete registration token
+            Cache::forget("register:token:{$token}");
+
+            DB::commit();
+
+            return [
+                'status' => true,
+                'user' => $user,
+                'token' => $authToken,
+            ];
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('AuthService::registerWithPhone failed', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
+        }
+    }
+
+    /**
+     * Login with phone and OTP
+     *
+     * @param string $phone
+     * @param string $otp
+     * @param int $organizerId
+     * @return array
+     */
+    public function loginWithPhone(string $phone, string $otp, int $organizerId): array
+    {
+        try {
+            // First send OTP if not already sent
+            $cacheKey = "otp:login:{$phone}:{$organizerId}";
+            $data = Cache::get($cacheKey);
+            if (!$data) {
+                return [
+                    'status' => false,
+                    'message' => __('auth.error.otp_not_found'),
+                ];
+            }
+            // Verify OTP
+            if ($data['attempts'] >= 5) {
+                Cache::forget($cacheKey);
+                return [
+                    'status' => false,
+                    'message' => __('auth.error.too_many_attempts'),
+                ];
+            }
+
+            if ($data['otp'] !== $otp) {
+                $data['attempts']++;
+                Cache::put($cacheKey, $data, now()->addMinutes(5));
+
+                return [
+                    'status' => false,
+                    'message' => __('auth.error.invalid_otp'),
+                ];
+            }
+
+            // Find user
+            $user = User::query()
+                ->where('phone', $phone)
+                ->where('organizer_id', $organizerId)
+                ->first();
+
+            if (!$user) {
+                return [
+                    'status' => false,
+                    'user_exit' => false,
+                    'message' => __('auth.error.user_not_found'),
+                ];
+            }
+
+            if ($user->inactive) {
+                return [
+                    'status' => false,
+                    'message' => __('auth.error.account_inactivated'),
+                ];
+            }
+
+            // Update last login
+            $user->update(['last_login_at' => now()]);
+
+            // Create auth token
+            $authToken = $user->createToken('api', expiresAt: now()->addDays(30))->plainTextToken;
+
+            // Delete OTP cache
+            Cache::forget($cacheKey);
+
+            return [
+                'status' => true,
+                'user' => $user,
+                'token' => $authToken,
+            ];
+        } catch (\Throwable $e) {
+            Log::error('AuthService::loginWithPhone failed', [
+                'phone' => $phone,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
+        }
+    }
+    
+    private function generateFinalMessage(bool $isNewUser, bool $isNewTicket, bool $seatWasUpdated): array
+    {
+        if ($isNewUser) {
+            return [
+                'title' => __('event.messages.register_success_title'),
+                'message' => __('event.messages.new_user_new_ticket_message'),
+            ];
+        }
+
+        if ($isNewTicket && $seatWasUpdated) {
+            return [
+                'title' => __('event.messages.ticket_granted_title'),
+                'message' => __('event.messages.existing_user_new_ticket_message'),
+            ];
+        }
+
+        if (!$isNewTicket) {
+            return [
+                'title' => __('event.messages.ticket_confirmed_title'),
+                'message' => __('event.messages.existing_user_existing_ticket_message'),
+            ];
+        }
+
+        return [
+            'title' => __('common.messages.process_complete_title'),
+            'message' => __('common.messages.process_complete_message'),
+        ];
     }
 }

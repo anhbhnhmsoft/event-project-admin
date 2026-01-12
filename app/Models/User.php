@@ -126,7 +126,7 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
             ->wherePivot('status', MembershipUserStatus::ACTIVE->value)->limit(1);
     }
 
-    public function membershipsUser ()
+    public function membershipsUser()
     {
         return $this->hasMany(MembershipUser::class);
     }
@@ -142,5 +142,10 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
             ->withTimestamps()
             ->withPivot('id')
             ->using(EventScheduleDocumentUser::class);
+    }
+
+    public function devices(): HasMany
+    {
+        return $this->hasMany(UserDevice::class);
     }
 }

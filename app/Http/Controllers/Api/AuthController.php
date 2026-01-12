@@ -3,8 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\PhoneRegisterRequest;
+use App\Http\Requests\SendOTPRequest;
+use App\Http\Requests\VerifyOTPRequest;
 use App\Http\Resources\UserResource;
 use App\Services\AuthService;
+use App\Services\OTPService;
+use App\Services\PhoneAuthService;
+use App\Utils\Constants\PurposeZNS;
 use App\Mail\VerifyEmailMail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -415,6 +421,232 @@ class AuthController extends Controller
         }
         return response()->json([
             'message' => __('auth.success.lock_account_success'),
+        ], 200);
+    }
+
+    /**
+     * Authenticate with phone - Check if phone exists and send OTP if new
+     * POST /api/auth/phone/authenticate
+     */
+    public function authenticate(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'phone' => ['required', 'string', 'regex:/^0[0-9]{9,10}$/'],
+            'organizer_id' => ['required', 'integer', 'exists:organizers,id'],
+        ], [
+            'phone.required' => __('auth.validation.phone_required'),
+            'phone.regex' => __('auth.validation.phone_regex'),
+            'organizer_id.required' => __('auth.validation.organizer_id_required'),
+            'organizer_id.exists' => __('auth.validation.organizer_id_exists'),
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => __('auth.error.validation_failed'),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $result = $this->authService->authenticate(
+            $request->input('phone'),
+            $request->input('organizer_id')
+        );
+
+        if (!$result['status']) {
+            return response()->json([
+                'message' => $result['message'],
+            ], 400);
+        }
+
+        return response()->json([
+            'message' => __('auth.success.authenticate'),
+            'data' => [
+                'need_register' => $result['need_register'],
+                'expire_minutes' => $result['expire_minutes'] ?? null,
+            ],
+        ], 200);
+    }
+
+    /**
+     * Verify OTP for registration
+     * POST /api/auth/phone/verify-otp
+     */
+    public function verifyOtpRegister(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'phone' => ['required', 'string', 'regex:/^0[0-9]{9,10}$/'],
+            'otp' => ['required', 'string', 'size:6'],
+            'organizer_id' => ['required', 'integer', 'exists:organizers,id'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => __('auth.error.validation_failed'),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $result = $this->authService->verifyOtpRegister(
+            $request->input('phone'),
+            $request->input('otp'),
+            $request->input('organizer_id')
+        );
+
+        if (!$result['status']) {
+            return response()->json([
+                'message' => $result['message'],
+            ], 400);
+        }
+
+        return response()->json([
+            'message' => __('auth.success.otp_verified'),
+            'data' => [
+                'token' => $result['token'],
+            ],
+        ], 200);
+    }
+
+    /**
+     * Resend OTP for registration
+     * POST /api/auth/phone/resend-otp
+     */
+    public function resendOtpRegister(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'phone' => ['required', 'string', 'regex:/^0[0-9]{9,10}$/'],
+            'organizer_id' => ['required', 'integer', 'exists:organizers,id'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => __('auth.error.validation_failed'),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $result = $this->authService->resendOtpRegister(
+            $request->input('phone'),
+            $request->input('organizer_id')
+        );
+
+        if (!$result['status']) {
+            return response()->json([
+                'message' => $result['message'],
+            ], 400);
+        }
+
+        return response()->json([
+            'message' => __('auth.success.otp_resent'),
+            'data' => [
+                'expire_minutes' => $result['expire_minutes'],
+            ],
+        ], 200);
+    }
+
+    /**
+     * Register new user with phone + registration token
+     * POST /api/auth/phone/register
+     */
+    public function registerWithPhone(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'token' => ['required', 'string'],
+            'name' => ['required', 'string', 'max:255'],
+            'organizer_id' => ['required', 'integer', 'exists:organizers,id'],
+            'email' => [
+                'nullable',
+                'email',
+                Rule::unique('users', 'email')->where(function ($query) use ($request) {
+                    return $query->where('organizer_id', $request->input('organizer_id'));
+                })
+            ],
+            'lang' => ['nullable', 'string', 'in:vi,en'],
+            'password' => ['required', 'string', 'min:8'],
+            'confirm_password' => ['required', 'same:password'],
+            'address' => ['nullable', 'string', 'max:255'],
+        ],[
+            'token.required' => __('auth.validation.token_required'),
+            'token.string' => __('auth.validation.token_string'),
+            'name.required' => __('auth.validation.name_required'),
+            'name.string' => __('auth.validation.name_string'),
+            'name.max' => __('auth.validation.name_max'),
+            'email.required' => __('auth.validation.email_required'),
+            'email.email' => __('auth.validation.email_email'),
+            'email.unique' => __('auth.validation.email_unique'),
+            'password.required' => __('auth.validation.password_required'),
+            'password.string' => __('auth.validation.password_string'),
+            'password.min' => __('auth.validation.password_min'),
+            'confirm_password.required' => __('auth.validation.confirm_password_required'),
+            'confirm_password.same' => __('auth.validation.confirm_password_same'),
+            'address.max' => __('auth.validation.address_max'),
+            'organizer_id.required' => __('auth.validation.organizer_id_required'),
+            'organizer_id.integer' => __('auth.validation.organizer_id_integer'),
+            'organizer_id.exists' => __('auth.validation.organizer_id_exists'),
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => __('auth.error.validation_failed'),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $result = $this->authService->registerWithPhone(
+            $request->input('token'),
+            $validator->validated()
+        );
+
+        if (!$result['status']) {
+            return response()->json([
+                'message' => $result['message'],
+            ], 400);
+        }
+
+        return response()->json([
+            'message' => __('auth.success.register_success'),
+            'data' => [
+                'user' => new UserResource($result['user']),
+                'token' => $result['token'],
+            ],
+        ], 200);
+    }
+
+    /**
+     * Login with phone + OTP
+     * POST /api/auth/phone/login
+     */
+    public function loginWithPhone(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'phone' => ['required', 'string', 'regex:/^0[0-9]{9,10}$/'],
+            'otp' => ['required', 'string', 'size:6'],
+            'organizer_id' => ['required', 'integer', 'exists:organizers,id'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => __('auth.error.validation_failed'),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $result = $this->authService->loginWithPhone(
+            $request->input('phone'),
+            $request->input('otp'),
+            $request->input('organizer_id')
+        );
+
+        if (!$result['status']) {
+            return response()->json([
+                'message' => $result['message'],
+            ], 400);
+        }
+
+        return response()->json([
+            'message' => __('auth.success.login_success'),
+            'data' => [
+                'user' => new UserResource($result['user']),
+                'token' => $result['token'],
+            ],
         ], 200);
     }
 }

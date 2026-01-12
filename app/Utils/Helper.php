@@ -255,4 +255,15 @@ final class Helper
         $phone = self::formatPhone($phone);
         return preg_match('/^84\d{9}$/', $phone);
     }
+
+    /**
+     * Generate secure random token
+     *
+     * @param int $length
+     * @return string
+     */
+    public static function generateTokenRandom(int $length = 64): string
+    {
+        return bin2hex(random_bytes($length / 2));
+    }
 }

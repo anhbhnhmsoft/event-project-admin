@@ -55,6 +55,14 @@ return [
         ]
     ],
 
+    'otp' => [
+        'expiry_minutes' => env('OTP_EXPIRY_MINUTES', 10),
+        'rate_limit' => [
+            'count' => env('OTP_RATE_LIMIT_COUNT', 3),
+            'minutes' => env('OTP_RATE_LIMIT_MINUTES', 10),
+        ],
+    ],
+
     'revenuecat' => [
         'api_key' => env('REVENUECAT_API_KEY'),
         'webhook_secret' => env('REVENUECAT_WEBHOOK_SECRET'),

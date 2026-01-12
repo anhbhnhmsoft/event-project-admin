@@ -19,6 +19,8 @@ return [
         // BỔ SUNG: Cài đặt ngôn ngữ
         'set_lang_success' => 'Language setting successful',
         'lock_account_success' => 'Account locked successfully',
+        'authenticate' => 'Authenticate',
+        'otp_verified' => 'OTP verified successfully',
     ],
     'error' => [
         'invalid_credentials' => 'Invalid email or password',
@@ -40,6 +42,13 @@ return [
         'not_found' => 'Object not found',
         'account_already_locked' => 'Account already locked, please contact the administrator for help',
         'account_inactivated' => 'Account has been inactivated, please contact the administrator for help',
+        'phone_already_registered' => 'Phone number already registered',
+        'too_many_attempts' => 'Too many attempts, please try again later',
+        'otp_sent' => 'OTP has been sent to your phone number Zalo',
+        'invalid_token' => 'Invalid token',
+        'otp_not_found' => 'OTP invalid or expired',
+        'user_not_found' => 'User not found',
+        'invalid_otp' => 'Invalid OTP',
     ],
     'validation' => [
         'password_required' => 'Password is required',
@@ -76,6 +85,8 @@ return [
         'address_max' => 'Address must not exceed 255 characters',
         'introduce_invalid' => 'Invalid self-introduction',
         'avatar_invalid' => "Invalid profile picture",
+        'avatar_required' => 'Profile picture is required',
+
     ],
     'login' => [
         'heading'           => 'Login',

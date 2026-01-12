@@ -75,7 +75,6 @@ class ZaloService
             // Prepare template data
             $templateData = [
                 'otp' => $otp,
-                'expired_time' => '10', // 10 phút
             ];
 
             // Prepare request params
@@ -90,7 +89,8 @@ class ZaloService
             $response = Http::withHeaders([
                 'access_token' => $accessToken,
                 'Content-Type' => 'application/json',
-            ])->post(ZaloEndPointExtends::API_OA_SEND_ZNS, $params);
+            ])
+                ->post(ZaloEndPointExtends::API_OA_SEND_ZNS, $params);
 
             $responseData = $response->json();
 
@@ -167,7 +167,7 @@ class ZaloService
             $response = Http::withHeaders([
                 'secret_key' => $this->appSecret,
                 'Content-Type' => 'application/x-www-form-urlencoded',
-            ])->asForm()->post(ZaloEndPointExtends::API_REFRESH_TOKEN, [
+            ])->asForm()->post(ZaloEndPointExtends::API_OA_ACCESS_TOKEN, [
                 'app_id' => $this->appId,
                 'grant_type' => 'refresh_token',
                 'refresh_token' => $refreshToken,
@@ -313,7 +313,7 @@ class ZaloService
             'state' => $state,
         ]);
 
-        return "https://oauth.zaloapp.com/v4/permission?{$queryParams}";
+        return "https://oauth.zaloapp.com/oa/permission?{$queryParams}";
     }
 
     /**
@@ -328,7 +328,7 @@ class ZaloService
             $response = Http::withHeaders([
                 'secret_key' => $this->appSecret,
                 'Content-Type' => 'application/x-www-form-urlencoded',
-            ])->asForm()->post(ZaloEndPointExtends::API_REFRESH_TOKEN, [ // Endpoint for access token is same base, but let's verify if ZaloEndPointExtends has it. Actually API_REFRESH_TOKEN is https://oauth.zaloapp.com/v4/access_token which is correct for both.
+            ])->asForm()->post(ZaloEndPointExtends::API_OA_ACCESS_TOKEN, [ // Endpoint for access token is same base, but let's verify if ZaloEndPointExtends has it. Actually API_REFRESH_TOKEN is https://oauth.zaloapp.com/v4/access_token which is correct for both.
                 'app_id' => $this->appId,
                 'grant_type' => 'authorization_code',
                 'code' => $code,

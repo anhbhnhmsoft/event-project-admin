@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\ZaloService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class ZaloController extends Controller
@@ -36,7 +37,7 @@ class ZaloController extends Controller
     {
         $code = $request->input('code');
         $error = $request->input('error');
-
+        Log::debug('ZaloService::callback', ['code' => $code, 'error' => $error]);
         if ($error) {
             return response()->json([
                 'error' => $error,
