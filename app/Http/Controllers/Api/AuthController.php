@@ -3,14 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\PhoneRegisterRequest;
-use App\Http\Requests\SendOTPRequest;
-use App\Http\Requests\VerifyOTPRequest;
 use App\Http\Resources\UserResource;
 use App\Services\AuthService;
-use App\Services\OTPService;
-use App\Services\PhoneAuthService;
-use App\Utils\Constants\PurposeZNS;
 use App\Mail\VerifyEmailMail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -41,12 +35,13 @@ class AuthController extends Controller
     public function login(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
+            'username' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string', 'min:8'],
             'organizer_id' => ['required', 'integer', 'exists:organizers,id'],
         ], [
-            'email.required' => __('auth.validation.email_required'),
-            'email.email' => __('auth.validation.email_email'),
+            'username.required' => __('auth.validation.username_required'),
+            'username.string' => __('auth.validation.username_invalid'),
+            'username.max' => __('auth.validation.username_max'),
             'password.required' => __('auth.validation.password_required'),
             'password.min' => __('auth.validation.password_min'),
             'organizer_id.required' => __('auth.validation.organizer_id_required'),
@@ -63,8 +58,22 @@ class AuthController extends Controller
 
         $result = $this->authService->login($validator->getData());
 
+        if (isset($result['unverified_phone']) && $result['unverified_phone']) {
+            return response()->json([
+                'unverified_phone' => true,
+                'message' => $result['message'],
+            ], 422);
+        }
+        if (isset($result['unverified_email']) && $result['unverified_email']) {
+            return response()->json([
+                'unverified_email' => true,
+                'message' => $result['message'],
+            ], 422);
+        }
         if ($result['status'] === false) {
             return response()->json([
+                'unverified_phone' => false,
+                'unverified_email' => false,
                 'message' => $result['message'],
             ], 422);
         }
@@ -94,7 +103,7 @@ class AuthController extends Controller
             'introduce' => ['nullable', 'string'],
             'password' => ['nullable', 'string', 'min:8'],
             'confirm_password' => ['nullable', 'same:password'],
-       ],[
+        ], [
             'name.required' => __('auth.validation.name_required'),
             'name.string' => __('auth.validation.name_required'),
             'name.min' => __('auth.validation.name_min'),
@@ -132,7 +141,7 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'file' => 'required|image|mimes:jpeg,png,jpg|max:10240'
-       ],[
+        ], [
             'file.required' => __('auth.validation.avatar_invalid'),
             'file.image' => __('auth.validation.avatar_invalid'),
             'file.mimes' => __('auth.validation.avatar_invalid'),
@@ -169,22 +178,20 @@ class AuthController extends Controller
         ], 200);
     }
 
-    public function register(Request $request)
+    public function register(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
+            'username' => ['required', 'string', 'max:255'],
             'name' => ['required', 'string', 'min:4', 'max:255'],
-            'email' => ['required', 'email', Rule::unique('users','email')->where(function($query) use ($request) {
-                return $query->where('organizer_id', $request->input('organizer_id'));
-            })],
             'password' => ['required', 'string', 'min:8'],
             'confirm_password' => ['required', 'same:password'],
             'organizer_id' => ['required', 'integer', 'exists:organizers,id'],
         ], [
+            'username.required' => __('auth.validation.username_required'),
+            'username.max' => __('auth.validation.username_max'),
             'name.required' => __('auth.validation.name_required'),
             'name.min' => __('auth.validation.name_min'),
             'name.max' => __('auth.validation.name_max'),
-            'email.required' => __('auth.validation.email_required'),
-            'email.email' => __('auth.validation.email_email'),
             'password.required' => __('auth.validation.password_required'),
             'password.min' => __('auth.validation.password_min'),
             'confirm_password.required' => __('auth.validation.confirm_password_required'),
@@ -192,7 +199,6 @@ class AuthController extends Controller
             'organizer_id.required' => __('auth.validation.organizer_id_required'),
             'organizer_id.integer' => __('auth.validation.organizer_id_integer'),
             'organizer_id.exists' => __('auth.validation.organizer_id_exists'),
-            'email.unique' => __('auth.validation.email_unique'),
         ]);
 
         if ($validator->fails()) {
@@ -205,9 +211,13 @@ class AuthController extends Controller
         $result = $this->authService->register($validator->validated());
 
         if ($result['status'] === false) {
+            $code = 500;
+            if (str_contains($result['message'] ?? '', 'exist') || str_contains($result['message'] ?? '', 'tồn tại')) {
+                $code = 422;
+            }
             return response()->json([
                 'message' => $result['message'],
-            ], 500);
+            ], $code);
         }
 
         return response()->json([
@@ -251,11 +261,12 @@ class AuthController extends Controller
     public function resendVerify(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'email' => ['required', 'email'],
+            'username' => ['required', 'string', 'max:255'],
             'locate' => ['nullable', 'string', 'in:vi,en'],
         ], [
-            'email.required' => __('auth.validation.email_required'),
-            'email.email' => __('auth.validation.email_email')
+            'username.required' => __('auth.validation.username_required'),
+            'username.string' => __('auth.validation.username_invalid'),
+            'username.max' => __('auth.validation.username_max'),
         ]);
 
         if ($validator->fails()) {
@@ -297,12 +308,11 @@ class AuthController extends Controller
     public function forgotPassword(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'email' => ['required', 'email', 'exists:users,email'],
-            'locate' => ['nullable', 'string', 'in:vi,en'],
+            'username' => ['required', 'string'],
+            'organizer_id' => ['required', 'integer', 'exists:organizers,id'],
         ], [
-            'email.required' => __('auth.validation.email_required'),
-            'email.email' => __('auth.validation.email_email'),
-            'email.exists' => __('auth.validation.email_error'),
+            'username.required' => __('auth.validation.username_required'),
+            'organizer_id.required' => __('auth.validation.organizer_id_required'),
         ]);
 
         if ($validator->fails()) {
@@ -313,9 +323,12 @@ class AuthController extends Controller
         }
 
         $validated = $validator->validated();
-        $locale = $validated['locate'] ?? null;
 
-        $result = $this->authService->forgotPassword($validated, $locale);
+        $result = $this->authService->sendAuthenticationCode(
+            $validated['username'],
+            'forgot_password',
+            $validated['organizer_id']
+        );
 
         if (isset($result['status']) && $result['status'] === false) {
             return response()->json([
@@ -325,20 +338,24 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => __('auth.success.reset_sent'),
-            'data' => ['status' => true],
+            'data' => [
+                'status' => true,
+                'expire_minutes' => $result['expire_minutes'] ?? null,
+            ],
         ], 200);
     }
 
     public function confirmPassword(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'email' => ['required', 'email'],
+            'username' => ['required', 'string'],
+            'organizer_id' => ['required', 'integer', 'exists:organizers,id'],
             'code' => ['required', 'string', 'size:6'],
             'password' => ['required', 'string', 'min:8', 'regex:/[a-z]/', 'regex:/[A-Z]/'],
             'confirm_password' => ['required', 'same:password'],
         ], [
-            'email.required' => __('auth.validation.email_required'),
-            'email.email' => __('auth.validation.email_email'),
+            'username.required' => __('auth.validation.username_required'),
+            'organizer_id.required' => __('auth.validation.organizer_id_required'),
             'code.required' => __('auth.validation.code_required'),
             'code.size' => __('auth.validation.code_size'),
             'password.required' => __('auth.validation.password_required'),
@@ -386,7 +403,7 @@ class AuthController extends Controller
     public function setLang(Request $request)
     {
         $user = $request->user();
-        $lang = $request->string('lang','vi')->toString();
+        $lang = $request->string('lang', 'vi')->toString();
         $status = $this->authService->setLanguageUser($user, $lang);
         if ($status['status'] === false) {
             return response()->json([
@@ -425,19 +442,23 @@ class AuthController extends Controller
     }
 
     /**
-     * Authenticate with phone - Check if phone exists and send OTP if new
-     * POST /api/auth/phone/authenticate
+     * Verify OTP Code
+     * POST /api/auth/verify-code
      */
-    public function authenticate(Request $request): JsonResponse
+    public function verifyCode(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'phone' => ['required', 'string', 'regex:/^0[0-9]{9,10}$/'],
+            'username' => ['required', 'string'],
+            'code' => ['required', 'string', 'size:6'],
             'organizer_id' => ['required', 'integer', 'exists:organizers,id'],
+            'type' => ['required', 'string', 'in:login,forgot_password,register'],
         ], [
-            'phone.required' => __('auth.validation.phone_required'),
-            'phone.regex' => __('auth.validation.phone_regex'),
+            'username.required' => __('auth.validation.username_required'),
+            'code.required' => __('auth.validation.code_required'),
+            'code.size' => __('auth.validation.code_size'),
             'organizer_id.required' => __('auth.validation.organizer_id_required'),
-            'organizer_id.exists' => __('auth.validation.organizer_id_exists'),
+            'type.required' => __('auth.validation.type_required'),
+            'type.in' => __('auth.validation.type_in'),
         ]);
 
         if ($validator->fails()) {
@@ -447,205 +468,68 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $result = $this->authService->authenticate(
-            $request->input('phone'),
-            $request->input('organizer_id')
+        $result = $this->authService->verifyCode(
+            $request->input('username'),
+            $request->input('code'),
+            $request->input('organizer_id'),
+            $request->input('type')
         );
 
         if (!$result['status']) {
             return response()->json([
                 'message' => $result['message'],
-            ], 400);
+            ], 422);
         }
 
         return response()->json([
-            'message' => __('auth.success.authenticate'),
+            'message' => $result['message'],
             'data' => [
-                'need_register' => $result['need_register'],
+                'token' => $result['token'],
+                'user' => new UserResource($result['user']),
+            ],
+        ], 200);
+    }
+    /**
+     * Resend OTP for register
+     * POST /api/auth/resend-code
+     */
+    public function resendCode(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'username' => ['required', 'string'],
+            'organizer_id' => ['required', 'integer', 'exists:organizers,id'],
+            'type' => ['required', 'string', 'in:login,forgot_password,register'],
+        ], [
+            'username.required' => __('auth.validation.username_required'),
+            'organizer_id.required' => __('auth.validation.organizer_id_required'),
+            'type.required' => __('auth.validation.type_required'),
+            'type.in' => __('auth.validation.type_in'),
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => __('auth.error.validation_failed'),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $result = $this->authService->sendAuthenticationCode(
+            $request->input('username'),
+            $request->input('type'),
+            $request->input('organizer_id')
+        );
+
+        if (!$result['status']) {
+            $code = isset($result['message']) && str_contains($result['message'] ?? '', 'limit') ? 429 : 422;
+            return response()->json([
+                'message' => $result['message'],
+            ], $code);
+        }
+
+        return response()->json([
+            'message' => $result['message'] ?? __('auth.success.otp_sent'),
+            'data' => [
                 'expire_minutes' => $result['expire_minutes'] ?? null,
-            ],
-        ], 200);
-    }
-
-    /**
-     * Verify OTP for registration
-     * POST /api/auth/phone/verify-otp
-     */
-    public function verifyOtpRegister(Request $request): JsonResponse
-    {
-        $validator = Validator::make($request->all(), [
-            'phone' => ['required', 'string', 'regex:/^0[0-9]{9,10}$/'],
-            'otp' => ['required', 'string', 'size:6'],
-            'organizer_id' => ['required', 'integer', 'exists:organizers,id'],
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => __('auth.error.validation_failed'),
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        $result = $this->authService->verifyOtpRegister(
-            $request->input('phone'),
-            $request->input('otp'),
-            $request->input('organizer_id')
-        );
-
-        if (!$result['status']) {
-            return response()->json([
-                'message' => $result['message'],
-            ], 400);
-        }
-
-        return response()->json([
-            'message' => __('auth.success.otp_verified'),
-            'data' => [
-                'token' => $result['token'],
-            ],
-        ], 200);
-    }
-
-    /**
-     * Resend OTP for registration
-     * POST /api/auth/phone/resend-otp
-     */
-    public function resendOtpRegister(Request $request): JsonResponse
-    {
-        $validator = Validator::make($request->all(), [
-            'phone' => ['required', 'string', 'regex:/^0[0-9]{9,10}$/'],
-            'organizer_id' => ['required', 'integer', 'exists:organizers,id'],
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => __('auth.error.validation_failed'),
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        $result = $this->authService->resendOtpRegister(
-            $request->input('phone'),
-            $request->input('organizer_id')
-        );
-
-        if (!$result['status']) {
-            return response()->json([
-                'message' => $result['message'],
-            ], 400);
-        }
-
-        return response()->json([
-            'message' => __('auth.success.otp_resent'),
-            'data' => [
-                'expire_minutes' => $result['expire_minutes'],
-            ],
-        ], 200);
-    }
-
-    /**
-     * Register new user with phone + registration token
-     * POST /api/auth/phone/register
-     */
-    public function registerWithPhone(Request $request): JsonResponse
-    {
-        $validator = Validator::make($request->all(), [
-            'token' => ['required', 'string'],
-            'name' => ['required', 'string', 'max:255'],
-            'organizer_id' => ['required', 'integer', 'exists:organizers,id'],
-            'email' => [
-                'nullable',
-                'email',
-                Rule::unique('users', 'email')->where(function ($query) use ($request) {
-                    return $query->where('organizer_id', $request->input('organizer_id'));
-                })
-            ],
-            'lang' => ['nullable', 'string', 'in:vi,en'],
-            'password' => ['required', 'string', 'min:8'],
-            'confirm_password' => ['required', 'same:password'],
-            'address' => ['nullable', 'string', 'max:255'],
-        ],[
-            'token.required' => __('auth.validation.token_required'),
-            'token.string' => __('auth.validation.token_string'),
-            'name.required' => __('auth.validation.name_required'),
-            'name.string' => __('auth.validation.name_string'),
-            'name.max' => __('auth.validation.name_max'),
-            'email.required' => __('auth.validation.email_required'),
-            'email.email' => __('auth.validation.email_email'),
-            'email.unique' => __('auth.validation.email_unique'),
-            'password.required' => __('auth.validation.password_required'),
-            'password.string' => __('auth.validation.password_string'),
-            'password.min' => __('auth.validation.password_min'),
-            'confirm_password.required' => __('auth.validation.confirm_password_required'),
-            'confirm_password.same' => __('auth.validation.confirm_password_same'),
-            'address.max' => __('auth.validation.address_max'),
-            'organizer_id.required' => __('auth.validation.organizer_id_required'),
-            'organizer_id.integer' => __('auth.validation.organizer_id_integer'),
-            'organizer_id.exists' => __('auth.validation.organizer_id_exists'),
-        ]);
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => __('auth.error.validation_failed'),
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        $result = $this->authService->registerWithPhone(
-            $request->input('token'),
-            $validator->validated()
-        );
-
-        if (!$result['status']) {
-            return response()->json([
-                'message' => $result['message'],
-            ], 400);
-        }
-
-        return response()->json([
-            'message' => __('auth.success.register_success'),
-            'data' => [
-                'user' => new UserResource($result['user']),
-                'token' => $result['token'],
-            ],
-        ], 200);
-    }
-
-    /**
-     * Login with phone + OTP
-     * POST /api/auth/phone/login
-     */
-    public function loginWithPhone(Request $request): JsonResponse
-    {
-        $validator = Validator::make($request->all(), [
-            'phone' => ['required', 'string', 'regex:/^0[0-9]{9,10}$/'],
-            'otp' => ['required', 'string', 'size:6'],
-            'organizer_id' => ['required', 'integer', 'exists:organizers,id'],
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => __('auth.error.validation_failed'),
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        $result = $this->authService->loginWithPhone(
-            $request->input('phone'),
-            $request->input('otp'),
-            $request->input('organizer_id')
-        );
-
-        if (!$result['status']) {
-            return response()->json([
-                'message' => $result['message'],
-            ], 400);
-        }
-
-        return response()->json([
-            'message' => __('auth.success.login_success'),
-            'data' => [
-                'user' => new UserResource($result['user']),
-                'token' => $result['token'],
             ],
         ], 200);
     }

@@ -28,7 +28,7 @@ class MembershipListResource extends JsonResource
             'config' => $this->config,
             'status' => $this->status,
             'type'   => $this->type,
-            'organizer_id' => $this->organizer_id
+            'organizer_id' => (string) $this->organizer_id
         ];
     }
 }

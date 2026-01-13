@@ -20,15 +20,9 @@ Route::prefix('auth')->middleware(['set-locale', 'throttle:5,1'])->group(functio
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
     Route::post('/confirm-password', [AuthController::class, 'confirmPassword']);
-
-    // Phone Authentication Flow
-    Route::prefix('phone')->group(function () {
-        Route::post('/authenticate', [AuthController::class, 'authenticate']);
-        Route::post('/verify-otp', [AuthController::class, 'verifyOtpRegister']);
-        Route::post('/resend-otp', [AuthController::class, 'resendOtpRegister']);
-        Route::post('/login', [AuthController::class, 'loginWithPhone']);
-        Route::post('/register', [AuthController::class, 'registerWithPhone']);
-    });
+    Route::post('/verify-code', [AuthController::class, 'verifyCode']);
+    Route::post('/resend-code', [AuthController::class, 'resendCode']);
+    Route::post('/lock-account', [AuthController::class, 'lockAccount']);
 });
 
 Route::middleware('set-locale')->group(function () {

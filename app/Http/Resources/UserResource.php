@@ -18,7 +18,7 @@ class UserResource extends JsonResource
             'introduce' => $this->introduce,
             'gender' => $this->gender,
             'avatar_url' => $this->avatar_path ? Helper::generateURLImagePath($this->avatar_path) : null,
-            'organizer_id' => $this->organizer_id,
+            'organizer_id' => (string) $this->organizer_id,
             'lang' => $this->lang,
             'membership' => optional($this->activeMemberships->first())->only(['id', 'name', 'config']),
             'has_received_gift' => $this->has_received_gift ?? false,

@@ -19,11 +19,11 @@ class GiftUserResource extends JsonResource
         return [
             'id' => (string)$this->id,
             'event' => [
-                'id'  => $event->id,
+                'id'  => (string)$event->id,
                 'name' => $event->name,
             ],
             'gift' => [
-                'id' => $gift->id,
+                'id' => (string)$gift->id,
                 'name' => $gift->name,
                 'description' => (string)$gift->description,
             ],

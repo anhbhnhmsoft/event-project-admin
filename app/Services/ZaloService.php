@@ -102,6 +102,26 @@ class ZaloService
                     'error_message' => $responseData['message'] ?? 'Unknown error',
                 ]);
 
+                $errorCode = $responseData['error'];
+                $errorMessage = $responseData['message'] ?? 'Unknown error';
+
+                // Xử lý cụ thể cho trường hợp không có Zalo
+                if ($errorCode == -212) {
+                    return [
+                        'success' => false,
+                        'is_zalo_user' => false, // Flag để bên ngoài biết và gọi SMS thay thế
+                        'message' => __('error.not_zalo_user'),
+                    ];
+                }
+
+                if ($errorCode == -213) {
+                    return [
+                        'success' => false,
+                        'is_blocked' => true,
+                        'message' => __('error.user_blocked'),
+                    ];
+                }
+
                 return [
                     'success' => false,
                     'message' => __('error.couldnot_send_otp'),
@@ -117,7 +137,7 @@ class ZaloService
 
             return [
                 'success' => true,
-                'message' => 'Gửi OTP thành công',
+                'message' => __('error.send_otp_success'),
                 'data' => $responseData['data'] ?? [],
             ];
         } catch (HttpException $e) {
@@ -361,7 +381,6 @@ class ZaloService
                 'refresh_token' => $refreshToken,
                 'expires_in' => $expiresIn,
             ];
-
         } catch (\Throwable $th) {
             Log::error('ZaloService::getAccessTokenFromCode Exception', [
                 'error' => $th->getMessage(),
