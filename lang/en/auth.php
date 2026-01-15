@@ -49,6 +49,13 @@ return [
         'otp_not_found' => 'OTP invalid or expired',
         'user_not_found' => 'User not found',
         'invalid_otp' => 'Invalid OTP',
+        'too_many_attempts_wait' => 'Too many attempts, please try again after :minutes minutes',
+        'email_already_registered' => 'Email already registered',
+        'invalid_username' => 'Invalid username',
+        'unverified_phone' => 'Phone number not verified',
+        'invalid_request' => 'Invalid request',
+        'type_required' => 'Type is required',
+        'type_in' => 'Invalid type'
     ],
     'validation' => [
         'password_required' => 'Password is required',
@@ -86,6 +93,11 @@ return [
         'introduce_invalid' => 'Invalid self-introduction',
         'avatar_invalid' => "Invalid profile picture",
         'avatar_required' => 'Profile picture is required',
+        'username_invalid' => 'Invalid username',
+        'username_max' => 'Username must not exceed 255 characters',
+        'username_unique' => 'Username already exists',
+        'username_required' => 'Username is required',
+
 
     ],
     'login' => [

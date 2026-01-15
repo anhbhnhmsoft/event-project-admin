@@ -23,7 +23,7 @@ class EventListCommentResource extends JsonResource
         return [
             'id' => (string)$this->id,
             'user_comment' => [
-                'id' => $user->id,
+                'id' => (string)$user->id,
                 'name' => $user->name,
                 'avatar_url'=> $user->avatar_path ? Helper::generateURLImagePath($user->avatar_path) : null
             ],

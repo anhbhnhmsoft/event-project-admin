@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\Login;
 use App\Filament\Pages\Register;
+use App\Http\Middleware\CheckCustomerAccessCustomer;
 use App\Http\Middleware\SetLocale;
 use Filament\Auth\Pages\EmailVerification\EmailVerificationPrompt;
 use Filament\Http\Middleware\Authenticate;
@@ -56,6 +57,7 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                CheckCustomerAccessCustomer::class,
             ])
             ->authMiddleware([
                 Authenticate::class,

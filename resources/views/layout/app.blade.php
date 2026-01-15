@@ -5,7 +5,6 @@
     {{-- Cơ bản --}}
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
     {{-- Bảo mật --}}
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
@@ -46,6 +45,7 @@
     <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
         @inertia
         @yield('content')
+        {{ $slot }}
     </div>
 </body>
 

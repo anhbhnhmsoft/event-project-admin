@@ -16,13 +16,13 @@ class TransactionDetailResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
-            'foreign_id' => $this->foreign_id,
-            'user_id' => $this->user_id,
+            'id' => (string) $this->id,
+            'foreign_id' => (string) $this->foreign_id,
+            'user_id' => (string) $this->user_id,
             'type' => $this->type,
             'money' => $this->money,
             'transaction_code' => $this->transaction_code,
-            'transaction_id' => $this->transaction_id,
+            'transaction_id' => (string) $this->transaction_id,
             'description' => $this->description,
             'status' => $this->status,
             'metadata' => $this->metadata,

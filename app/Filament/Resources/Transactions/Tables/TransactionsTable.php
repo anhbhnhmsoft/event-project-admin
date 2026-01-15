@@ -128,6 +128,7 @@ class TransactionsTable
             ->emptyStateDescription(__('admin.transactions.table.empty_description'))
             ->defaultPaginationPageOption(25)
             ->defaultSort('created_at', 'desc')
+            ->poll(2000)
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

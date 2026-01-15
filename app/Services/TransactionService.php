@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\SendNotifications;
 use App\Models\EventScheduleDocumentUser;
 use App\Models\EventSeat;
 use App\Models\EventUserHistory;
@@ -15,6 +16,8 @@ use App\Utils\Constants\MembershipUserStatus;
 use App\Utils\Constants\TransactionStatus;
 use App\Utils\Constants\TransactionType;
 use App\Utils\Constants\TransactionTypePayment;
+use App\Utils\Constants\UserNotificationType;
+use App\Utils\DTO\NotificationPayload;
 use Exception;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -196,6 +199,14 @@ class TransactionService
                     // update trạng thái giao dịch
                     $record->status = TransactionStatus::SUCCESS->value;
                     $record->save();
+                    $payload = new NotificationPayload(
+                        title: __('membership_purchase.success.title'),
+                        description: __('membership_purchase.payment.message'),
+                        data: [
+                        ],
+                        notificationType: UserNotificationType::MEMBERSHIP_APPROVED,
+                    );
+                    SendNotifications::dispatch($payload, [$user->id])->onQueue('notifications');
                     break;
                 case TransactionStatus::FAILED:
                 default:

@@ -70,6 +70,7 @@ return [
         'membership_approved' => 'Membership Approved',
         'system_announcement' => 'System Announcement',
         'membership_expire_reminder' => 'Membership Expire Reminder',
+        'membership_purchase' => 'Membership Purchase',
         'member_near_expire' => 'Membership Near Expire',
         'member_expired' => 'Membership Expired',
         'event_starting' => 'Event Starting',

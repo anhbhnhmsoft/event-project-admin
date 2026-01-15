@@ -24,19 +24,19 @@ class MembershipController extends Controller
     public function __construct(MemberShipService $membershipService, CassoService $cassoService)
     {
         $this->membershipService = $membershipService;
-        $this->cassoService      = $cassoService;
+        $this->cassoService = $cassoService;
     }
 
     public function listMembership(Request $request): JsonResponse
     {
         $filters = $request->array('filters', []);
-        $page  = $request->integer('page', 1);
+        $page = $request->integer('page', 1);
         $limit = $request->integer('limit', 10);
         $sortBy = 'order';
         $filters['status'] = true;
         $filters['type'] = MembershipType::FOR_CUSTOMER->value;
         $filters['organizer_id'] = Auth::user()->organizer_id;
-        $memberships  = $this->membershipService->membershipsPaginator($filters, $sortBy, $page, $limit);
+        $memberships = $this->membershipService->membershipsPaginator($filters, $sortBy, $page, $limit);
 
         return response()->json([
             'message' => __('common.common_success.get_success'),
@@ -53,12 +53,12 @@ class MembershipController extends Controller
     public function listAccountMembership(Request $request)
     {
         $filters = $request->array('filters', []);
-        $page  = $request->integer('page', 1);
+        $page = $request->integer('page', 1);
         $limit = $request->integer('limit', 10);
 
         // Mặc định
         $filters['user_id'] = Auth::user()->id;
-        $memberships  = $this->membershipService->membershipUserPaginator(
+        $memberships = $this->membershipService->membershipUserPaginator(
             filters: $filters,
             with: ['membership'],
             page: $page,
@@ -75,6 +75,7 @@ class MembershipController extends Controller
             ],
         ], 200);
     }
+
     public function membershipRegister(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -108,7 +109,7 @@ class MembershipController extends Controller
         $trans = $result['data'];
         return response()->json([
             'message' => __('common.common_success.add_success'),
-            'data'    => [
+            'data' => [
                 'trans_id' => (string)$trans->id,
                 'expired_at' => $trans->expired_at,
                 'config_pay' => $trans->config_pay,
@@ -116,5 +117,14 @@ class MembershipController extends Controller
                 'description' => $trans->description
             ]
         ], 200);
+    }
+
+    /**
+     * @param Request $request
+     * @return
+     */
+    public function purchase()
+    {
+
     }
 }

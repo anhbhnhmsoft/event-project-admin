@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\App;
 use App\Models\UserResetCode;
 use App\Mail\ResetPasswordMail;
+use App\Mail\VerifyEmailMail;
 use App\Models\EventSeat;
 use App\Models\Organizer;
 use App\Utils\Constants\CommonStatus;
@@ -45,24 +46,54 @@ class AuthService
     public function login(array $data): array
     {
         try {
-            $user = User::query()
-                ->where('email', $data['email'])
-                ->whereHasActiveOrganizer((int) $data['organizer_id'])
-                ->first();
+            $username = $data['username'];
+            $type = $this->detectUsernameType($username);
+
+            $query = User::query()->where('organizer_id', (int) $data['organizer_id']);
+
+            if ($type === 'email') {
+                $query->where('email', $username);
+            } elseif ($type === 'phone') {
+                $query->where('phone', $username);
+            } else {
+                throw new ServiceException(__('auth.error.invalid_credentials'));
+            }
+
+            $user = $query->first();
+
             if (!$user) {
+                // Return same error to prevent username enumeration
                 throw new ServiceException(__('auth.error.invalid_credentials'));
             }
             if ($user->inactive) {
                 throw new ServiceException(__('auth.error.account_inactivated'));
             }
-            if (!$user || ! Hash::check($data['password'], $user->password)) {
+            if (! Hash::check($data['password'], $user->password)) {
                 throw new ServiceException(__('auth.error.invalid_credentials'));
             }
-            if (!$user->hasVerifiedEmail()) {
-                throw new ServiceException(__('auth.error.unverified_email'));
+
+            // Only require email verification for email users
+            if ($type === 'email' && !$user->hasVerifiedEmail()) {
+                return [
+                    'status' => false,
+                    'message' => __('auth.error.unverified_email'),
+                    'unverified_email' => true
+                ];
             }
+
+            // Require phone verification for phone user
+            if ($type === 'phone' && !$user->phone_verified_at) {
+                $this->sendAuthenticationCode($user->phone, 'login', $user->organizer_id);
+                return [
+                    'status' => false,
+                    'message' => __('auth.error.unverified_phone'),
+                    'unverified_phone' => true
+                ];
+            }
+
             $user->lang = $data['locate'] ?? Language::VI->value;
             $user->save();
+
             $token = $user->createToken('api', expiresAt: now()->addDays(30))->plainTextToken;
             return [
                 'status' => true,
@@ -70,13 +101,12 @@ class AuthService
                 'user' => $user,
             ];
         } catch (ServiceException $e) {
-            Log::debug($e->getMessage());
             return [
                 'status' => false,
                 'message' => $e->getMessage(),
             ];
         } catch (\Throwable $e) {
-            Log::debug('AuthService login error: ' . $e->getMessage());
+            Log::error('AuthService login error: ' . $e->getMessage());
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),
@@ -88,26 +118,70 @@ class AuthService
     {
         DB::beginTransaction();
         try {
-            $user = User::query()->create([
+            $username = $data['username'];
+            $type = $this->detectUsernameType($username);
+            $organizerId = (int) $data['organizer_id'];
+
+            $userData = [
                 'name' => trim($data['name']),
-                'email' => $data['email'],
                 'password' => Hash::make($data['password']),
-                'organizer_id' => (int) $data['organizer_id'],
+                'organizer_id' => $organizerId,
                 'role' => RoleUser::CUSTOMER->value,
                 'lang' => request()->input('locate') ?? Language::VI->value,
-            ]);
-            $url = URL::temporarySignedRoute(
-                'verification.verify',
-                now()->addMinutes(60),
-                ['id' => $user->getKey(), 'hash' => sha1($user->getEmailForVerification())]
-            );
-            Mail::raw(__('auth.success.verify_email_body') . " {$url}", fn($m) => $m->to($user->email)->subject('Verify Email'));
+            ];
+
+            // Handle Phone Registration
+            if ($type === 'phone') {
+                $userData['phone'] = $username;
+                // Phone check unique
+                if (User::where('phone', $username)->where('organizer_id', $organizerId)->exists()) {
+                    throw new ServiceException(__('auth.error.phone_already_registered'));
+                }
+            }
+            // Handle Email Registration
+            elseif ($type === 'email') {
+                $userData['email'] = $username;
+                if (User::where('email', $username)->where('organizer_id', $organizerId)->exists()) {
+                    throw new ServiceException(__('auth.error.email_already_registered'));
+                }
+            } else {
+                throw new ServiceException(__('auth.error.invalid_username'));
+            }
+
+            $user = User::query()->create($userData);
+
+            // Send email verification if email type
+            if ($type === 'email') {
+                $url = URL::temporarySignedRoute(
+                    'verification.verify',
+                    now()->addMinutes(60),
+                    ['id' => $user->getKey(), 'hash' => sha1($user->getEmailForVerification())]
+                );
+                Mail::to($user->email)->queue(new VerifyEmailMail($url, $userData['lang']));
+            } elseif ($type === 'phone') {
+                // Send OTP for phone
+                $this->sendAuthenticationCode($username, 'register', $organizerId);
+            }
+
             DB::commit();
+
             return [
                 'status' => true,
+                'message' => $type === 'phone'
+                    ? __('auth.success.register_success_verify_otp')
+                    : __('auth.success.register_success_verify_email'),
+                'need_verify' => true,
+                'username' => $username,
+            ];
+        } catch (ServiceException $e) {
+            DB::rollBack();
+            return [
+                'status' => false,
+                'message' => $e->getMessage(),
             ];
         } catch (\Throwable $e) {
             DB::rollBack();
+            Log::error('Register failed: ' . $e->getMessage());
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),
@@ -199,10 +273,21 @@ class AuthService
         }
     }
 
-    public function forgotPassword(array $data, string $locale = 'vi'): array
+    public function forgotPasswordForMail(array $data, string $locale = 'vi'): array
     {
         try {
-            $user = User::where('email', $data['email'])->first();
+            $query = User::where('email', $data['email']);
+            if (isset($data['organizer_id'])) {
+                $query->where('organizer_id', $data['organizer_id']);
+            }
+            $user = $query->first();
+
+            if (!$user) {
+                return [
+                    'status' => false,
+                    'message' => __('auth.error.email_not_found'),
+                ];
+            }
 
             $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
@@ -239,29 +324,96 @@ class AuthService
         }
     }
 
-    public function confirmPassword(array $data): array
+    public function verfifyBackup(array $data): array
     {
         try {
             $user = User::where('email', $data['email'])->first();
 
-            $resetCode = UserResetCode::where('user_id', $user->id)
-                ->where('email', $data['email'])
-                ->where('code', $data['code'])
-                ->where('expires_at', '>', now())
-                ->whereNull('deleted_at')
-                ->first();
+            App::setLocale($data['locate']);
+            $url = URL::temporarySignedRoute(
+                'verification.verify',
+                now()->addMinutes(60),
+                ['id' => $user->getKey(), 'hash' => sha1($user->getEmailForVerification())]
+            );
 
-            if (!$resetCode) {
+            Mail::to($user->email)->queue(new VerifyEmailMail($url, $data['locate']));
+
+            return [
+                'status' => true,
+                'message' => __('auth.success.reset_sent'),
+            ];
+        } catch (ServiceException $e) {
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
+        }
+    }
+
+    public function confirmPassword(array $data): array
+    {
+        try {
+            $username = $data['username'];
+            $organizerId = (int) $data['organizer_id'];
+            $type = $this->detectUsernameType($username);
+
+            // Find User
+            $user = User::where('organizer_id', $organizerId)
+                ->where(function ($q) use ($username, $type) {
+                    if ($type === 'email') $q->where('email', $username);
+                    else $q->where('phone', $username);
+                })->first();
+
+            if (!$user) {
                 return [
                     'status' => false,
-                    'message' => __('auth.error.invalid_code'),
+                    'message' => __('auth.error.user_not_found'),
+                ];
+            }
+
+            if ($type === 'phone') {
+                // Verify OTP
+                $cacheKey = "otp:forgot_password:{$username}:{$organizerId}";
+                $tokenData = Cache::get($cacheKey);
+
+                if (!$tokenData || $tokenData['otp'] !== $data['code']) {
+                    return [
+                        'status' => false,
+                        'message' => __('auth.error.invalid_code'),
+                    ];
+                }
+                Cache::forget($cacheKey); // Clear OTP
+
+            } elseif ($type === 'email') {
+                // Verify Reset Code
+                $resetCode = UserResetCode::where('user_id', $user->id)
+                    ->where('email', $username)
+                    ->where('code', $data['code'])
+                    ->where('expires_at', '>', now())
+                    ->whereNull('deleted_at')
+                    ->first();
+
+                if (!$resetCode) {
+                    return [
+                        'status' => false,
+                        'message' => __('auth.error.invalid_code'),
+                    ];
+                }
+                $resetCode->delete();
+            } else {
+                return [
+                    'status' => false,
+                    'message' => __('auth.error.invalid_username'),
                 ];
             }
 
             $user->password = Hash::make($data['password']);
             $user->save();
-
-            $resetCode->delete();
 
             return [
                 'status' => true,
@@ -273,6 +425,7 @@ class AuthService
                 'message' => __('common.common_error.server_error'),
             ];
         } catch (\Throwable $e) {
+            Log::error('confirmPassword error: ' . $e->getMessage());
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),
@@ -633,99 +786,49 @@ class AuthService
      * @param int $organizerId
      * @return array
      */
-    public function authenticate(string $phone, int $organizerId): array
+    /**
+     * Send authentication code (OTP)
+     * 
+     * @param string $username
+     * @param string $type enum: register, login, forgot_password
+     * @param int $organizerId
+     * @return array
+     */
+    public function sendAuthenticationCode(string $username, string $type, int $organizerId): array
     {
         try {
-            // Check if user exists with this phone and organizer
-            $user = User::query()
-                ->where('phone', $phone)
-                ->where('organizer_id', $organizerId)
-                ->first();
+            // Check Rate Limit
+            $limitCheck = $this->checkHoldingLimit('send_otp', $username);
+            if (!$limitCheck['status']) {
+                return $limitCheck;
+            }
 
-            if ($user) {
-                // User exists - send OTP for login
-                $cacheKey = "otp:login:{$phone}:{$organizerId}";
+            $usernameType = $this->detectUsernameType($username);
 
-                // Check if OTP already sent recently
-                if (Cache::has($cacheKey)) {
-                    return [
-                        'status' => false,
-                        'message' => __('auth.error.otp_already_sent'),
-                    ];
+            if ($usernameType === 'phone') {
+                return $this->sendPhoneOtp($username, $type, $organizerId);
+            }
+
+            if ($usernameType === 'email') {
+                // For now, only support forgot password OTP/Link for email via this endpoint
+                if ($type === 'forgot_password') {
+                    // Delegate to forgotPassword logic (which sends link/code)
+                    return $this->forgotPasswordForMail([
+                        'email' => $username,
+                        'locate' => request()->input('locate', 'vi'),
+                        'organizer_id' => $organizerId
+                    ]);
+                } else {
+                    return $this->verfifyBackup(['email'  => $username, 'locate' => request()->input('locate', 'vi')]);
                 }
-
-                // Generate OTP
-                $otp = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
-
-                // Send OTP via Zalo
-                $zaloService = app(ZaloService::class);
-                $result = $zaloService->sendOTP($phone, $otp, \App\Utils\Constants\PurposeZNS::REGISTER); // Using REGISTER template for now as noted
-
-                if (!$result['success']) {
-                    return [
-                        'status' => false,
-                        'message' => $result['message'],
-                    ];
-                }
-
-                // Cache OTP for 5 minutes (login OTP usually shorter or same as register)
-                // Using 5 minutes as per user's previous manual edit pattern
-                Cache::put($cacheKey, [
-                    'otp' => $otp,
-                    'attempts' => 0,
-                    'ip_address' => request()->ip(),
-                ], now()->addMinutes(5));
-
-                return [
-                    'status' => true,
-                    'need_register' => false,
-                    'expire_minutes' => 5,
-                ];
             }
-
-            // User doesn't exist - send OTP for registration
-            $cacheKey = "otp:register:{$phone}:{$organizerId}";
-
-            // Check if OTP already sent recently
-            if (Cache::has($cacheKey)) {
-                return [
-                    'status' => false,
-                    'message' => __('auth.error.otp_already_sent'),
-                ];
-            }
-
-            // Generate OTP
-            $otp = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
-
-            // Send OTP via Zalo
-            $zaloService = app(ZaloService::class);
-            $result = $zaloService->sendOTP($phone, $otp, \App\Utils\Constants\PurposeZNS::REGISTER);
-
-            if (!$result['success']) {
-                return [
-                    'status' => false,
-                    'message' => $result['message'],
-                ];
-            }
-
-            // Cache OTP for 10 minutes
-            Cache::put($cacheKey, [
-                'otp' => $otp,
-                'attempts' => 0,
-                'ip_address' => request()->ip(),
-            ], now()->addMinutes(10));
 
             return [
-                'status' => true,
-                'need_register' => true,
-                'expire_minutes' => 10,
+                'status' => false,
+                'message' => __('auth.error.invalid_username'),
             ];
         } catch (\Throwable $e) {
-            Log::error('AuthService::authenticate failed', [
-                'phone' => $phone,
-                'error' => $e->getMessage(),
-            ]);
-
+            Log::error('sendAuthenticationCode failed', ['error' => $e->getMessage()]);
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),
@@ -733,303 +836,63 @@ class AuthService
         }
     }
 
-    /**
-     * Verify OTP for registration and return registration token
-     *
-     * @param string $phone
-     * @param string $otp
-     * @param int $organizerId
-     * @return array
-     */
-    public function verifyOtpRegister(string $phone, string $otp, int $organizerId): array
+    private function sendPhoneOtp(string $phone, string $type, int $organizerId): array
     {
-        try {
-            $cacheKey = "otp:register:{$phone}:{$organizerId}";
-            $data = Cache::get($cacheKey);
+        // Check if user exists check
+        $user = User::where('phone', $phone)->where('organizer_id', $organizerId)->first();
 
-            if (!$data) {
-                return [
-                    'status' => false,
-                    'message' => __('auth.error.otp_not_found'),
-                ];
-            }
-
-            // Check attempts
-            if ($data['attempts'] >= 5) {
-                Cache::forget($cacheKey);
-                return [
-                    'status' => false,
-                    'message' => __('auth.error.too_many_attempts'),
-                ];
-            }
-
-            // Verify OTP
-            if ($data['otp'] !== $otp) {
-                $data['attempts']++;
-                Cache::put($cacheKey, $data, now()->addMinutes(10));
-
-                return [
-                    'status' => false,
-                    'message' => __('auth.error.invalid_otp'),
-                ];
-            }
-
-            // OTP is valid - generate registration token
-            $token = Helper::generateTokenRandom();
-
-            // Cache registration token for 30 minutes
-            Cache::put("register:token:{$token}", [
-                'phone' => $phone,
-                'organizer_id' => $organizerId,
-            ], now()->addMinutes(30));
-
-            // Delete OTP cache
-            Cache::forget($cacheKey);
-
-            return [
-                'status' => true,
-                'token' => $token,
-            ];
-        } catch (\Throwable $e) {
-            Log::error('AuthService::verifyOtpRegister failed', [
-                'phone' => $phone,
-                'error' => $e->getMessage(),
-            ]);
-
+        if ($type === 'register' && $user && $user->phone_verified_at) {
             return [
                 'status' => false,
-                'message' => __('common.common_error.server_error'),
+                'message' => __('auth.error.phone_already_registered'),
             ];
         }
-    }
 
-    /**
-     * Resend OTP for registration
-     *
-     * @param string $phone
-     * @param int $organizerId
-     * @return array
-     */
-    public function resendOtpRegister(string $phone, int $organizerId): array
-    {
-        try {
-            $rateLimitKey = "otp:ratelimit:{$phone}";
-
-            // Check rate limit (max 3 sends per hour)
-            $sendCount = Cache::get($rateLimitKey, 0);
-            if ($sendCount >= 5) {
-                return [
-                    'status' => false,
-                    'message' => __('auth.error.otp_rate_limit'),
-                ];
-            }
-
-            // Generate new OTP
-            $otp = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
-
-            // Send OTP via Zalo
-            $zaloService = app(ZaloService::class);
-            $result = $zaloService->sendOTP($phone, $otp, \App\Utils\Constants\PurposeZNS::REGISTER);
-
-            if (!$result['success']) {
-                return [
-                    'status' => false,
-                    'message' => $result['message'],
-                ];
-            }
-
-            // Update cache
-            $cacheKey = "otp:register:{$phone}:{$organizerId}";
-            Cache::put($cacheKey, [
-                'otp' => $otp,
-                'attempts' => 0,
-                'ip_address' => request()->ip(),
-            ], now()->addMinutes(10));
-
-            // Increment rate limit counter
-            Cache::put($rateLimitKey, $sendCount + 1, now()->addHour());
-
-            return [
-                'status' => true,
-                'expire_minutes' => 10,
-            ];
-        } catch (\Throwable $e) {
-            Log::error('AuthService::resendOtpRegister failed', [
-                'phone' => $phone,
-                'error' => $e->getMessage(),
-            ]);
-
+        if (($type === 'login') && !$user) {
+            // For login, if user not found, return error
             return [
                 'status' => false,
-                'message' => __('common.common_error.server_error'),
+                'message' => __('auth.error.user_not_found'),
             ];
         }
-    }
 
-    /**
-     * Register new user with phone using registration token
-     *
-     * @param string $token
-     * @param array $data
-     * @return array
-     */
-    public function registerWithPhone(string $token, array $data): array
-    {
-        DB::beginTransaction();
-        try {
-            // Verify registration token
-            $tokenData = Cache::get("register:token:{$token}");
+        // Generate OTP
+        $otp = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
 
-            if (!$tokenData) {
-                return [
-                    'status' => false,
-                    'message' => __('auth.error.invalid_token'),
-                ];
-            }
+        // Determine ZNS Template based on type
+        $purpose = \App\Utils\Constants\PurposeZNS::REGISTER; // Default
+        // Logic mapping type to PurposeZNS if needed
 
-            $phone = $tokenData['phone'];
-            $organizerId = $tokenData['organizer_id'];
+        // Send via Zalo
+        $zaloService = app(ZaloService::class);
+        $result = $zaloService->sendOTP($phone, $otp, $purpose);
 
-            // Check if user already exists
-            $existingUser = User::query()
-                ->where('phone', $phone)
-                ->where('organizer_id', $organizerId)
-                ->first();
-
-            if ($existingUser) {
-                DB::rollBack();
-                return [
-                    'status' => false,
-                    'message' => __('auth.error.phone_already_registered'),
-                ];
-            }
-
-            // Create new user
-            $user = User::create([
-                'name' => $data['name'],
-                'phone' => $phone,
-                'email' => $data['email'] ?? null,
-                'password' => bcrypt($data['password']), // Default password is phone number
-                'organizer_id' => $organizerId,
-                'role' => \App\Utils\Constants\RoleUser::CUSTOMER->value,
-                'lang' => $data['lang'] ?? \App\Utils\Constants\Language::VI->value,
-                'phone_verified_at' => now(),
-                'address' => $data['address'] ?? null,
-            ]);
-
-            // Create auth token
-            $authToken = $user->createToken('api', expiresAt: now()->addDays(30))->plainTextToken;
-
-            // Delete registration token
-            Cache::forget("register:token:{$token}");
-
-            DB::commit();
-
-            return [
-                'status' => true,
-                'user' => $user,
-                'token' => $authToken,
-            ];
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error('AuthService::registerWithPhone failed', [
-                'error' => $e->getMessage(),
-            ]);
-
+        if (!$result['success']) {
             return [
                 'status' => false,
-                'message' => __('common.common_error.server_error'),
+                'message' => $result['message'],
             ];
         }
+
+        // Cache OTP
+        // Unified key format: otp:{type}:{username}:{organizerId}
+        // Actually, let's use type specific keys or unified?
+        // Let's use unified key for register to match register method expectation: otp:register:{username}:{organizerId}
+
+        $cacheKey = "otp:{$type}:{$phone}:{$organizerId}";
+        Cache::put($cacheKey, [
+            'otp' => $otp,
+            'attempts' => 0,
+            'ip_address' => request()->ip(),
+        ], now()->addMinutes(10));
+
+        return [
+            'status' => true,
+            'message' => __('auth.success.otp_sent'),
+            'expire_minutes' => 10,
+        ];
     }
 
-    /**
-     * Login with phone and OTP
-     *
-     * @param string $phone
-     * @param string $otp
-     * @param int $organizerId
-     * @return array
-     */
-    public function loginWithPhone(string $phone, string $otp, int $organizerId): array
-    {
-        try {
-            // First send OTP if not already sent
-            $cacheKey = "otp:login:{$phone}:{$organizerId}";
-            $data = Cache::get($cacheKey);
-            if (!$data) {
-                return [
-                    'status' => false,
-                    'message' => __('auth.error.otp_not_found'),
-                ];
-            }
-            // Verify OTP
-            if ($data['attempts'] >= 5) {
-                Cache::forget($cacheKey);
-                return [
-                    'status' => false,
-                    'message' => __('auth.error.too_many_attempts'),
-                ];
-            }
-
-            if ($data['otp'] !== $otp) {
-                $data['attempts']++;
-                Cache::put($cacheKey, $data, now()->addMinutes(5));
-
-                return [
-                    'status' => false,
-                    'message' => __('auth.error.invalid_otp'),
-                ];
-            }
-
-            // Find user
-            $user = User::query()
-                ->where('phone', $phone)
-                ->where('organizer_id', $organizerId)
-                ->first();
-
-            if (!$user) {
-                return [
-                    'status' => false,
-                    'user_exit' => false,
-                    'message' => __('auth.error.user_not_found'),
-                ];
-            }
-
-            if ($user->inactive) {
-                return [
-                    'status' => false,
-                    'message' => __('auth.error.account_inactivated'),
-                ];
-            }
-
-            // Update last login
-            $user->update(['last_login_at' => now()]);
-
-            // Create auth token
-            $authToken = $user->createToken('api', expiresAt: now()->addDays(30))->plainTextToken;
-
-            // Delete OTP cache
-            Cache::forget($cacheKey);
-
-            return [
-                'status' => true,
-                'user' => $user,
-                'token' => $authToken,
-            ];
-        } catch (\Throwable $e) {
-            Log::error('AuthService::loginWithPhone failed', [
-                'phone' => $phone,
-                'error' => $e->getMessage(),
-            ]);
-
-            return [
-                'status' => false,
-                'message' => __('common.common_error.server_error'),
-            ];
-        }
-    }
-    
     private function generateFinalMessage(bool $isNewUser, bool $isNewTicket, bool $seatWasUpdated): array
     {
         if ($isNewUser) {
@@ -1057,5 +920,161 @@ class AuthService
             'title' => __('common.messages.process_complete_title'),
             'message' => __('common.messages.process_complete_message'),
         ];
+    }
+    /**
+     * Detect if username is email or phone
+     * @param string $username
+     * @return string 'email'|'phone'|'invalid'
+     */
+    public function detectUsernameType(string $username): string
+    {
+        if (filter_var($username, FILTER_VALIDATE_EMAIL)) {
+            return 'email';
+        }
+
+        // Simple regex for VN phone: starts with 0 or +84, followed by 9-10 digits
+        if (preg_match('/^(\+84|0)[0-9]{9,10}$/', $username)) {
+            return 'phone';
+        }
+
+        return 'invalid';
+    }
+
+    /**
+     * Check rate limiting (Holding Limit)
+     * Limit: 5 requests per hour per action/target/ip
+     * Block duration: 5 minutes
+     * 
+     * @param string $action e.g., 'send_otp', 'login_fail'
+     * @param string $target username or ip
+     * @return array ['status' => bool, 'message' => string|null]
+     */
+    public function checkHoldingLimit(string $action, string $target): array
+    {
+        $ip = request()->ip();
+        // Rate limit key: limit:{action}:{target}:{ip}
+        $key = "auth_limit:{$action}:{$target}:{$ip}";
+        $blockKey = "auth_block:{$action}:{$target}:{$ip}";
+
+        if (Cache::has($blockKey)) {
+            return [
+                'status' => false,
+                'message' => __('auth.error.too_many_attempts_wait', ['minutes' => 5]),
+            ];
+        }
+
+        $attempts = Cache::get($key, 0);
+
+        if ($attempts >= 5) {
+            // Block for 5 minutes
+            Cache::put($blockKey, true, now()->addMinutes(5));
+            Cache::forget($key); // Reset attempts after blocking
+
+            return [
+                'status' => false,
+                'message' => __('auth.error.too_many_attempts_wait', ['minutes' => 5]),
+            ];
+        }
+
+        // Increment attempts and set expiry for 5 minutes window
+        if ($attempts === 0) {
+            Cache::put($key, 1, now()->addMinutes(5));
+        } else {
+            Cache::increment($key);
+        }
+
+        return ['status' => true];
+    }
+    /**
+     * Verify OTP Code
+     * 
+     * @param string $username
+     * @param string $code
+     * @param int $organizerId
+     * @param string $type
+     * @return array
+     */
+    public function verifyCode(string $username, string $code, int $organizerId, string $type): array
+    {
+        try {
+            $cacheKey = "otp:{$type}:{$username}:{$organizerId}";
+            $tokenData = Cache::get($cacheKey);
+
+            if (!$tokenData) {
+                return [
+                    'status' => false,
+                    'message' => __('auth.error.otp_not_found'),
+                ];
+            }
+
+            if ($tokenData['otp'] !== $code) {
+                return [
+                    'status' => false,
+                    'message' => __('auth.error.invalid_otp'),
+                ];
+            }
+
+            // Verify Access
+            $user = User::where('phone', $username)->where('organizer_id', $organizerId)->first();
+
+            if ($user) {
+                $user->phone_verified_at = now();
+                $user->save();
+
+                // Create auth token
+                $authToken = $user->createToken('api', expiresAt: now()->addDays(30))->plainTextToken;
+                Cache::forget($cacheKey);
+
+                return [
+                    'status' => true,
+                    'message' => __('auth.success.otp_verified'),
+                    'token' => $authToken,
+                    'user' => $user,
+                ];
+            }
+
+            return [
+                'status' => false,
+                'message' => __('auth.error.user_not_found'),
+            ];
+        } catch (\Throwable $e) {
+            Log::error('verifyCode error: ' . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
+        }
+    }
+    /**
+     * Lock current user account
+     * @return array
+     */
+    public function lockAccount(): array
+    {
+        try {
+            /** @var User $user */
+            $user = Auth::user();
+            if (!$user) {
+                return [
+                    'status' => false,
+                    'message' => __('auth.error.user_not_found'),
+                ];
+            }
+
+            $user->inactive = true;
+            $user->save();
+            $user->tokens()->delete();
+
+            return [
+                'status' => true,
+                'message' => __('auth.success.lock_account_success'),
+            ];
+        } catch (\Throwable $e) {
+            Log::error('lockAccount error: ' . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
+        }
     }
 }

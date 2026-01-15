@@ -43,3 +43,6 @@ Route::get('lang/{locale}', [App\Http\Controllers\LanguageController::class, 'sw
 // Zalo Access Token Initialization Routes
 Route::get('/zalo/redirect', [App\Http\Controllers\ZaloController::class, 'redirect'])->name('zalo.redirect');
 Route::get('/zalo/callback', [App\Http\Controllers\ZaloController::class, 'callback'])->name('zalo.callback');
+
+Route::get('/membership/purchase', \App\Livewire\MembershipPurchase::class)->name('membership.purchase');
+
