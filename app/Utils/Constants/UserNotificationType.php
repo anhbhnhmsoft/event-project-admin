@@ -11,6 +11,7 @@ enum UserNotificationType: int
     case MEMBERSHIP_APPROVED = 5; // Duyệt thành viên
     case SYSTEM_ANNOUNCEMENT = 6; // Thông báo hệ thống
     case MEMBERSHIP_EXPIRE_REMINDER = 7; // Nhắc nhở hết hạn
+    case MEMBERSHIP_PURCHASE = 8; // Mua gói thành viên
 
     public function label(): string
     {
@@ -22,6 +23,7 @@ enum UserNotificationType: int
             self::MEMBERSHIP_APPROVED => __('constants.user_notification_type.membership_approved'),
             self::SYSTEM_ANNOUNCEMENT => __('constants.user_notification_type.system_announcement'),
             self::MEMBERSHIP_EXPIRE_REMINDER => __('constants.user_notification_type.membership_expire_reminder'),
+            self::MEMBERSHIP_PURCHASE => __('constants.user_notification_type.membership_purchase'),
         };
     }
 
