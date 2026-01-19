@@ -18,7 +18,7 @@ class CheckCustomerAccessCustomer
     public function handle(Request $request, Closure $next): Response
     {
         $user = auth()->user();
-        if ($user->role == RoleUser::CUSTOMER->value) {
+        if ($user && $user->role == RoleUser::CUSTOMER->value) {
             auth()->logout();
             abort(403);
         }
