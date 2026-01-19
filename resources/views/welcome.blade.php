@@ -114,25 +114,13 @@
                                 {{ __('app.welcome.feature_interaction') }}
                             </div>
                         </div>
-                        <div class="flex gap-3 items-start">
-                            <div
-                                class="w-7 h-7 bg-[#5b9bd5] rounded-full flex items-center justify-center shrink-0 text-white font-extrabold text-base shadow-[0_4px_8px_rgba(91,155,213,0.2)] mt-0.5">
-                                ✓
-                            </div>
-                            <div class="text-[#333333] text-base leading-normal text-left">
-                                {{ __('app.welcome.feature_analytics') }}
-                            </div>
-                        </div>
+
                     </div>
 
                     <div class="flex gap-4 flex-wrap justify-center md:justify-start">
-                        <a href="#demo"
-                            class="px-9 py-4 rounded-[10px] font-bold text-base bg-[#5b9bd5] text-white shadow-[0_10px_20px_rgba(91,155,213,0.3)] hover:bg-[#4784c0] hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(91,155,213,0.4)] transition-all duration-300 no-underline">
-                            {{ __('app.welcome.request_demo') }}
-                        </a>
-                        <a href="#pricing"
+                        <a href="{{ route('membership.purchase') }}"
                             class="px-9 py-4 rounded-[10px] font-bold text-base bg-white text-[#1f73b7] border-2 border-[#1f73b7] shadow-[0_4px_10px_rgba(0,0,0,0.05)] hover:bg-[#1f73b7] hover:text-white hover:border-[#1f73b7] hover:-translate-y-0.5 hover:shadow-[0_6px_15px_rgba(31,115,183,0.2)] transition-all duration-300 no-underline">
-                            {{ __('app.welcome.view_pricing') }}
+                            {{ __('app.welcome.register_member') }}
                         </a>
                     </div>
                 </div>

@@ -33,5 +33,6 @@ return [
         'stat_events' => 'Events Organized',
         'stat_guests' => 'Guests Served',
         'badge_text' => '#1 Event Platform in Vietnam',
+        'register_member' => 'Register as a Member',
     ],
 ];

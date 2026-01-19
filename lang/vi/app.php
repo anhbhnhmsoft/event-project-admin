@@ -33,5 +33,6 @@ return [
         'stat_events' => 'Sự kiện đã tổ chức',
         'stat_guests' => 'Khách mời đã phục vụ',
         'badge_text' => 'Nền tảng sự kiện số 1 Việt Nam',
+        'register_member' => 'Đăng ký thành viên',
     ],
 ];
