@@ -34,6 +34,6 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $schedule->command('app:notification-time-event')->dailyAt('06:00');
 
-        $schedule->command('zalo:refresh-token')->everyFourHours();
+        $schedule->command('zalo:refresh-token')->everyThirtyMinutes();
     })
     ->create();
