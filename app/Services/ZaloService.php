@@ -172,72 +172,88 @@ class ZaloService
      */
     public function refreshAccessToken(?string $refreshToken = null): array
     {
-        try {
-            // Get refresh token from parameter or database
-            if (!$refreshToken) {
+        return Cache::lock('zalo_refresh_token_lock', 10)->block(5, function () use ($refreshToken) {
+            try {
                 $tokenRecord = ZaloToken::getLatest();
-                if (!$tokenRecord || !$tokenRecord->refresh_token) {
+
+                if (!$refreshToken) {
+                    if (!$tokenRecord || !$tokenRecord->refresh_token) {
+                        return [
+                            'success' => false,
+                            'message' => 'No refresh token available',
+                        ];
+                    }
+
+                    if (!$tokenRecord->willExpireSoon()) {
+                        Log::info('ZaloService::refreshAccessToken - Token already refreshed by another process. Skipping.');
+                        return [
+                            'success' => true,
+                            'access_token' => $tokenRecord->access_token,
+                            'refresh_token' => $tokenRecord->refresh_token,
+                            'expires_in' => $tokenRecord->expired_at - time(),
+                        ];
+                    }
+
+                    $refreshToken = $tokenRecord->refresh_token;
+                }
+
+                // 2. Perform the Refresh Request
+                $response = Http::withHeaders([
+                    'secret_key' => $this->appSecret,
+                    'Content-Type' => 'application/x-www-form-urlencoded',
+                ])->asForm()->post(ZaloEndPointExtends::API_OA_ACCESS_TOKEN, [
+                    'app_id' => $this->appId,
+                    'grant_type' => 'refresh_token',
+                    'refresh_token' => $refreshToken,
+                ]);
+
+                $data = $response->json();
+
+                if (isset($data['error']) && $data['error'] !== 0) {
+                    Log::error('ZaloService::refreshAccessToken failed', [
+                        'error' => $data['error'],
+                        'message' => $data['message'] ?? 'Unknown error',
+                    ]);
+
                     return [
                         'success' => false,
-                        'message' => 'No refresh token available',
+                        'message' => $data['message'] ?? 'Refresh token thất bại',
                     ];
                 }
-                $refreshToken = $tokenRecord->refresh_token;
-            }
-            $response = Http::withHeaders([
-                'secret_key' => $this->appSecret,
-                'Content-Type' => 'application/x-www-form-urlencoded',
-            ])->asForm()->post(ZaloEndPointExtends::API_OA_ACCESS_TOKEN, [
-                'app_id' => $this->appId,
-                'grant_type' => 'refresh_token',
-                'refresh_token' => $refreshToken,
-            ]);
 
-            $data = $response->json();
-            if (isset($data['error']) && $data['error'] !== 0) {
-                Log::error('ZaloService::refreshAccessToken failed', [
-                    'error' => $data['error'],
-                    'message' => $data['message'] ?? 'Unknown error',
+                $accessToken = $data['access_token'];
+                $newRefreshToken = $data['refresh_token'] ?? $refreshToken;
+                $expiresIn = $data['expires_in'] ?? 3600;
+
+                // 3. Save to database
+                ZaloToken::createOrUpdate($accessToken, $newRefreshToken, $expiresIn);
+
+                // 4. Cache (slightly less time than actual expiry)
+                $cacheExpiry = now()->addSeconds($expiresIn - 300); // -5 minutes for safety
+                Cache::put('zalo_access_token', $accessToken, $cacheExpiry);
+                Cache::put('zalo_refresh_token', $newRefreshToken, now()->addDays(90));
+
+                Log::info('ZaloService::refreshAccessToken success', [
+                    'expires_in' => $expiresIn,
+                ]);
+
+                return [
+                    'success' => true,
+                    'access_token' => $accessToken,
+                    'refresh_token' => $newRefreshToken,
+                    'expires_in' => $expiresIn,
+                ];
+            } catch (\Throwable $th) {
+                Log::error('ZaloService::refreshAccessToken Exception', [
+                    'error' => $th->getMessage(),
                 ]);
 
                 return [
                     'success' => false,
-                    'message' => $data['message'] ?? 'Refresh token thất bại',
+                    'message' => 'Có lỗi xảy ra: ' . $th->getMessage(),
                 ];
             }
-
-            $accessToken = $data['access_token'];
-            $newRefreshToken = $data['refresh_token'] ?? $refreshToken;
-            $expiresIn = $data['expires_in'] ?? 3600;
-
-            // Save to database
-            ZaloToken::createOrUpdate($accessToken, $newRefreshToken, $expiresIn);
-
-            // Cache for quick access (cache for slightly less time than actual expiry)
-            $cacheExpiry = now()->addSeconds($expiresIn - 300); // -5 minutes for safety
-            Cache::put('zalo_access_token', $accessToken, $cacheExpiry);
-            Cache::put('zalo_refresh_token', $newRefreshToken, now()->addDays(90));
-
-            Log::info('ZaloService::refreshAccessToken success', [
-                'expires_in' => $expiresIn,
-            ]);
-
-            return [
-                'success' => true,
-                'access_token' => $accessToken,
-                'refresh_token' => $newRefreshToken,
-                'expires_in' => $expiresIn,
-            ];
-        } catch (\Throwable $th) {
-            Log::error('ZaloService::refreshAccessToken Exception', [
-                'error' => $th->getMessage(),
-            ]);
-
-            return [
-                'success' => false,
-                'message' => 'Có lỗi xảy ra: ' . $th->getMessage(),
-            ];
-        }
+        });
     }
 
     /**
