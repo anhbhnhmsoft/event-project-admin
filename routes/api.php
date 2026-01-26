@@ -37,6 +37,9 @@ Route::middleware('set-locale')->group(function () {
 
 Route::middleware('set-locale')->group(function () {
     Route::get('/event', [EventController::class, 'list']);
+    Route::get('/event/{id}', [EventController::class, 'show']);
+    Route::get('/event/list-comment', [EventController::class, 'listComment']);
+    Route::get('/event/{id}/poll', [EventPollController::class, 'list']);
 });
 
 Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
@@ -56,11 +59,8 @@ Route::middleware(['set-locale', 'auth:sanctum'])->group(function () {
         Route::post('/history', [EventController::class, 'eventUserHistory']);
         Route::post('/history_register', [EventController::class, 'createEventUserHistory']);
         Route::post('/comment', [EventController::class, 'createEventComment']);
-        Route::get('/list-comment', [EventController::class, 'listComment']);
-        Route::get('/{id}', [EventController::class, 'show']);
         Route::get('/{id}/area', [EventController::class, 'showArea']);
         Route::get('/{id}/area/{areaId}', [EventController::class, 'showSeat']);
-        Route::get('/{id}/poll', [EventPollController::class, 'list']);
         Route::get('/poll/{pollId}', [EventPollController::class, 'item']);
         Route::post('/poll', [EventPollController::class, 'submit']);
     });

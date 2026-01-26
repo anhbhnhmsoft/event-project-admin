@@ -82,7 +82,7 @@ class AuthService
             }
 
             // Require phone verification for phone user
-            if ($type === 'phone' && !$user->phone_verified_at) {
+            if ($type === 'phone' && $user->phone_verified_at == null) {
                 $this->sendAuthenticationCode($user->phone, 'login', $user->organizer_id);
                 return [
                     'status' => false,
