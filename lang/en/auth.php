@@ -37,12 +37,11 @@ return [
         'unverified_email' => 'Email not verified, please check your email to verify your account',
         'logout_failed' => 'Logout failed',
         'failed' => 'These credentials do not match our records.',
-        // BỔ SUNG: Hết hạn mật khẩu và không tìm thấy
         'password_expired' => 'Password has expired, please set a new password',
         'not_found' => 'Object not found',
         'account_already_locked' => 'Account already locked, please contact the administrator for help',
         'account_inactivated' => 'Account has been inactivated, please contact the administrator for help',
-        'phone_already_registered' => 'Phone number already registered',
+        'phone_already_registered' => 'Phone number already registered',    
         'too_many_attempts' => 'Too many attempts, please try again later',
         'otp_sent' => 'OTP has been sent to your phone number Zalo',
         'invalid_token' => 'Invalid token',
@@ -55,7 +54,10 @@ return [
         'unverified_phone' => 'Phone number not verified',
         'invalid_request' => 'Invalid request',
         'type_required' => 'Type is required',
-        'type_in' => 'Invalid type'
+        'type_in' => 'Invalid type',
+        'organizer_id_required' => 'Organizer is required',
+        'organizer_id_integer' => 'Organizer must be an integer',
+        'organizer_id_exists' => 'Organizer does not exist',
     ],
     'validation' => [
         'password_required' => 'Password is required',

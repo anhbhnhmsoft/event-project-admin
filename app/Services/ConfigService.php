@@ -16,22 +16,31 @@ class ConfigService
         return Config::query()->where('organizer_id', $organizerId)->get();
     }
 
-    public function getConfigByKeys(array $keys)
+    public function getConfigByKeys(array $keys, $organizerId)
     {
-        return Config::query()->whereIn('config_key', $keys)->pluck('config_value', 'config_key');
+        return Config::query()
+            ->where('organizer_id', $organizerId)
+            ->whereIn('config_key', $keys)
+            ->pluck('config_value', 'config_key');
     }
 
-    public function getConfig(ConfigName $key)
+    public function getConfig(ConfigName $key, $organizerId)
     {
-        return Config::query()->where('config_key', $key->value)->first();
+        return Config::query()
+            ->where('organizer_id', $organizerId)
+            ->where('config_key', $key->value)
+            ->first();
     }
 
-    public function updateConfigs(array $form): bool
+    public function updateConfigs(array $form, $organizerId): bool
     {
         try {
             DB::beginTransaction();
             foreach ($form as $key => $value) {
-                $config = Config::query()->where('config_key', $key)->first();
+                $config = Config::query()
+                    ->where('organizer_id', $organizerId)
+                    ->where('config_key', $key)
+                    ->first();
                 if ($config) {
                     $config->update(['config_value' => $value]);
                 }
@@ -90,5 +99,34 @@ class ConfigService
             Log::error('Error updating organizer: ' . $e->getMessage());
             return false;
         }
+    }
+    public function getZaloConfig($organizerId)
+    {
+        $keys = [
+            ConfigName::ZALO_APP_ID->value,
+            ConfigName::ZALO_APP_SECRET->value,
+            ConfigName::ZALO_OA_ID->value,
+            ConfigName::ZALO_REDIRECT_URI->value,
+            ConfigName::ZALO_OTP_TEMPLATES->value,
+        ];
+
+        $configs = Config::query()
+            ->where('organizer_id', $organizerId)
+            ->whereIn('config_key', $keys)
+            ->pluck('config_value', 'config_key');
+
+        if ($configs->isEmpty()) {
+            return null;
+        }
+
+        $templates = json_decode($configs[ConfigName::ZALO_OTP_TEMPLATES->value] ?? '{}', true);
+
+        return [
+            'app_id' => $configs[ConfigName::ZALO_APP_ID->value] ?? null,
+            'app_secret' => $configs[ConfigName::ZALO_APP_SECRET->value] ?? null,
+            'redirect_uri' => $configs[ConfigName::ZALO_REDIRECT_URI->value] ?? null,
+            'oa_id' => $configs[ConfigName::ZALO_OA_ID->value] ?? null,
+            'otp_templates' => $templates,
+        ];
     }
 }

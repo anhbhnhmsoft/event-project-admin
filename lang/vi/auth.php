@@ -93,6 +93,7 @@ return [
         'username_max' => 'Tên người dùng tối đa 255 kí tự',
         'username_unique' => 'Tên người dùng đã tồn tại',
         'username_required' => 'Tên người dùng là bắt buộc',
+        'organizer_id_exists' => 'Nhà tổ chức không tồn tại',
     ],
     'login' => [
         'heading'           => 'Đăng nhập',

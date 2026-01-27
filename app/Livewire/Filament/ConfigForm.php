@@ -57,7 +57,7 @@ class ConfigForm extends Component
             $this->config_value['LOGO'] = $storedPath;
         }
 
-        $result = $this->service->updateConfigs($this->config_value);
+        $result = $this->service->updateConfigs($this->config_value, $this->organizerId);
 
         if ($result) {
             Notification::make()

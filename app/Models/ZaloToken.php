@@ -14,6 +14,7 @@ class ZaloToken extends Model
         'access_token',
         'refresh_token',
         'expired_at',
+        'organizer_id',
     ];
 
     protected $casts = [
@@ -34,9 +35,15 @@ class ZaloToken extends Model
      * 
      * @return ZaloToken|null
      */
-    public static function getLatest(): ?ZaloToken
+    /**
+     * Get the latest token record for a specific organizer
+     * 
+     * @param int|null $organizerId
+     * @return ZaloToken|null
+     */
+    public static function getLatest($organizerId = 1): ?ZaloToken
     {
-        return static::latest('id')->first();
+        return static::where('organizer_id', $organizerId)->latest('id')->first();
     }
 
     /**
@@ -85,11 +92,12 @@ class ZaloToken extends Model
      * @param string $accessToken
      * @param string $refreshToken
      * @param int $expiresIn
+     * @param int $organizerId
      * @return ZaloToken
      */
-    public static function createOrUpdate(string $accessToken, string $refreshToken, int $expiresIn = 3600): ZaloToken
+    public static function createOrUpdate(string $accessToken, string $refreshToken, int $expiresIn = 3600, int $organizerId = 1): ZaloToken
     {
-        $token = static::getLatest();
+        $token = static::getLatest($organizerId);
 
         if ($token) {
             $token->updateTokens($accessToken, $refreshToken, $expiresIn);
@@ -100,6 +108,7 @@ class ZaloToken extends Model
             'access_token' => $accessToken,
             'refresh_token' => $refreshToken,
             'expired_at' => time() + $expiresIn,
+            'organizer_id' => $organizerId,
         ]);
     }
 }

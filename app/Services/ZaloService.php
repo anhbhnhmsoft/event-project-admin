@@ -19,18 +19,12 @@ class ZaloService
     private string $appId;
     private string $appSecret;
 
-    public function __construct()
+    public function __construct(protected ConfigService $configService)
     {
-        $this->appId = config('services.zalo.app_id');
-        $this->appSecret = config('services.zalo.app_secret');
-        $this->oaId = config('services.zalo.oa_id');
-
-        // Validate required configs
-        if (empty($this->appId) || empty($this->appSecret) || empty($this->oaId)) {
-            throw new \RuntimeException(
-                'Zalo configuration is missing. Please check services.zalo config.'
-            );
-        }
+        $config = $this->configService->getZaloConfig(1);
+        $this->appId = $config['app_id'] ?? '';
+        $this->appSecret = $config['app_secret'] ?? '';
+        $this->oaId = $config['oa_id'] ?? '';
 
         $this->zalo = new Zalo([
             'app_id' => $this->appId,
@@ -46,7 +40,7 @@ class ZaloService
      * @param PurposeZNS $purpose - Mục đích gửi OTP
      * @return array
      */
-    public function sendOTP(string $phone, string $otp, PurposeZNS $purpose): array
+    public function sendOTP(string $phone, string $otp, PurposeZNS $purpose, int $organizerId = 1): array
     {
         try {
             // Format phone number
@@ -61,7 +55,7 @@ class ZaloService
             }
 
             // Get access token
-            $accessToken = $this->getAccessToken();
+            $accessToken = $this->getAccessToken($organizerId);
             if (!$accessToken) {
                 return [
                     'success' => false,
@@ -70,7 +64,7 @@ class ZaloService
             }
 
             // Get template ID
-            $templateId = $this->getTemplateId($purpose);
+            $templateId = $this->getTemplateId($purpose, $organizerId);
 
             // Prepare template data
             $templateData = [
@@ -170,11 +164,11 @@ class ZaloService
      * @param string|null $refreshToken - Refresh token from Zalo (optional, will use from DB if not provided)
      * @return array
      */
-    public function refreshAccessToken(?string $refreshToken = null): array
+    public function refreshAccessToken(?string $refreshToken = null, int $organizerId = 1): array
     {
-        return Cache::lock('zalo_refresh_token_lock', 10)->block(5, function () use ($refreshToken) {
+        return Cache::lock("zalo_refresh_token_lock_{$organizerId}", 10)->block(5, function () use ($refreshToken, $organizerId) {
             try {
-                $tokenRecord = ZaloToken::getLatest();
+                $tokenRecord = ZaloToken::getLatest($organizerId);
 
                 if (!$refreshToken) {
                     if (!$tokenRecord || !$tokenRecord->refresh_token) {
@@ -197,12 +191,14 @@ class ZaloService
                     $refreshToken = $tokenRecord->refresh_token;
                 }
 
+                $config = $this->configService->getZaloConfig($organizerId);
+
                 // 2. Perform the Refresh Request
                 $response = Http::withHeaders([
-                    'secret_key' => $this->appSecret,
+                    'secret_key' => $config['app_secret'],
                     'Content-Type' => 'application/x-www-form-urlencoded',
                 ])->asForm()->post(ZaloEndPointExtends::API_OA_ACCESS_TOKEN, [
-                    'app_id' => $this->appId,
+                    'app_id' => $config['app_id'],
                     'grant_type' => 'refresh_token',
                     'refresh_token' => $refreshToken,
                 ]);
@@ -226,12 +222,12 @@ class ZaloService
                 $expiresIn = $data['expires_in'] ?? 3600;
 
                 // 3. Save to database
-                ZaloToken::createOrUpdate($accessToken, $newRefreshToken, $expiresIn);
+                ZaloToken::createOrUpdate($accessToken, $newRefreshToken, $expiresIn, $organizerId);
 
                 // 4. Cache (slightly less time than actual expiry)
                 $cacheExpiry = now()->addSeconds($expiresIn - 300); // -5 minutes for safety
-                Cache::put('zalo_access_token', $accessToken, $cacheExpiry);
-                Cache::put('zalo_refresh_token', $newRefreshToken, now()->addDays(90));
+                Cache::put("zalo_access_token_{$organizerId}", $accessToken, $cacheExpiry);
+                Cache::put("zalo_refresh_token_{$organizerId}", $newRefreshToken, now()->addDays(90));
 
                 Log::info('ZaloService::refreshAccessToken success', [
                     'expires_in' => $expiresIn,
@@ -261,16 +257,16 @@ class ZaloService
      *
      * @return string|null
      */
-    private function getAccessToken(): ?string
+    private function getAccessToken(int $organizerId = 1): ?string
     {
         // Step 1: Try to get from cache (fastest)
-        $cachedToken = Cache::get('zalo_access_token');
+        $cachedToken = Cache::get("zalo_access_token_{$organizerId}");
         if ($cachedToken) {
             return $cachedToken;
         }
 
         // Step 2: Get from database
-        $tokenRecord = ZaloToken::getLatest();
+        $tokenRecord = ZaloToken::getLatest($organizerId);
 
         if (!$tokenRecord) {
             Log::error('ZaloService::getAccessToken - No token record in database');
@@ -283,7 +279,7 @@ class ZaloService
             $remainingTime = $tokenRecord->expired_at - time();
             // Cache if remaining time is significant enough (> 5 minutes)
             if ($remainingTime > 300) {
-                Cache::put('zalo_access_token', $tokenRecord->access_token, now()->addSeconds($remainingTime - 300));
+                Cache::put("zalo_access_token_{$organizerId}", $tokenRecord->access_token, now()->addSeconds($remainingTime - 300));
             }
             return $tokenRecord->access_token;
         }
@@ -291,7 +287,7 @@ class ZaloService
         // Step 4: Token expired or will expire soon, refresh it
         Log::info('ZaloService::getAccessToken - Token expired or expiring soon, refreshing...');
 
-        $result = $this->refreshAccessToken($tokenRecord->refresh_token);
+        $result = $this->refreshAccessToken($tokenRecord->refresh_token, $organizerId);
 
         return $result['success'] ? $result['access_token'] : null;
     }
@@ -302,9 +298,10 @@ class ZaloService
      * @param PurposeZNS $purpose
      * @return string
      */
-    private function getTemplateId(PurposeZNS $purpose): string
+    private function getTemplateId(PurposeZNS $purpose, int $organizerId = 1): string
     {
-        $templates = config('services.zalo.otp_templates');
+        $config = $this->configService->getZaloConfig($organizerId);
+        $templates = $config['otp_templates'] ?? [];
 
         return match ($purpose) {
             PurposeZNS::REGISTER => $templates['register'] ?? $templates['otp'],
@@ -322,14 +319,14 @@ class ZaloService
      * @param int $expiresIn
      * @return void
      */
-    public function setTokens(string $accessToken, string $refreshToken, int $expiresIn = 3600): void
+    public function setTokens(string $accessToken, string $refreshToken, int $expiresIn = 3600, int $organizerId = 1): void
     {
         // Save to database
-        ZaloToken::createOrUpdate($accessToken, $refreshToken, $expiresIn);
+        ZaloToken::createOrUpdate($accessToken, $refreshToken, $expiresIn, $organizerId);
 
         // Also cache for quick access
-        Cache::put('zalo_access_token', $accessToken, now()->addSeconds($expiresIn - 300));
-        Cache::put('zalo_refresh_token', $refreshToken, now()->addDays(90));
+        Cache::put("zalo_access_token_{$organizerId}", $accessToken, now()->addSeconds($expiresIn - 300));
+        Cache::put("zalo_refresh_token_{$organizerId}", $refreshToken, now()->addDays(90));
 
         Log::info('ZaloService::setTokens - Tokens saved to database and cached successfully');
     }
@@ -341,10 +338,15 @@ class ZaloService
      * @param string $state
      * @return string
      */
-    public function getAuthorizationUrl(string $callbackUrl, string $state = ''): string
+    public function getAuthorizationUrl(string $callbackUrl, string $state = '', int $organizerId = 1): string
     {
+        $config = $this->configService->getZaloConfig($organizerId);
+        if (!$config) {
+            throw new \RuntimeException("Zalo config not found for organizer {$organizerId}");
+        }
+
         $queryParams = http_build_query([
-            'app_id' => $this->appId,
+            'app_id' => $config['app_id'],
             'redirect_uri' => $callbackUrl,
             'state' => $state,
         ]);
@@ -358,20 +360,21 @@ class ZaloService
      * @param string $code
      * @return array
      */
-    public function getAccessTokenFromCode(string $code): array
+    public function getAccessTokenFromCode(string $code, int $organizerId = 1): array
     {
         try {
+            $config = $this->configService->getZaloConfig($organizerId);
+
             $response = Http::withHeaders([
-                'secret_key' => $this->appSecret,
+                'secret_key' => $config['app_secret'],
                 'Content-Type' => 'application/x-www-form-urlencoded',
             ])->asForm()->post(ZaloEndPointExtends::API_OA_ACCESS_TOKEN, [ // Endpoint for access token is same base, but let's verify if ZaloEndPointExtends has it. Actually API_REFRESH_TOKEN is https://oauth.zaloapp.com/v4/access_token which is correct for both.
-                'app_id' => $this->appId,
+                'app_id' => $config['app_id'],
                 'grant_type' => 'authorization_code',
                 'code' => $code,
             ]);
 
             $data = $response->json();
-
             if (isset($data['error']) && $data['error'] !== 0) {
                 Log::error('ZaloService::getAccessTokenFromCode failed', [
                     'error' => $data['error'],
@@ -389,7 +392,7 @@ class ZaloService
             $expiresIn = $data['expires_in'];
 
             // Store tokens
-            $this->setTokens($accessToken, $refreshToken, $expiresIn);
+            $this->setTokens($accessToken, $refreshToken, $expiresIn, $organizerId);
 
             return [
                 'success' => true,
