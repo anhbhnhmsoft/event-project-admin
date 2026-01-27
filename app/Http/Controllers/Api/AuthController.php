@@ -457,6 +457,7 @@ class AuthController extends Controller
             'code.required' => __('auth.validation.code_required'),
             'code.size' => __('auth.validation.code_size'),
             'organizer_id.required' => __('auth.validation.organizer_id_required'),
+            'organizer_id.exists' => __('auth.validation.organizer_id_exists'),
             'type.required' => __('auth.validation.type_required'),
             'type.in' => __('auth.validation.type_in'),
         ]);

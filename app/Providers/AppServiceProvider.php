@@ -35,7 +35,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(NotificationService::class, fn() => new NotificationService());
         $this->app->singleton(DashboardService::class, fn() => new DashboardService());
         $this->app->singleton(EventPollService::class, fn() => new EventPollService());
-        $this->app->singleton(ZaloService::class, fn() => new ZaloService());
+        $this->app->singleton(ZaloService::class, function ($app) {
+            return new ZaloService($app->make(ConfigService::class));
+        });
         $this->app->singleton(RevenueCatService::class, fn() => new RevenueCatService());
     }
 

@@ -4,6 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="zalo-platform-site-verification" content="USMq9AVj8n9zsBKU_EKb00hpYHVcXLrCC38q" />
 
     <title>{{ __('app.meta.title') }}</title>
     <meta name="description" content="{{ __('app.meta.description') }}">

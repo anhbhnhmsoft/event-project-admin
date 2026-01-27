@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     {{-- Bảo mật --}}
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="zalo-platform-site-verification" content="USMq9AVj8n9zsBKU_EKb00hpYHVcXLrCC38q" />
 
     {{-- SEO cơ bản --}}
     <title inertia>{{ $meta['title'] ?? 'EventApp - Hệ thống quản lý sự kiện chuyên nghiệp' }}</title>
