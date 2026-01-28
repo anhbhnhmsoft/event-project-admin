@@ -20,6 +20,7 @@ Route::prefix('auth')->middleware(['set-locale', 'throttle:5,1'])->group(functio
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
     Route::post('/confirm-password', [AuthController::class, 'confirmPassword']);
+    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
     Route::post('/verify-code', [AuthController::class, 'verifyCode']);
     Route::post('/resend-code', [AuthController::class, 'resendCode']);
     Route::post('/lock-account', [AuthController::class, 'lockAccount']);
@@ -38,7 +39,7 @@ Route::middleware('set-locale')->group(function () {
 Route::middleware('set-locale')->group(function () {
     Route::get('/event', [EventController::class, 'list']);
     Route::get('/event/{id}', [EventController::class, 'show']);
-    Route::get('/event/list-comment', [EventController::class, 'listComment']);
+    Route::get('/event/list-comment', [EventController::class, 'listComment']); 
     Route::get('/event/{id}/poll', [EventPollController::class, 'list']);
 });
 

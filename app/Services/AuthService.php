@@ -810,17 +810,7 @@ class AuthService
             }
 
             if ($usernameType === 'email') {
-                // For now, only support forgot password OTP/Link for email via this endpoint
-                if ($type === 'forgot_password') {
-                    // Delegate to forgotPassword logic (which sends link/code)
-                    return $this->forgotPasswordForMail([
-                        'email' => $username,
-                        'locate' => request()->input('locate', 'vi'),
-                        'organizer_id' => $organizerId
-                    ]);
-                } else {
-                    return $this->verfifyBackup(['email'  => $username, 'locate' => request()->input('locate', 'vi')]);
-                }
+                return $this->sendEmailOtp($username, $type, $organizerId);
             }
 
             return [
@@ -838,13 +828,64 @@ class AuthService
 
     private function sendPhoneOtp(string $phone, string $type, int $organizerId): array
     {
-        // Check if user exists check
+        // Check if user exists
         $user = User::where('phone', $phone)->where('organizer_id', $organizerId)->first();
 
         if ($type === 'register' && $user && $user->phone_verified_at) {
             return [
                 'status' => false,
                 'message' => __('auth.error.phone_already_registered'),
+            ];
+        }
+
+        if (($type === 'login' || $type === 'forgot_password') && !$user) {
+            return [
+                'status' => false,
+                'message' => __('auth.error.user_not_found'),
+            ];
+        }
+
+        // Generate OTP
+        $otp = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
+
+        // Determine ZNS Template based on type
+        $purpose = \App\Utils\Constants\PurposeZNS::REGISTER; // Default
+
+        // Send via Zalo
+        $zaloService = app(ZaloService::class);
+        $result = $zaloService->sendOTP($phone, $otp, $purpose);
+
+        if (!$result['success']) {
+            return [
+                'status' => false,
+                'message' => $result['message'],
+            ];
+        }
+
+        // Cache OTP
+        $cacheKey = "otp:{$type}:{$phone}:{$organizerId}";
+        Cache::put($cacheKey, [
+            'otp' => $otp,
+            'attempts' => 0,
+            'ip_address' => request()->ip(),
+        ], now()->addMinutes(10));
+
+        return [
+            'status' => true,
+            'message' => __('auth.success.otp_sent'),
+            'expire_minutes' => 10,
+        ];
+    }
+
+    private function sendEmailOtp(string $email, string $type, int $organizerId): array
+    {
+        // Check if user exists check
+        $user = User::where('email', $email)->where('organizer_id', $organizerId)->first();
+
+        if ($type === 'register' && $user && $user->email_verified_at) {
+            return [
+                'status' => false,
+                'message' => __('auth.error.email_already_registered'),
             ];
         }
 
@@ -859,27 +900,22 @@ class AuthService
         // Generate OTP
         $otp = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
 
-        // Determine ZNS Template based on type
-        $purpose = \App\Utils\Constants\PurposeZNS::REGISTER; // Default
-        // Logic mapping type to PurposeZNS if needed
+        // Send via Email
+        $locale = request()->input('locate', 'vi');
+        App::setLocale($locale);
 
-        // Send via Zalo
-        $zaloService = app(ZaloService::class);
-        $result = $zaloService->sendOTP($phone, $otp, $purpose);
-
-        if (!$result['success']) {
+        try {
+            Mail::to($email)->send(new ResetPasswordMail($otp, $locale));
+        } catch (\Throwable $e) {
+            Log::error('Failed to send email OTP: ' . $e->getMessage());
             return [
                 'status' => false,
-                'message' => $result['message'],
+                'message' => __('common.common_error.server_error'),
             ];
         }
 
         // Cache OTP
-        // Unified key format: otp:{type}:{username}:{organizerId}
-        // Actually, let's use type specific keys or unified?
-        // Let's use unified key for register to match register method expectation: otp:register:{username}:{organizerId}
-
-        $cacheKey = "otp:{$type}:{$phone}:{$organizerId}";
+        $cacheKey = "otp:{$type}:{$email}:{$organizerId}";
         Cache::put($cacheKey, [
             'otp' => $otp,
             'attempts' => 0,
@@ -1014,28 +1050,61 @@ class AuthService
                 ];
             }
 
-            // Verify Access
-            $user = User::where('phone', $username)->where('organizer_id', $organizerId)->first();
+            // Detect username type and find user
+            $usernameType = $this->detectUsernameType($username);
+            $user = null;
 
-            if ($user) {
-                $user->phone_verified_at = now();
-                $user->save();
+            if ($usernameType === 'phone') {
+                $user = User::where('phone', $username)->where('organizer_id', $organizerId)->first();
+            } elseif ($usernameType === 'email') {
+                $user = User::where('email', $username)->where('organizer_id', $organizerId)->first();
+            }
 
-                // Create auth token
-                $authToken = $user->createToken('api', expiresAt: now()->addDays(30))->plainTextToken;
-                Cache::forget($cacheKey);
+            if (!$user) {
+                return [
+                    'status' => false,
+                    'message' => __('auth.error.user_not_found'),
+                ];
+            }
+
+            // Clear OTP
+            Cache::forget($cacheKey);
+
+            // Handle different types
+            if ($type === 'forgot_password') {
+                // Generate reset token
+                $resetToken = \Illuminate\Support\Str::uuid()->toString();
+                $resetCacheKey = "reset_token:{$resetToken}";
+
+                Cache::put($resetCacheKey, [
+                    'user_id' => $user->id,
+                    'organizer_id' => $organizerId,
+                ], now()->addMinutes(5));
 
                 return [
                     'status' => true,
                     'message' => __('auth.success.otp_verified'),
-                    'token' => $authToken,
-                    'user' => $user,
+                    'reset_token' => $resetToken,
                 ];
             }
 
+            // For login/register types, mark as verified and create auth token
+            if ($usernameType === 'phone') {
+                $user->phone_verified_at = now();
+                $user->save();
+            } elseif ($usernameType === 'email') {
+                $user->email_verified_at = now();
+                $user->save();
+            }
+
+            // Create auth token
+            $authToken = $user->createToken('api', expiresAt: now()->addDays(30))->plainTextToken;
+
             return [
-                'status' => false,
-                'message' => __('auth.error.user_not_found'),
+                'status' => true,
+                'message' => __('auth.success.otp_verified'),
+                'token' => $authToken,
+                'user' => $user,
             ];
         } catch (\Throwable $e) {
             Log::error('verifyCode error: ' . $e->getMessage());
@@ -1045,6 +1114,56 @@ class AuthService
             ];
         }
     }
+
+    /**
+     * Reset password using reset token
+     * 
+     * @param string $resetToken
+     * @param string $password
+     * @return array
+     */
+    public function resetPassword(string $resetToken, string $password): array
+    {
+        try {
+            $cacheKey = "reset_token:{$resetToken}";
+            $tokenData = Cache::get($cacheKey);
+
+            if (!$tokenData) {
+                return [
+                    'status' => false,
+                    'message' => __('auth.error.invalid_or_expired_token'),
+                ];
+            }
+
+            $user = User::find($tokenData['user_id']);
+
+            if (!$user || $user->organizer_id !== $tokenData['organizer_id']) {
+                return [
+                    'status' => false,
+                    'message' => __('auth.error.user_not_found'),
+                ];
+            }
+
+            // Update password
+            $user->password = Hash::make($password);
+            $user->save();
+
+            // Clear reset token
+            Cache::forget($cacheKey);
+
+            return [
+                'status' => true,
+                'message' => __('auth.success.password_changed'),
+            ];
+        } catch (\Throwable $e) {
+            Log::error('resetPassword error: ' . $e->getMessage());
+            return [
+                'status' => false,
+                'message' => __('common.common_error.server_error'),
+            ];
+        }
+    }
+
     /**
      * Lock current user account
      * @return array
