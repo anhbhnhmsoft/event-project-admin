@@ -385,6 +385,47 @@ class AuthController extends Controller
         ], 200);
     }
 
+    /**
+     * Reset Password with Reset Token
+     * POST /api/auth/reset-password
+     */
+    public function resetPassword(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'reset_token' => ['required', 'string'],
+            'password' => ['required', 'string', 'min:8'],
+            'confirm_password' => ['required', 'same:password'],
+        ], [
+            'reset_token.required' => __('auth.validation.reset_token_required'),
+            'password.required' => __('auth.validation.password_required'),
+            'password.min' => __('auth.validation.password_min'),
+            'confirm_password.required' => __('auth.validation.confirm_password_required'),
+            'confirm_password.same' => __('auth.validation.confirm_password_same'),
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => __('auth.error.validation_failed'),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $result = $this->authService->resetPassword(
+            $request->input('reset_token'),
+            $request->input('password')
+        );
+
+        if (isset($result['status']) && $result['status'] === false) {
+            return response()->json([
+                'message' => $result['message'],
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => __('auth.success.password_changed'),
+        ], 200);
+    }
+
     public function getUserInfo(Request $request)
     {
         $user = $request->user()->load('activeMemberships');
@@ -480,6 +521,15 @@ class AuthController extends Controller
             return response()->json([
                 'message' => $result['message'],
             ], 422);
+        }
+
+        if($result['status'] && isset($result['reset_token'])) {
+            return response()->json([
+                'message' => $result['message'],
+                'data' => [
+                    'reset_token' => $result['reset_token'],
+                ],
+            ], 200);
         }
 
         return response()->json([
