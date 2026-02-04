@@ -41,6 +41,10 @@ class EventSeatService
             return true;
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('EventSeatService::eventSeatInsert error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return false;
         }
     }
@@ -105,6 +109,10 @@ class EventSeatService
             DB::commit();
             return $result;
         } catch (\Exception $e) {
+            Log::error('EventSeatService::updateSeat error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             DB::rollBack();
             return false;
         }
@@ -134,6 +142,10 @@ class EventSeatService
             return ['status' => true, 'data' => $seat];
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('EventSeatService::assignSeatToUser error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return ['status' => false, 'message' => __('event.validation.cannot_assign_seat')];
         }
     }
@@ -151,6 +163,10 @@ class EventSeatService
             return ['status' => true];
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('EventSeatService::unassignSeat error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return ['status' => false, 'message' => __('event.validation.cannot_cancel_seat')];
         }
     }
@@ -239,6 +255,10 @@ class EventSeatService
             ];
 
         } catch (Exception $e) {
+            Log::error('EventSeatService::registerSeatPayment error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             DB::rollBack();
 
             return [
@@ -291,6 +311,10 @@ class EventSeatService
             ];
 
         } catch (Exception $e) {
+            Log::error('EventSeatService::handleSuccessfulPayment error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             DB::rollBack();
 
             return [
@@ -368,6 +392,10 @@ class EventSeatService
             ];
 
         } catch (Exception $e) {
+            Log::error('EventSeatService::checkAndCreatePayment error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),
