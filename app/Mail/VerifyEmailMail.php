@@ -16,14 +16,15 @@ class VerifyEmailMail extends Mailable
 
     public $url;
     public $locale;
-
+    public $user;
     /**
      * Create a new message instance.
      */
-    public function __construct(string $url, string $locale = 'vi')
+    public function __construct(string $url, string $locale = 'vi', $user)
     {
         $this->url = $url;
         $this->locale = $locale;
+        $this->user = $user;
     }
 
     /**
@@ -51,6 +52,7 @@ class VerifyEmailMail extends Mailable
             markdown: 'emails.auth.verify-email',
             with: [
                 'url' => $this->url,
+                'user' => $this->user,
             ]
         );
     }
