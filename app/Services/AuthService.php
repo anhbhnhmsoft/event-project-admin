@@ -157,7 +157,7 @@ class AuthService
                     now()->addMinutes(60),
                     ['id' => $user->getKey(), 'hash' => sha1($user->getEmailForVerification())]
                 );
-                Mail::to($user->email)->queue(new VerifyEmailMail($url, $userData['lang']));
+                Mail::to($user->email)->queue(new VerifyEmailMail($url, $userData['lang'], $user));
             } elseif ($type === 'phone') {
                 // Send OTP for phone
                 $this->sendAuthenticationCode($username, 'register', $organizerId);
@@ -273,57 +273,6 @@ class AuthService
         }
     }
 
-    public function forgotPasswordForMail(array $data, string $locale = 'vi'): array
-    {
-        try {
-            $query = User::where('email', $data['email']);
-            if (isset($data['organizer_id'])) {
-                $query->where('organizer_id', $data['organizer_id']);
-            }
-            $user = $query->first();
-
-            if (!$user) {
-                return [
-                    'status' => false,
-                    'message' => __('auth.error.email_not_found'),
-                ];
-            }
-
-            $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-
-            UserResetCode::where('user_id', $user->id)
-                ->where('email', $data['email'])
-                ->whereNull('deleted_at')
-                ->delete();
-
-            UserResetCode::create([
-                'user_id' => $user->id,
-                'email' => $data['email'],
-                'code' => $code,
-                'expires_at' => now()->addMinutes(10),
-            ]);
-
-            App::setLocale($locale);
-
-            Mail::to($user->email)->send(new ResetPasswordMail($code, $locale));
-
-            return [
-                'status' => true,
-                'message' => __('auth.success.reset_sent'),
-            ];
-        } catch (ServiceException $e) {
-            return [
-                'status' => false,
-                'message' => __('common.common_error.server_error'),
-            ];
-        } catch (\Throwable $e) {
-            return [
-                'status' => false,
-                'message' => __('common.common_error.server_error'),
-            ];
-        }
-    }
-
     public function verfifyBackup(array $data): array
     {
         try {
@@ -336,7 +285,7 @@ class AuthService
                 ['id' => $user->getKey(), 'hash' => sha1($user->getEmailForVerification())]
             );
 
-            Mail::to($user->email)->queue(new VerifyEmailMail($url, $data['locate']));
+            Mail::to($user->email)->queue(new VerifyEmailMail($url, $data['locate'], $user));
 
             return [
                 'status' => true,
@@ -905,7 +854,7 @@ class AuthService
         App::setLocale($locale);
 
         try {
-            Mail::to($email)->send(new ResetPasswordMail($otp, $locale));
+            Mail::to($email)->queue(new ResetPasswordMail($otp, $locale));
         } catch (\Throwable $e) {
             Log::error('Failed to send email OTP: ' . $e->getMessage());
             return [
