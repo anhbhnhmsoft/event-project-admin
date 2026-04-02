@@ -43,8 +43,7 @@ class Login extends BaseLogin
                     ->searchable()
                     ->placeholder(__(''))
                     ->options(fn() => Organizer::query()->pluck('name', 'id'))
-                    ->required()
-                    ->native(false),
+                    ->required(),
                 $this->getEmailFormComponent()
                     ->label(__('auth.login.email')),
                 $this->getPasswordFormComponent()

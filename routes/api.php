@@ -10,7 +10,6 @@ use App\Http\Controllers\Api\OrganizerController;
 use App\Http\Controllers\Api\ProvinceController;
 use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\WebhookCassoController;
-use App\Http\Controllers\WebhookRevenueCatController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -101,5 +100,4 @@ Route::prefix('common')->middleware('set-locale')->group(function () {
 });
 
 Route::post('/webhook/payos', [WebhookCassoController::class, 'handle']);
-Route::post('/webhook/revenuecat', [WebhookRevenueCatController::class, 'handle']);
 Route::post('/webhook/zalo', [App\Http\Controllers\ZaloController::class, 'hook'])->name('zalo.webhook');

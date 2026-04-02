@@ -193,34 +193,45 @@ class QuickRegister extends Component
 
     public function register()
     {
-
         if ($this->isSubmitting) {
             return;
         }
 
         $this->isSubmitting = true;
-        $this->validate();
-        $data = [
-            'name' => trim($this->name),
-            'email' => trim(strtolower($this->email)),
-            'phone' => preg_replace('/\s+/', '', $this->phone),
-            'lang' => $this->lang,
-            'organizer_id' => $this->organizer['id'],
-            'event_id' => $this->event['id'],
-        ];
 
-        // Gọi service đăng ký
-        $result = $this->authService->quickRegister($data);
+        try {
+            $this->validate();
 
-        $this->resultStatus = $result['status'];
+            $data = [
+                'name' => trim($this->name),
+                'email' => trim(strtolower($this->email)),
+                'phone' => preg_replace('/\s+/', '', $this->phone),
+                'lang' => $this->lang,
+                'organizer_id' => $this->organizer['id'],
+                'event_id' => $this->event['id'],
+            ];
 
-        if ($result['status']) {
-            $this->handleSuccess($result);
-        } else {
-            $this->handleError($result['message'] ?? '');
+            // Gọi service đăng ký
+            $result = $this->authService->quickRegister($data);
+
+            $this->resultStatus = $result['status'];
+
+            if ($result['status']) {
+                $this->handleSuccess($result);
+            } else {
+                $this->handleError($result['message'] ?? '');
+            }
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Re-throw validation exception để Livewire hiển thị lỗi
+            throw $e;
+        } catch (\Exception $e) {
+            // Log lỗi và hiển thị thông báo lỗi
+            \Illuminate\Support\Facades\Log::error('Quick register error: ' . $e->getMessage());
+            $this->handleError($e->getMessage());
+        } finally {
+            // Luôn reset trạng thái submitting
+            $this->isSubmitting = false;
         }
-
-        $this->isSubmitting = false;
     }
 
     private function handleSuccess(array $result)

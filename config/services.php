@@ -55,10 +55,4 @@ return [
         ],
     ],
 
-    'revenuecat' => [
-        'api_key' => env('REVENUECAT_API_KEY'),
-        'webhook_secret' => env('REVENUECAT_WEBHOOK_SECRET'),
-        'public_sdk_key' => env('REVENUECAT_PUBLIC_SDK_KEY'),
-        'project_id' => env('REVENUECAT_PROJECT_ID'),
-    ],
 ];
