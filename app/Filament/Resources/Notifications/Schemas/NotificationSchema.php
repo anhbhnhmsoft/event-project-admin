@@ -29,16 +29,16 @@ class NotificationSchema
         if ($user->role == RoleUser::SUPER_ADMIN->value) {
             $steps[] = Step::make(__('admin.notifications.form.steps.select_organizer'))
                 ->schema([
-                    Select::make('organizer_id')
-                        ->label(__('admin.notifications.form.organizer'))
-                        ->options(fn() => Organizer::query()->orderBy('name')->pluck('name', 'id'))
-                        ->searchable()
-                        ->preload()
-                        ->required()
-                        ->live()
-                        ->validationMessages([
-                            'required' => __('admin.notifications.form.validation.organizer_required'),
-                        ]),
+                    // Select::make('organizer_id')
+                    //     ->label(__('admin.notifications.form.organizer'))
+                    //     ->options(fn() => Organizer::query()->whereNotNull('name')->orderBy('name')->pluck('name', 'id'))
+                    //     ->searchable()
+                    //     ->preload()
+                    //     ->required()
+                    //     ->live()
+                    //     ->validationMessages([
+                    //         'required' => __('admin.notifications.form.validation.organizer_required'),
+                    //     ]),
                 ]);
         } else {
             $steps[] = Step::make(__('admin.notifications.form.steps.recipients_content'))
@@ -57,6 +57,7 @@ class NotificationSchema
                     ->options(function (Get $get) use ($user) {
                         $organizerId = $get('organizer_id') ?: ($user->organizer_id ?? null);
                         return \App\Models\NotificationTemplate::query()
+                            ->whereNotNull('name')
                             ->when($organizerId, fn($q) => $q->where('organizer_id', $organizerId))
                             ->active()
                             ->orderBy('created_at', 'desc')
@@ -91,8 +92,8 @@ class NotificationSchema
                         $organizerId = $get('organizer_id') ?: ($user->organizer_id ?? null);
                         return User::query()
                             ->when($organizerId, fn(Builder $q) => $q->where('organizer_id', $organizerId))
-                            ->orderBy('email')
-                            ->pluck('email', 'id');
+                            ->orderBy('name')
+                            ->pluck('name', 'id');
                     })
                     ->searchable()
                     ->preload()
@@ -162,6 +163,7 @@ class NotificationSchema
                     ->options(function (Get $get) use ($user) {
                         $organizerId = $get('organizer_id') ?: ($user->organizer_id ?? null);
                         return \App\Models\NotificationTemplate::query()
+                            ->whereNotNull('name')
                             ->when($organizerId, fn($q) => $q->where('organizer_id', $organizerId))
                             ->active()
                             ->orderBy('created_at', 'desc')

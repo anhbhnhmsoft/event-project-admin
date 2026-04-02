@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use App\Http\Responses\CustomLoginResponse;
 use App\Models\Membership;
 use App\Observers\MembershipObserver;
 use App\Services\AuthService;
@@ -14,9 +13,9 @@ use App\Services\OrganizerService;
 use App\Services\EventUserHistoryService;
 use App\Services\TransactionService;
 use App\Services\NotificationService;
-use App\Services\RevenueCatService;
 use App\Services\ZaloService;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -38,7 +37,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ZaloService::class, function ($app) {
             return new ZaloService($app->make(ConfigService::class));
         });
-        $this->app->singleton(RevenueCatService::class, fn() => new RevenueCatService());
     }
 
     /**
@@ -49,6 +47,10 @@ class AppServiceProvider extends ServiceProvider
         if (request()->is('admin*')) {
             App::setLocale('vi');
         }
+
+        Gate::define('viewLogViewer', function ($user = null) {
+            return true;
+        });
 
         Membership::observe(MembershipObserver::class);
     }

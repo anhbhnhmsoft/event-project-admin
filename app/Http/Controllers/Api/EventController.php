@@ -523,7 +523,4 @@ class EventController extends Controller
         ]);
     }
 
-    public final function handleRevenueCatWebhook(Request $request)
-    {
-    }
 }

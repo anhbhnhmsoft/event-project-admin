@@ -17,6 +17,15 @@ class ConfigForm extends Component
 
     private ConfigService $service;
 
+    // Zalo config keys - chỉ super admin mới thấy
+    public array $zaloConfigKeys = [
+        'ZALO_APP_ID',
+        'ZALO_APP_SECRET',
+        'ZALO_OA_ID',
+        'ZALO_REDIRECT_URI',
+        'ZALO_OTP_TEMPLATES',
+    ];
+
     public array $config_value = [];
     public array $organizer_value = [];
 
