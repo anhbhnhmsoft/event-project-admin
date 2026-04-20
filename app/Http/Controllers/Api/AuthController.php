@@ -279,7 +279,7 @@ class AuthController extends Controller
         $validated = $validator->validated();
         $locale = $validated['locate'] ?? null;
 
-        $user = User::where('email', $validated['email'])->first();
+        $user = User::where('email', $validated['username'])->first();
 
         if (! $user) {
             return response()->json([
