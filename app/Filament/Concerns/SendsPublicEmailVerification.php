@@ -3,6 +3,7 @@
 namespace App\Filament\Concerns;
 
 use App\Mail\VerifyEmailMail;
+use App\Utils\Constants\Language;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Mail;
@@ -31,6 +32,10 @@ trait SendsPublicEmailVerification
 
         $locale = $user->lang ?? app()->getLocale();
 
-        Mail::to($user->email)->queue(new VerifyEmailMail($url, $locale, $user));
+        if ($locale instanceof Language) {
+            $locale = $locale->value;
+        }
+
+        Mail::to($user->email)->queue(new VerifyEmailMail($url, (string) $locale, $user));
     }
 }

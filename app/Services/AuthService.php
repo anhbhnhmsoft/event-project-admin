@@ -442,7 +442,7 @@ class AuthService
                 'role' => RoleUser::ADMIN,
                 'phone' => $data['phone'] ?? null,
                 'organizer_id' => $organizer->id,
-                'lang' => Language::VI,
+                'lang' => Language::VI->value,
             ]);
             $configs = [
                 [
