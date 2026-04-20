@@ -227,16 +227,19 @@ class MemberShipService
     public function checkMembershipExpire()
     {
         try {
-            $today = Carbon::now()->toDateString();
+            $today = Carbon::today()->toDateString();
 
-            // 7 ngày trước khi hết hạn
-            $sevenDaysFromNow = Carbon::now()->addDays(7)->toDateString();
-            $sevenDayMemberships = MembershipUser::where('end_date', '<=', $sevenDaysFromNow)
-                ->where('end_date', '>', $today)
+            // Nhắc đúng mốc còn 7 ngày.
+            $sevenDaysFromNow = Carbon::today()->addDays(7)->toDateString();
+            $sevenDayMemberships = MembershipUser::where('status', MembershipUserStatus::ACTIVE->value)
+                ->whereDate('end_date', $sevenDaysFromNow)
                 ->get();
 
             if ($sevenDayMemberships->isNotEmpty()) {
-                $sevenDayUserIds = $sevenDayMemberships->pluck('user_id')->toArray();
+                $sevenDayUserIds = $sevenDayMemberships->pluck('user_id')
+                    ->unique()
+                    ->values()
+                    ->toArray();
 
                 $sevenDayPayload = new NotificationPayload(
                     title: __('event.success.notification_title_mbs_near'),
@@ -248,7 +251,12 @@ class MemberShipService
                 SendNotifications::dispatch($sevenDayPayload, $sevenDayUserIds)->onQueue('notifications');
 
                 // Lấy email và gửi song song
-                $sevenDayEmails = User::whereIn('id', $sevenDayUserIds)->pluck('email')->toArray();
+                $sevenDayEmails = User::whereIn('id', $sevenDayUserIds)
+                    ->pluck('email')
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->toArray();
                 if (!empty($sevenDayEmails)) {
                     SendMembershipExpireEmail::dispatch(
                         $sevenDayEmails,
@@ -258,43 +266,53 @@ class MemberShipService
                 }
             }
 
-            // 1 ngày trước khi hết hạn
-            $oneDayFromNow = Carbon::now()->addDay()->toDateString();
-            $oneDayMemberships = MembershipUser::where('end_date', '<=', $oneDayFromNow)
-                ->where('end_date', '>=', $today)
+            // Nhắc các gói sẽ hết hạn trong hôm nay hoặc ngày mai.
+            $oneDayFromNow = Carbon::today()->addDay()->toDateString();
+            $oneDayMemberships = MembershipUser::where('status', MembershipUserStatus::ACTIVE->value)
+                ->whereBetween('end_date', [$today, $oneDayFromNow])
                 ->get();
 
             $oneDayUserIds = $oneDayMemberships->pluck('user_id')
+                ->unique()
                 ->filter(fn($id) => !in_array($id, $sevenDayUserIds ?? []))
+                ->values()
                 ->toArray();
 
             if (!empty($oneDayUserIds)) {
                 $oneDayPayload = new NotificationPayload(
                     title: __('event.success.notification_title_mbs_expired'),
-                    description: __('event.success.notification_title_expired'),
+                    description: __('event.success.notification_desc_mbs_expired'),
                     data: [],
                     notificationType: UserNotificationType::MEMBERSHIP_EXPIRE_REMINDER,
                 );
 
                 SendNotifications::dispatch($oneDayPayload, $oneDayUserIds)->onQueue('notifications');
 
-                $oneDayEmails = User::whereIn('id', $oneDayUserIds)->pluck('email')->toArray();
+                $oneDayEmails = User::whereIn('id', $oneDayUserIds)
+                    ->pluck('email')
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->toArray();
                 if (!empty($oneDayEmails)) {
                     SendMembershipExpireEmail::dispatch(
                         $oneDayEmails,
                         __('event.success.notification_title_mbs_expired'),
-                        __('event.success.notification_title_expired')
+                        __('event.success.notification_desc_mbs_expired')
                     )->onQueue('emails');
                 }
             }
 
-            // Cập nhật trạng thái đã hết hạn
-            MembershipUser::where('end_date', '<', $today)
+            // Chỉ chuyển các gói đang active nhưng đã quá hạn sang expired.
+            MembershipUser::where('status', MembershipUserStatus::ACTIVE->value)
+                ->where('end_date', '<', $today)
                 ->update(['status' => MembershipUserStatus::EXPIRED->value]);
 
             return ['status' => true];
-        } catch (Exception $e) {
-            Log::error("Error in checkMembershipExpire: " . $e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('Error in checkMembershipExpire', [
+                'message' => $e->getMessage(),
+            ]);
             return ['status' => false];
         }
     }

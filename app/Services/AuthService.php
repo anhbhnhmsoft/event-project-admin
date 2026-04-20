@@ -388,16 +388,27 @@ class AuthService
             $count = UserResetCode::where('expires_at', '<', now())
                 ->forceDelete();
 
+            Log::info('Expired user reset codes cleaned up.', [
+                'deleted_count' => $count,
+            ]);
+
             return [
                 'status' => true,
                 'message' => __('common.common_success.update_success'),
+                'deleted_count' => $count,
             ];
         } catch (ServiceException $e) {
+            Log::error('checkExpiresAtUser service exception', [
+                'message' => $e->getMessage(),
+            ]);
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),
             ];
         } catch (\Throwable $e) {
+            Log::error('checkExpiresAtUser error', [
+                'message' => $e->getMessage(),
+            ]);
             return [
                 'status' => false,
                 'message' => __('common.common_error.server_error'),
