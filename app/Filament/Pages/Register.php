@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Concerns\SendsPublicEmailVerification;
 use App\Models\User;
 use App\Services\AuthService;
 use Filament\Actions\Action;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Vite;
 
 class Register extends PagesRegister
 {
+    use SendsPublicEmailVerification;
 
     public function mount(): void
     {

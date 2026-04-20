@@ -2,11 +2,11 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\EmailVerificationPrompt;
 use App\Filament\Pages\Login;
 use App\Filament\Pages\Register;
 use App\Http\Middleware\CheckCustomerAccessCustomer;
 use App\Http\Middleware\SetLocale;
-use Filament\Auth\Pages\EmailVerification\EmailVerificationPrompt;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
