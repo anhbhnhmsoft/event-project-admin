@@ -352,23 +352,19 @@ class EventController extends Controller
 
         $type = $filters['type'] ?? null;
 
-        if ($type == EventCommentType::PRIVATE->value) {
-            $user = $request->user();
+        if ((int) $type === EventCommentType::PRIVATE->value) {
+            $user = auth('sanctum')->user();
+
+            if (!$user) {
+                return $this->emptyCommentResponse($limit, $page);
+            }
+
             $membership = $user->activeMembership->first();
 
             $allowComment = $membership && ($membership->config[ConfigMembership::ALLOW_COMMENT->value] ?? false);
 
             if (!$allowComment) {
-                return response()->json([
-                    'message' => __('common.common_success.get_success'),
-                    'data' => [],
-                    'pagination' => [
-                        'total' => 0,
-                        'per_page' => $limit,
-                        'current_page' => $page,
-                        'last_page' => 1,
-                    ],
-                ], 200);
+                return $this->emptyCommentResponse($limit, $page);
             }
         }
 
@@ -382,6 +378,20 @@ class EventController extends Controller
                 'per_page' => $comments->perPage(),
                 'current_page' => $comments->currentPage(),
                 'last_page' => $comments->lastPage(),
+            ],
+        ], 200);
+    }
+
+    private function emptyCommentResponse(int $limit, int $page): JsonResponse
+    {
+        return response()->json([
+            'message' => __('common.common_success.get_success'),
+            'data' => [],
+            'pagination' => [
+                'total' => 0,
+                'per_page' => $limit,
+                'current_page' => $page,
+                'last_page' => 1,
             ],
         ], 200);
     }

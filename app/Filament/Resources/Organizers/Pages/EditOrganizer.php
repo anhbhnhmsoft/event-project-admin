@@ -62,9 +62,10 @@ class EditOrganizer extends Page implements HasSchemas
                     ->columnSpanFull()
                     ->extraAttributes(['style' => 'min-height: 300px;']),
             ])->livewireSubmitHandler('save')
-                ->footer([
-                    Actions::make([
-                        Action::make(__('common.save'))
+                    ->footer([
+                        Actions::make([
+                        Action::make('save')
+                            ->label(__('common.save'))
                             ->submit('save')
                             ->keyBindings(['mod+s']),
                     ]),

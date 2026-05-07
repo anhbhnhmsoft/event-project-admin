@@ -37,8 +37,8 @@ Route::middleware('set-locale')->group(function () {
 
 Route::middleware('set-locale')->group(function () {
     Route::get('/event', [EventController::class, 'list']);
-    Route::get('/event/{id}', [EventController::class, 'show']);
     Route::get('/event/list-comment', [EventController::class, 'listComment']); 
+    Route::get('/event/{id}', [EventController::class, 'show']);
     Route::get('/event/{id}/poll', [EventPollController::class, 'list']);
 });
 
