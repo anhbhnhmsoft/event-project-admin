@@ -13,7 +13,7 @@ use App\Http\Controllers\WebhookCassoController;
 use Illuminate\Support\Facades\Route;
 
 
-Route::prefix('auth')->middleware(['set-locale', 'throttle:5,1'])->group(function () {
+Route::prefix('auth')->middleware(['set-locale', 'throttle:30,1'])->group(function () {
     // Unified Authentication (supports both email/password and phone/OTP)
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/register', [AuthController::class, 'register']);

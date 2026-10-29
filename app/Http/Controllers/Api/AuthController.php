@@ -182,7 +182,7 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'username' => ['required', 'string', 'max:255'],
-            'name' => ['required', 'string', 'min:4', 'max:255'],
+            'name' => ['required', 'string', 'min:2', 'max:255'],
             'password' => ['required', 'string', 'min:8'],
             'confirm_password' => ['required', 'same:password'],
             'organizer_id' => ['required', 'integer', 'exists:organizers,id'],
@@ -211,17 +211,13 @@ class AuthController extends Controller
         $result = $this->authService->register($validator->validated());
 
         if ($result['status'] === false) {
-            $code = 500;
-            if (str_contains($result['message'] ?? '', 'exist') || str_contains($result['message'] ?? '', 'tồn tại')) {
-                $code = 422;
-            }
             return response()->json([
                 'message' => $result['message'],
-            ], $code);
+            ], 422);
         }
 
         return response()->json([
-            'message' => __('auth.success.register_success'),
+            'message' => $result['message'] ?? __('auth.success.register_success'),
         ], 200);
     }
 

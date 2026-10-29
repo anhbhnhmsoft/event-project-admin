@@ -4,6 +4,8 @@ return [
     'success' => [
         'login_success' => 'Login successful',
         'register_success' => 'Register successful, please check your email to verify your account',
+        'register_success_verify_otp' => 'Registration successful, please enter the OTP to verify your account.',
+        'register_success_verify_email' => 'Registration successful, please check your email to verify your account.',
         'reset_sent' => 'Reset code has been sent to your email',
         'password_changed' => 'Password has been changed successfully',
         'verify_success' => 'Email verified successfully',

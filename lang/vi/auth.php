@@ -4,6 +4,8 @@ return [
     'success' => [
         'login_success' => 'Đăng nhập thành công',
         'register_success' => 'Đăng ký tài khoản thành công, bạn hãy kiểm tra email để xác thực tài khoản',
+        'register_success_verify_otp' => 'Đăng ký tài khoản thành công, vui lòng nhập mã OTP để xác thực tài khoản.',
+        'register_success_verify_email' => 'Đăng ký tài khoản thành công, bạn hãy kiểm tra email để xác thực tài khoản.',
         'reset_sent' => 'Mã reset đã được gửi đến email của bạn',
         'password_changed' => 'Mật khẩu đã được thay đổi thành công',
         'verify_success' => 'Xác thực email thành công',

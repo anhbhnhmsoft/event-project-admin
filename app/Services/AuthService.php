@@ -133,22 +133,34 @@ class AuthService
             // Handle Phone Registration
             if ($type === 'phone') {
                 $userData['phone'] = $username;
-                // Phone check unique
-                if (User::where('phone', $username)->where('organizer_id', $organizerId)->exists()) {
-                    throw new ServiceException(__('auth.error.phone_already_registered'));
+                $existingUser = User::where('phone', $username)->where('organizer_id', $organizerId)->first();
+                if ($existingUser) {
+                    if ($existingUser->phone_verified_at) {
+                        throw new ServiceException(__('auth.error.phone_already_registered'));
+                    }
+                    // If user was created previously but not verified (e.g. OTP failed), allow updating and resending OTP
+                    $existingUser->update($userData);
+                    $user = $existingUser;
+                } else {
+                    $user = User::query()->create($userData);
                 }
             }
             // Handle Email Registration
             elseif ($type === 'email') {
                 $userData['email'] = $username;
-                if (User::where('email', $username)->where('organizer_id', $organizerId)->exists()) {
-                    throw new ServiceException(__('auth.error.email_already_registered'));
+                $existingUser = User::where('email', $username)->where('organizer_id', $organizerId)->first();
+                if ($existingUser) {
+                    if ($existingUser->email_verified_at) {
+                        throw new ServiceException(__('auth.error.email_already_registered'));
+                    }
+                    $existingUser->update($userData);
+                    $user = $existingUser;
+                } else {
+                    $user = User::query()->create($userData);
                 }
             } else {
                 throw new ServiceException(__('auth.error.invalid_username'));
             }
-
-            $user = User::query()->create($userData);
 
             // Send email verification if email type
             if ($type === 'email') {
@@ -159,8 +171,11 @@ class AuthService
                 );
                 Mail::to($user->email)->queue(new VerifyEmailMail($url, $userData['lang'], $user));
             } elseif ($type === 'phone') {
-                // Send OTP for phone
-                $this->sendAuthenticationCode($username, 'register', $organizerId);
+                // Send OTP for phone and verify result
+                $otpResult = $this->sendAuthenticationCode($username, 'register', $organizerId);
+                if (!$otpResult['status']) {
+                    throw new ServiceException($otpResult['message'] ?? __('common.common_error.server_error'));
+                }
             }
 
             DB::commit();
@@ -809,11 +824,22 @@ class AuthService
         $otp = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
 
         // Determine ZNS Template based on type
-        $purpose = \App\Utils\Constants\PurposeZNS::REGISTER; // Default
+        $purpose = match ($type) {
+            'forgot_password' => \App\Utils\Constants\PurposeZNS::FORGOT_PASSWORD,
+            'login' => \App\Utils\Constants\PurposeZNS::VERIFY_PHONE,
+            default => \App\Utils\Constants\PurposeZNS::REGISTER,
+        };
+
+        \Illuminate\Support\Facades\Log::info('Generating OTP for phone', [
+            'phone' => $phone,
+            'type' => $type,
+            'organizer_id' => $organizerId,
+            'otp' => $otp,
+        ]);
 
         // Send via Zalo
         $zaloService = app(ZaloService::class);
-        $result = $zaloService->sendOTP($phone, $otp, $purpose);
+        $result = $zaloService->sendOTP($phone, $otp, $purpose, $organizerId);
 
         if (!$result['success']) {
             return [
